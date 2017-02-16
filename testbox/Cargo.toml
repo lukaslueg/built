@@ -1,0 +1,18 @@
+[package]
+name = "testbox"
+version = "1.2.3-rc1"
+authors = ["Joe", "Bob", "Harry:Potter"]
+build = "build.rs"
+description = "xobtset"
+homepage = "localhost"
+
+[dependencies]
+time = "0.1"
+
+[build-dependencies]
+built = { path = "./../", features=["serialized_git", "serialized_time", "serialized_version"] }
+
+[features]
+default = ["SuperAwesome", "MegaAwesome"]
+SuperAwesome = []
+MegaAwesome = []

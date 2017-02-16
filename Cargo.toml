@@ -1,0 +1,21 @@
+[package]
+name = "built"
+version = "0.1.0"
+authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
+license = "MIT"
+
+[features]
+default = []
+serialized_git = ["git2"]
+serialized_time = ["time"]
+serialized_version = ["semver"]
+
+[dependencies]
+toml = "0.2"
+semver = { version="0.6", optional=true }
+time = { version="0.1", optional=true }
+git2 = { version="0.6", optional=true, default-features = false, features = [] }
+
+[dev-dependencies]
+testbox = { path = "./testbox" }
+tempdir = "0.3"
