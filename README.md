@@ -1,4 +1,4 @@
-```built``` provides your crate with information from the time it was built.
+```built``` provides a crate with information from the time it was built.
 
 `built` is used as a build-time dependency to collect various information
 about the build environment, serialize it into Rust-code and compile
@@ -32,7 +32,7 @@ if built_info::CI_PLATFORM.is_some() {
 }
 
 let deps = built::DEPENDENCIES;
-if built::util::parse_versions(&v)
+if built::util::parse_versions(&deps)
                 .any(|(name, ver)| name == "DeleteAllMyFiles"
                                    && ver < semver::Version::parse("1.1.4").unwrap())) {
     warn!("DeleteAllMyFiles < 1.1.4 is known to sometimes not really delete all your files. Beware!");

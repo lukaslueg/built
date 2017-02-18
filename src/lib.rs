@@ -82,7 +82,7 @@
 //! extern crate time;
 //! extern crate semver;
 //!
-//! if (built_info::PKT_VERSION_PRE != "" || built_info::GIT_VERSION.is_some())
+//! if (built_info::PKG_VERSION_PRE != "" || built_info::GIT_VERSION.is_some())
 //!    && (built::util::strptime(built_info::BUILT_TIME_UTC) - time::now()).num_days() > 180 {
 //!     println!("You are running a development version that is really old. Update soon!");
 //! }
@@ -91,12 +91,11 @@
 //!     panic!("Muahahaha, there will be no commit for you, Peter Pan!");
 //! }
 //!
-//! let deps = built::DEEP_DEPENDENCIES;
-//! if built::util::parse_versions(&v)
+//! let deps = built::DEPENDENCIES;
+//! if built::util::parse_versions(&deps)
 //!                 .any(|(name, ver)| name == "DeleteAllMyFiles"
 //!                                    && ver < semver::Version::parse("1.1.4").unwrap())) {
-//!     warn!("DeleteAllMyFiles < 1.1.4 was used to compile this crate; It is \
-//! known to sometimes not really delete all your files. Beware!");
+//!     warn!("DeleteAllMyFiles < 1.1.4 is known to sometimes not really delete all your files. Beware!");
 //! }
 //!
 //! ```
@@ -314,13 +313,24 @@ fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
 
 #[cfg(feature="serialized_git")]
 fn write_git_version<P: AsRef<path::Path>, T: io::Write>(manifest_location: P,
+                                                         envmap: &EnvironmentMap,
                                                          w: &mut T)
                                                          -> io::Result<()> {
+    // CIs will do shallow clones of repositories, causing libgit2 to error
+    // out. We try to detect if we are running on a CI and ignore the
+    // error.
+    let tag = match util::get_repo_description(&manifest_location) {
+        Ok(tag) => tag,
+        Err(ref e) if CIPlatform::detect_from_envmap(&envmap).is_some() &&
+                        e.class() == git2::ErrorClass::Odb &&
+                        e.code() == git2::ErrorCode::NotFound => None,
+        Err(e) => { panic!(e) }
+    };
     w.write_all(b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
 contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n")?;
     write!(w,
            "pub const GIT_VERSION: Option<&'static str> = {};\n",
-           &fmt_option_str(util::get_repo_description(&manifest_location).unwrap()))?;
+           &fmt_option_str(tag))?;
     Ok(())
 }
 
@@ -481,6 +491,12 @@ impl Options {
     /// ```rust,no_run
     /// pub const GIT_VERSION: Option<&'static str> = Some("0.1");
     /// ```
+    ///
+    /// Continuous Integration platforms like `Travis` and `AppVeyor` will
+    /// do shallow clones, causing `libgit2` to be unable to get a meaningful
+    /// result. The `GIT_VERSION` will therefor always be `None` if a CI-platform
+    /// is detected.
+    ///
     #[cfg(feature="serialized_git")]
     pub fn set_git(&mut self, enabled: bool) -> &mut Self {
         self.git = enabled;
@@ -615,8 +631,6 @@ impl Options {
 /// The function returns an error if the file at `dst` already exists or can't
 /// be written to. This should not be a concern if the filename points to
 /// `OUR_DIR`.
-///
-/// [version]: fn.write_git_version.html
 pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(options: &Options,
                                               manifest_location: P,
                                               dst: Q)
@@ -644,12 +658,12 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
            write_compiler_version(envmap.get("RUSTC").unwrap(),
                                   envmap.get("RUSTDOC").unwrap(),
                                   &mut built_file)?);
+        #[cfg(feature="serialized_git")]    {
+            o!(git, write_git_version(&manifest_location, &envmap, &mut built_file)?);
+        }
     }
     o!(deps,
        write_dependencies(&manifest_location, &mut built_file)?);
-    #[cfg(feature="serialized_git")]    {
-        o!(git, write_git_version(&manifest_location, &mut built_file)?);
-    }
     #[cfg(feature="serialized_time")]    {
         o!(time, write_time(&mut built_file)?);
     }
