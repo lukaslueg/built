@@ -672,12 +672,12 @@ pub fn write_built_file() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::fs;
+    use std::fs;
+    use std::io::Write;
+    use std::path;
     use super::git2;
     use super::tempdir;
     use super::util;
-    use std::path;
-    use std::io::Write;
 
     #[test]
     fn parse_git_repo() {
