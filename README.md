@@ -39,5 +39,6 @@ if built::util::parse_versions(&deps)
 }
 ```
 
+[![Docs](https://docs.rs/built/badge.svg)](https://docs.rs/built)
 [![Build Status](https://travis-ci.org/lukaslueg/built.svg?branch=master)](https://travis-ci.org/lukaslueg/built)
 [![Build status](https://ci.appveyor.com/api/projects/status/6dgxjfaisaee040f?svg=true)](https://ci.appveyor.com/project/lukaslueg/built)
