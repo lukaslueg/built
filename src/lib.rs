@@ -686,15 +686,17 @@ pub fn write_built_file() -> io::Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
-    use std::io::Write;
-    use std::path;
-    use super::git2;
-    use super::tempdir;
-    use super::util;
 
     #[test]
+    #[cfg(feature="serialized_git")]
     fn parse_git_repo() {
+        use super::util;
+        use std::path;
+        use std::io::Write;
+        use std::fs;
+        use super::git2;
+        use super::tempdir;
+
         let repo_root = tempdir::TempDir::new("builttest").unwrap();
         assert_eq!(util::get_repo_description(&repo_root), Ok(None));
 
