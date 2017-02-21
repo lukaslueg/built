@@ -4,19 +4,27 @@ sudo: false
 cache: cargo
 
 os:
-  - linux
-  - osx
+- linux
+- osx
 
 rust:
-  - 1.14.0
-  - stable
-  - beta
-  - nightly
+- 1.14.0
+- stable
+- beta
+- nightly
 
 matrix:
   allow_failures:
-    - rust: nightly
+  - rust: nightly
+
+before_script:
+- pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
 
 script:
-    - cargo build --verbose
-    - cargo test --verbose --all-features
+- travis-cargo build &&
+  travis-cargo test &&
+  travis-cargo test -- --no-default-features &&
+  travis-cargo --only stable doc -- --all-features
+
+after_success:
+- travis-cargo --only stable doc-upload
