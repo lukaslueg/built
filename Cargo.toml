@@ -3,6 +3,7 @@ name = "built"
 version = "0.1.0-rc1"
 description = "Provides a crate with information from the time it was built."
 repository = "https://github.com/lukaslueg/built"
+documentation = "https://docs.rs/built"
 authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 license = "MIT"
 keywords = ["cargo", "build"]

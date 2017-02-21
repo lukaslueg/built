@@ -18,7 +18,8 @@ matrix:
   - rust: nightly
 
 before_script:
-- pip install 'travis-cargo<0.2' --user && export PATH=$HOME/.local/bin:$PATH
+    - pip install 'travis-cargo<0.2' --user &&
+      export PATH=$HOME/.local/bin:$HOME/Library/Python/2.7/bin:$PATH
 
 script:
 - travis-cargo build &&
@@ -27,7 +28,7 @@ script:
   travis-cargo --only stable doc -- --all-features
 
 after_success:
-- travis-cargo --only stable doc-upload
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then travis-cargo --only stable doc-upload; fi
 
 env:
   global:
