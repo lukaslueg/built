@@ -91,7 +91,7 @@
 //!     panic!("Muahahaha, there will be no commit for you, Peter Pan!");
 //! }
 //!
-//! let deps = built::DEPENDENCIES;
+//! let deps = built_info::DEPENDENCIES;
 //! if built::util::parse_versions(&deps)
 //!                 .any(|(name, ver)| name == "DeleteAllMyFiles"
 //!                                    && ver < semver::Version::parse("1.1.4").unwrap())) {

@@ -1,5 +1,8 @@
 ```built``` provides a crate with information from the time it was built.
 
+Documentation for latest release [here](https://docs.rs/built),
+for master [here](https://lukaslueg.github.io/built).
+
 `built` is used as a build-time dependency to collect various information
 about the build environment, serialize it into Rust-code and compile
 it into the final crate. The information collected by `built` include:
