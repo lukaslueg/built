@@ -16,6 +16,39 @@ it into the final crate. The information collected by `built` include:
  * The used compiler and it's version; the used documentation generator and
    it's version.
 
+---
+
+```rust
+pub mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+info!("This is version {}{}, built for {} by {}.",
+       built_info::PKG_VERSION,
+       built_info::GIT_VERSION.map_or_else(|| "".to_owned(),
+                                           |v| format!(" (git {})", v)),
+       built_info::TARGET,
+       built_info::RUSTC_VERSION);
+trace!("I was built with profile \"{}\", features \"{}\" on {} using {}",
+       built_info::PROFILE,
+       built_info::FEATURES_STR,
+       built_info::BUILT_TIME_UTC,
+       built_info::DEPENDENCIES_STR);
+```
+
+```
+This is version 0.1.0 (git 62eb1e2), built for x86_64-apple-darwin
+by rustc 1.16.0-nightly (bf6d7b665 2017-01-15).
+
+I was built with profile "debug", features "DEFAULT, ERR_PRINTLN"
+on Thu, 16 Feb 2017 19:00:08 GMT using android_glue 0.2.1,
+ansi_term 0.9.0, bitflags 0.3.3, bitflags 0.4.0, bitflags 0.6.0,
+bitflags 0.7.0, block 0.1.6, built 0.1.0, byteorder 0.5.3,
+bytes 0.3.0, cfg-if 0.1.0, cgl 0.1.5, cgmath 0.7.0, ...
+```
+
+---
+
 ```rust
 extern crate built;
 extern crate time;
