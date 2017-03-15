@@ -169,25 +169,25 @@ pub enum CIPlatform {
 impl fmt::Display for CIPlatform {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match *self {
-            CIPlatform::Travis => "Travis CI",
-            CIPlatform::Circle => "CircleCI",
-            CIPlatform::GitLab => "GitLab",
-            CIPlatform::AppVeyor => "AppVeyor",
-            CIPlatform::Codeship => "CodeShip",
-            CIPlatform::Drone => "Drone",
-            CIPlatform::Magnum => "Magnum",
-            CIPlatform::Semaphore => "Semaphore",
-            CIPlatform::Jenkins => "Jenkins",
-            CIPlatform::Bamboo => "Bamboo",
-            CIPlatform::TFS => "Team Foundation Server",
-            CIPlatform::TeamCity => "TeamCity",
-            CIPlatform::Buildkite => "Buildkite",
-            CIPlatform::Hudson => "Hudson",
-            CIPlatform::TaskCluster => "TaskCluster",
-            CIPlatform::GoCD => "GoCD",
-            CIPlatform::BitBucket => "BitBucket",
-            CIPlatform::Generic => "Generic CI",
-        })
+                        CIPlatform::Travis => "Travis CI",
+                        CIPlatform::Circle => "CircleCI",
+                        CIPlatform::GitLab => "GitLab",
+                        CIPlatform::AppVeyor => "AppVeyor",
+                        CIPlatform::Codeship => "CodeShip",
+                        CIPlatform::Drone => "Drone",
+                        CIPlatform::Magnum => "Magnum",
+                        CIPlatform::Semaphore => "Semaphore",
+                        CIPlatform::Jenkins => "Jenkins",
+                        CIPlatform::Bamboo => "Bamboo",
+                        CIPlatform::TFS => "Team Foundation Server",
+                        CIPlatform::TeamCity => "TeamCity",
+                        CIPlatform::Buildkite => "Buildkite",
+                        CIPlatform::Hudson => "Hudson",
+                        CIPlatform::TaskCluster => "TaskCluster",
+                        CIPlatform::GoCD => "GoCD",
+                        CIPlatform::BitBucket => "BitBucket",
+                        CIPlatform::Generic => "Generic CI",
+                    })
     }
 }
 
@@ -266,10 +266,21 @@ fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
 
     // Get the table of [[package]]s. This is the deep list of dependencies and
     // dependencies of dependencies.
-    for package in lock_toml.lookup("package").unwrap().as_slice().unwrap() {
+    for package in lock_toml.lookup("package")
+            .unwrap()
+            .as_slice()
+            .unwrap() {
         let package = package.as_table().unwrap();
-        deps.push((package.get("name").unwrap().as_str().unwrap().to_owned(),
-                   package.get("version").unwrap().as_str().unwrap().to_owned()));
+        deps.push((package.get("name")
+                       .unwrap()
+                       .as_str()
+                       .unwrap()
+                       .to_owned(),
+                   package.get("version")
+                       .unwrap()
+                       .as_str()
+                       .unwrap()
+                       .to_owned()));
     }
     deps.sort();
     deps
@@ -278,8 +289,7 @@ fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
 
 
 fn get_version_from_cmd<P: AsRef<ffi::OsStr>>(executable: P) -> io::Result<String> {
-    let output = process::Command::new(executable).arg("-V")
-        .output()?;
+    let output = process::Command::new(executable).arg("-V").output()?;
     let mut v = String::from_utf8(output.stdout).unwrap();
     v.pop(); // remove newline
     Ok(v)
@@ -322,9 +332,9 @@ fn write_git_version<P: AsRef<path::Path>, T: io::Write>(manifest_location: P,
     let tag = match util::get_repo_description(&manifest_location) {
         Ok(tag) => tag,
         Err(ref e) if CIPlatform::detect_from_envmap(&envmap).is_some() &&
-                        e.class() == git2::ErrorClass::Odb &&
-                        e.code() == git2::ErrorCode::NotFound => None,
-        Err(e) => { panic!(e) }
+                      e.class() == git2::ErrorClass::Odb &&
+                      e.code() == git2::ErrorCode::NotFound => None,
+        Err(e) => panic!(e),
     };
     w.write_all(b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
 contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n")?;
@@ -634,13 +644,13 @@ impl Options {
 pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(options: &Options,
                                               manifest_location: P,
                                               dst: Q)
-                                              -> io::Result<()> {
+-> io::Result<()>{
     let mut built_file = fs::File::create(&dst)?;
     built_file.write_all(r#"//
 // EVERYTHING BELOW THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
 "#
-            .as_ref())?;
+                                 .as_ref())?;
 
     macro_rules! o {
         ($i:ident, $b:stmt) => {
@@ -658,20 +668,21 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
            write_compiler_version(envmap.get("RUSTC").unwrap(),
                                   envmap.get("RUSTDOC").unwrap(),
                                   &mut built_file)?);
-        #[cfg(feature="serialized_git")]    {
-            o!(git, write_git_version(&manifest_location, &envmap, &mut built_file)?);
+#[cfg(feature="serialized_git")]        {
+            o!(git,
+               write_git_version(&manifest_location, &envmap, &mut built_file)?);
         }
     }
     o!(deps,
        write_dependencies(&manifest_location, &mut built_file)?);
-    #[cfg(feature="serialized_time")]    {
+#[cfg(feature="serialized_time")]    {
         o!(time, write_time(&mut built_file)?);
     }
     built_file.write_all(r#"//
 // EVERYTHING ABOVE THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
 "#
-            .as_ref())?;
+                                 .as_ref())?;
     Ok(())
 }
 
@@ -706,7 +717,7 @@ mod tests {
                                                    .mkdir(false)
                                                    .no_reinit(true)
                                                    .mkpath(false))
-            .unwrap();
+                .unwrap();
 
         let cruft_path = repo_root.path().join("cruftfile");
         let mut cruft_file = fs::File::create(cruft_path).unwrap();
@@ -717,11 +728,11 @@ mod tests {
         let mut idx = repo.index().unwrap();
         idx.add_path(path::Path::new("cruftfile")).unwrap();
         let commit_oid = repo.commit(Some("HEAD"),
-                    &sig,
-                    &sig,
-                    "Testing testing 1 2 3",
-                    &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
-                    &[])
+                                     &sig,
+                                     &sig,
+                                     "Testing testing 1 2 3",
+                                     &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
+                                     &[])
             .unwrap();
 
         assert_ne!(util::get_repo_description(&repo_root).unwrap().unwrap(),
