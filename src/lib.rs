@@ -331,7 +331,7 @@ fn write_git_version<P: AsRef<path::Path>, T: io::Write>(manifest_location: P,
     // error.
     let tag = match util::get_repo_description(&manifest_location) {
         Ok(tag) => tag,
-        Err(ref e) if CIPlatform::detect_from_envmap(&envmap).is_some() &&
+        Err(ref e) if CIPlatform::detect_from_envmap(envmap).is_some() &&
                       e.class() == git2::ErrorClass::Odb &&
                       e.code() == git2::ErrorCode::NotFound => None,
         Err(e) => panic!(e),
