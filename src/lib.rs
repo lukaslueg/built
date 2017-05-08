@@ -256,7 +256,8 @@ impl CIPlatform {
 
 fn get_build_deps<P: AsRef<path::Path>>(manifest_location: P) -> io::Result<Vec<(String, String)>> {
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.as_ref().join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
+    fs::File::open(manifest_location.as_ref().join("Cargo.lock"))?
+        .read_to_string(&mut lock_buf)?;
     Ok(parse_dependencies(&lock_buf))
 }
 
@@ -266,17 +267,20 @@ fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
 
     // Get the table of [[package]]s. This is the deep list of dependencies and
     // dependencies of dependencies.
-    for package in lock_toml.lookup("package")
+    for package in lock_toml
+            .lookup("package")
             .unwrap()
             .as_slice()
             .unwrap() {
         let package = package.as_table().unwrap();
-        deps.push((package.get("name")
+        deps.push((package
+                       .get("name")
                        .unwrap()
                        .as_str()
                        .unwrap()
                        .to_owned(),
-                   package.get("version")
+                   package
+                       .get("version")
                        .unwrap()
                        .as_str()
                        .unwrap()
@@ -646,11 +650,12 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
                                               dst: Q)
 -> io::Result<()>{
     let mut built_file = fs::File::create(&dst)?;
-    built_file.write_all(r#"//
+    built_file
+        .write_all(r#"//
 // EVERYTHING BELOW THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
 "#
-                                 .as_ref())?;
+                           .as_ref())?;
 
     macro_rules! o {
         ($i:ident, $b:stmt) => {
@@ -665,9 +670,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
         o!(env, write_env(&envmap, &mut built_file)?);
         o!(features, write_features(&envmap, &mut built_file)?);
         o!(compiler,
-           write_compiler_version(&envmap["RUSTC"],
-                                  &envmap["RUSTDOC"],
-                                  &mut built_file)?);
+           write_compiler_version(&envmap["RUSTC"], &envmap["RUSTDOC"], &mut built_file)?);
 #[cfg(feature="serialized_git")]        {
             o!(git,
                write_git_version(&manifest_location, &envmap, &mut built_file)?);
@@ -678,11 +681,12 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
 #[cfg(feature="serialized_time")]    {
         o!(time, write_time(&mut built_file)?);
     }
-    built_file.write_all(r#"//
+    built_file
+        .write_all(r#"//
 // EVERYTHING ABOVE THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
 "#
-                                 .as_ref())?;
+                           .as_ref())?;
     Ok(())
 }
 
@@ -739,7 +743,8 @@ mod tests {
                    "".to_owned());
 
         repo.tag("foobar",
-                 &repo.find_object(commit_oid, Some(git2::ObjectType::Commit)).unwrap(),
+                 &repo.find_object(commit_oid, Some(git2::ObjectType::Commit))
+                      .unwrap(),
                  &sig,
                  "Tagged foobar",
                  false)

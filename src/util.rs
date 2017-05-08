@@ -81,8 +81,11 @@ pub fn get_repo_description<P: AsRef<path::Path>>(root: P) -> Result<Option<Stri
     match git2::Repository::open(root) {
         Ok(repo) => {
             let mut desc_opt = git2::DescribeOptions::new();
-            desc_opt.describe_tags().show_commit_oid_as_fallback(true);
-            Ok(Some(repo.describe(&desc_opt).and_then(|desc| desc.format(None))?))
+            desc_opt
+                .describe_tags()
+                .show_commit_oid_as_fallback(true);
+            Ok(Some(repo.describe(&desc_opt)
+                        .and_then(|desc| desc.format(None))?))
         }
         Err(ref e) if e.class() == git2::ErrorClass::Repository &&
                       e.code() == git2::ErrorCode::NotFound => Ok(None),
