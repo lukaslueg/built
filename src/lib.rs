@@ -348,7 +348,7 @@ fn write_ci<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> 
     w.write_all(b"/// The Continuous Integration platform detected during compilation.\n")?;
     write!(w,
            "pub const CI_PLATFORM: Option<&'static str> = {};\n",
-           &fmt_option_str(CIPlatform::detect_from_envmap(&envmap)))?;
+           &fmt_option_str(CIPlatform::detect_from_envmap(envmap)))?;
     Ok(())
 }
 
@@ -665,8 +665,8 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
         o!(env, write_env(&envmap, &mut built_file)?);
         o!(features, write_features(&envmap, &mut built_file)?);
         o!(compiler,
-           write_compiler_version(envmap.get("RUSTC").unwrap(),
-                                  envmap.get("RUSTDOC").unwrap(),
+           write_compiler_version(&envmap["RUSTC"],
+                                  &envmap["RUSTDOC"],
                                   &mut built_file)?);
 #[cfg(feature="serialized_git")]        {
             o!(git,
