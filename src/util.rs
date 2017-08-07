@@ -71,14 +71,14 @@ pub fn strptime(s: &str) -> time::Tm {
 
 /// Retrieves the git-tag or hash describing the exact version.
 ///
-/// If the given path does not point to a valid git-repo, `Ok(None)` is returned
-/// instead of an `Err`-value.
+/// If a valid git-repo can't be discovered at or above the given path,
+/// `Ok(None)` is returned instead of an `Err`-value.
 ///
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
 #[cfg(feature="serialized_git")]
 pub fn get_repo_description<P: AsRef<path::Path>>(root: P) -> Result<Option<String>, git2::Error> {
-    match git2::Repository::open(root) {
+    match git2::Repository::discover(root) {
         Ok(repo) => {
             let mut desc_opt = git2::DescribeOptions::new();
             desc_opt

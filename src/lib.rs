@@ -728,6 +728,9 @@ mod tests {
         writeln!(cruft_file, "Who? Me?").unwrap();
         drop(cruft_file);
 
+        let project_root = repo_root.path().join("project_root");
+        fs::create_dir(&project_root).unwrap();
+
         let sig = git2::Signature::now("foo", "bar").unwrap();
         let mut idx = repo.index().unwrap();
         idx.add_path(path::Path::new("cruftfile")).unwrap();
@@ -739,7 +742,7 @@ mod tests {
                                      &[])
             .unwrap();
 
-        assert_ne!(util::get_repo_description(&repo_root).unwrap().unwrap(),
+        assert_ne!(util::get_repo_description(&project_root).unwrap().unwrap(),
                    "".to_owned());
 
         repo.tag("foobar",
@@ -750,7 +753,7 @@ mod tests {
                  false)
             .unwrap();
 
-        assert_eq!(util::get_repo_description(&repo_root),
+        assert_eq!(util::get_repo_description(&project_root),
                    Ok(Some("foobar".to_owned())));
     }
 
