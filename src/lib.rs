@@ -446,6 +446,43 @@ fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     Ok(())
 }
 
+fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
+	macro_rules! get_cfg {
+        ($i:ident : $($s:expr),+) => (
+            let $i = || { $( if cfg!($i=$s) { return $s; } );+ "unknown"};
+        )
+    }
+
+    get_cfg!(target_arch: "x86", "x86_64", "mips", "powerpc", "powerpc64", "arm", "aarch64");
+    get_cfg!(target_endian: "little", "big");
+    get_cfg!(target_env: "musl", "msvc", "gnu");
+    get_cfg!(target_family: "unix", "windows");
+    get_cfg!(target_os: "windows", "macos", "ios", "linux", "android", "freebsd", "dragonfly",
+                        "bitrig", "openbsd", "netbsd");
+    get_cfg!(target_pointer_width: "32", "64");
+
+	w.write_all(b"/// The target architecture, given by `cfg!(target_arch)`.\n")?;
+	write!(w, "pub const CFG_TARGET_ARCH: &'static str = \"{}\";\n", target_arch())?;
+
+    w.write_all(b"/// The endianness, given by `cfg!(target_endian)`.\n")?;
+    write!(w, "pub const CFG_ENDIAN: &'static str = \"{}\";\n", target_endian())?;
+
+    w.write_all(b"/// The toolchain-environment, given by `cfg!(target_env)`.\n")?;
+    write!(w, "pub const CFG_ENV: &'static str = \"{}\";\n", target_env())?;
+
+    w.write_all(b"/// The OS-family, given by `cfg!(target_family)`.\n")?;
+    write!(w, "pub const CFG_FAMILY: &'static str = \"{}\";\n", target_family())?;
+
+    w.write_all(b"/// The operating system, given by `cfg!(target_os)`.\n")?;
+    write!(w, "pub const CFG_OS: &'static str = \"{}\";\n", target_os())?;
+
+    w.write_all(b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n")?;
+    write!(w, "pub const CFG_POINTER_WIDTH: &'static str = \"{}\";\n", target_pointer_width())?;
+
+    Ok(())
+}
+
+
 /// Selects which information `built` should retrieve and write as Rust code.
 #[allow(unused)]
 pub struct Options {
@@ -456,6 +493,7 @@ pub struct Options {
     deps: bool,
     features: bool,
     time: bool,
+    cfg: bool,
 }
 
 impl Default for Options {
@@ -475,6 +513,7 @@ impl Default for Options {
             deps: false,
             features: true,
             time: true,
+            cfg: true,
         }
     }
 }
@@ -637,6 +676,29 @@ impl Options {
         self.time = enabled;
         self
     }
+
+    /// Writing the configuration attributes.
+    ///
+    /// `built` writes something like
+    ///
+    /// ```rust,no_run
+    /// /// The target architecture, given by `cfg!(target_arch)`.
+    /// pub const CFG_TARGET_ARCH: &'static str = "x86_64";
+    /// /// The endianness, given by `cfg!(target_endian)`.
+    /// pub const CFG_ENDIAN: &'static str = "little";
+    /// /// The toolchain-environment, given by `cfg!(target_env)`.
+    /// pub const CFG_ENV: &'static str = "gnu";
+    /// /// The OS-family, given by `cfg!(target_family)`.
+    /// pub const CFG_FAMILY: &'static str = "unix";
+    /// /// The operating system, given by `cfg!(target_os)`.
+    /// pub const CFG_OS: &'static str = "linux";
+    /// /// The pointer width, given by `cfg!(target_pointer_width)`.
+    /// pub const CFG_POINTER_WIDTH: &'static str = "64";
+    /// ```
+    pub fn set_cfg(&mut self, enabled: bool) -> &mut Self {
+        self.cfg = enabled;
+        self
+    }
 }
 
 /// Writes rust-code describing the crate at `src` to a new file named `dst`.
@@ -681,6 +743,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
 #[cfg(feature="serialized_time")]    {
         o!(time, write_time(&mut built_file)?);
     }
+    o!(cfg, write_cfg(&mut built_file)?);
     built_file
         .write_all(r#"//
 // EVERYTHING ABOVE THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.

@@ -138,6 +138,12 @@ fn main() {
     assert_ne!(built_info::TARGET, "");
     assert_ne!(built_info::RUSTC, "");
     assert_ne!(built_info::RUSTDOC, "");
+    assert_ne!(built_info::CFG_TARGET_ARCH, "");
+    assert_ne!(built_info::CFG_ENDIAN, "");
+    assert_ne!(built_info::CFG_ENV, "");
+    assert_ne!(built_info::CFG_FAMILY, "");
+    assert_ne!(built_info::CFG_OS, "");
+    assert_ne!(built_info::CFG_POINTER_WIDTH, "");
 
     let v = built_info::DEPENDENCIES;
     assert!(built::util::parse_versions(&v)
