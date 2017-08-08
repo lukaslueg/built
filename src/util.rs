@@ -1,17 +1,17 @@
 //! Various convenience functions for `built` at runtime.
-#[cfg(feature="serialized_git")]
+#[cfg(feature = "serialized_git")]
 extern crate git2;
-#[cfg(feature="serialized_version")]
+#[cfg(feature = "serialized_version")]
 extern crate semver;
-#[cfg(feature="serialized_time")]
+#[cfg(feature = "serialized_time")]
 extern crate time;
 
-#[cfg(feature="serialized_version")]
+#[cfg(feature = "serialized_version")]
 use std::iter;
-#[cfg(feature="serialized_git")]
+#[cfg(feature = "serialized_git")]
 use std::path;
 
-#[cfg(feature="serialized_version")]
+#[cfg(feature = "serialized_version")]
 type VersionParser<'a> = fn(&'a (&'a str, &'a str)) -> (&'a str, semver::Version);
 
 /// Parses version-strings with `semver::Version::parse()`.
@@ -39,10 +39,12 @@ type VersionParser<'a> = fn(&'a (&'a str, &'a str)) -> (&'a str, semver::Version
 /// # Panics
 /// If a version can't be parsed by `semver::Version::parse()`. This should never
 /// happen with version strings provided by Cargo and `built`.
-#[cfg(feature="serialized_version")]
-pub fn parse_versions<'a, T>(name_and_versions: T)
-                             -> iter::Map<<T as iter::IntoIterator>::IntoIter, VersionParser<'a>>
-    where T: IntoIterator<Item = &'a (&'a str, &'a str)>
+#[cfg(feature = "serialized_version")]
+pub fn parse_versions<'a, T>(
+    name_and_versions: T,
+) -> iter::Map<<T as iter::IntoIterator>::IntoIter, VersionParser<'a>>
+where
+    T: IntoIterator<Item = &'a (&'a str, &'a str)>,
 {
     fn parse_version<'a>(t: &'a (&'a str, &'a str)) -> (&'a str, semver::Version) {
         (t.0, t.1.parse().unwrap())
@@ -64,7 +66,7 @@ pub fn parse_versions<'a, T>(name_and_versions: T)
 /// # Panics
 /// If the string can't be parsed. This should never happen with input provided
 /// by `built`.
-#[cfg(feature="serialized_time")]
+#[cfg(feature = "serialized_time")]
 pub fn strptime(s: &str) -> time::Tm {
     time::strptime(s, "%a, %d %b %Y %T GMT").unwrap()
 }
@@ -76,19 +78,20 @@ pub fn strptime(s: &str) -> time::Tm {
 ///
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
-#[cfg(feature="serialized_git")]
+#[cfg(feature = "serialized_git")]
 pub fn get_repo_description<P: AsRef<path::Path>>(root: P) -> Result<Option<String>, git2::Error> {
     match git2::Repository::discover(root) {
         Ok(repo) => {
             let mut desc_opt = git2::DescribeOptions::new();
-            desc_opt
-                .describe_tags()
-                .show_commit_oid_as_fallback(true);
-            Ok(Some(repo.describe(&desc_opt)
-                        .and_then(|desc| desc.format(None))?))
+            desc_opt.describe_tags().show_commit_oid_as_fallback(true);
+            Ok(Some(
+                repo.describe(&desc_opt).and_then(|desc| desc.format(None))?,
+            ))
         }
-        Err(ref e) if e.class() == git2::ErrorClass::Repository &&
-                      e.code() == git2::ErrorCode::NotFound => Ok(None),
+        Err(ref e)
+            if e.class() == git2::ErrorClass::Repository && e.code() == git2::ErrorCode::NotFound => {
+            Ok(None)
+        }
         Err(e) => Err(e),
     }
 }

@@ -19,8 +19,10 @@ struct Project {
 
 impl Project {
     fn new() -> Project {
-        Project { root: tempdir::TempDir::new("built_integration").unwrap(),
-                  files: Vec::new() }
+        Project {
+            root: tempdir::TempDir::new("built_integration").unwrap(),
+            files: Vec::new(),
+        }
     }
 
     fn add_file<N: Into<path::PathBuf>, C: Into<Vec<u8>>>(&mut self, name: N, content: C) {
@@ -29,7 +31,9 @@ impl Project {
 
     /// Hold on to the tempdir, it will be removed when droped!
     fn create(self) -> io::Result<tempdir::TempDir> {
-        fs::DirBuilder::new().create(&self.root.path().join("src")).unwrap();
+        fs::DirBuilder::new()
+            .create(&self.root.path().join("src"))
+            .unwrap();
         for (name, content) in self.files {
             let fname = self.root.path().join(name);
             let mut file = fs::File::create(&fname)?;
@@ -42,16 +46,17 @@ impl Project {
 /// Tries to find built's Cargo.toml, panics if it ends up in /
 fn get_built_root() -> path::PathBuf {
     env::current_exe()
-         .map(|path| {
-             let mut path = path;
-             loop {
-                 if path.join("Cargo.toml").exists() {
-                     break;
-                 }
-                 path = path::PathBuf::from(path.parent().unwrap());
-             }
-             path
-         }).unwrap()
+        .map(|path| {
+            let mut path = path;
+            loop {
+                if path.join("Cargo.toml").exists() {
+                    break;
+                }
+                path = path::PathBuf::from(path.parent().unwrap());
+            }
+            path
+        })
+        .unwrap()
 }
 
 #[test]
@@ -83,7 +88,9 @@ default = [\"SuperAwesome\", \"MegaAwesome\"]
 SuperAwesome = []
 MegaAwesome = []", &built_root, &built_root));
 
-    p.add_file("build.rs", r#"
+    p.add_file(
+        "build.rs",
+        r#"
 use std::env;
 use std::path;
 extern crate built;
@@ -97,9 +104,12 @@ fn main() {
     let src = env::var("CARGO_MANIFEST_DIR").unwrap();
     let dst = path::Path::new(&env::var("OUT_DIR").unwrap()).join("built.rs");
     built::write_built_file_with_opts(&options, &src, &dst).unwrap();
-}"#);
+}"#,
+    );
 
-    p.add_file("src/main.rs", r#"
+    p.add_file(
+        "src/main.rs",
+        r#"
 //! The testbox.
 #![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
 
@@ -150,16 +160,20 @@ fn main() {
         .any(|(name, ver)| name == "cmake" && ver >= semver::Version::parse("0.1.0").unwrap()));
 
     assert!((built::util::strptime(built_info::BUILT_TIME_UTC) - time::now()).num_days() <= 1);
-}"#);
+}"#,
+    );
 
     let root = p.create().expect("Creating the project failed");
     let cargo_result = process::Command::new("cargo")
-                                .current_dir(&root)
-                                .arg("run")
-                                .arg("-q")
-                                .output()
-                                .expect("cargo failed");
-    if ! cargo_result.status.success() {
-        panic!("cargo failed with {}", String::from_utf8_lossy(&cargo_result.stderr));
+        .current_dir(&root)
+        .arg("run")
+        .arg("-q")
+        .output()
+        .expect("cargo failed");
+    if !cargo_result.status.success() {
+        panic!(
+            "cargo failed with {}",
+            String::from_utf8_lossy(&cargo_result.stderr)
+        );
     }
 }

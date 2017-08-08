@@ -103,11 +103,11 @@
 
 #![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
 
-#[cfg(feature="serialized_git")]
+#[cfg(feature = "serialized_git")]
 extern crate git2;
-#[cfg(feature="serialized_time")]
+#[cfg(feature = "serialized_time")]
 extern crate time;
-#[cfg(feature="serialized_version")]
+#[cfg(feature = "serialized_version")]
 extern crate semver;
 extern crate toml;
 #[cfg(test)]
@@ -169,25 +169,25 @@ pub enum CIPlatform {
 impl fmt::Display for CIPlatform {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(match *self {
-                        CIPlatform::Travis => "Travis CI",
-                        CIPlatform::Circle => "CircleCI",
-                        CIPlatform::GitLab => "GitLab",
-                        CIPlatform::AppVeyor => "AppVeyor",
-                        CIPlatform::Codeship => "CodeShip",
-                        CIPlatform::Drone => "Drone",
-                        CIPlatform::Magnum => "Magnum",
-                        CIPlatform::Semaphore => "Semaphore",
-                        CIPlatform::Jenkins => "Jenkins",
-                        CIPlatform::Bamboo => "Bamboo",
-                        CIPlatform::TFS => "Team Foundation Server",
-                        CIPlatform::TeamCity => "TeamCity",
-                        CIPlatform::Buildkite => "Buildkite",
-                        CIPlatform::Hudson => "Hudson",
-                        CIPlatform::TaskCluster => "TaskCluster",
-                        CIPlatform::GoCD => "GoCD",
-                        CIPlatform::BitBucket => "BitBucket",
-                        CIPlatform::Generic => "Generic CI",
-                    })
+            CIPlatform::Travis => "Travis CI",
+            CIPlatform::Circle => "CircleCI",
+            CIPlatform::GitLab => "GitLab",
+            CIPlatform::AppVeyor => "AppVeyor",
+            CIPlatform::Codeship => "CodeShip",
+            CIPlatform::Drone => "Drone",
+            CIPlatform::Magnum => "Magnum",
+            CIPlatform::Semaphore => "Semaphore",
+            CIPlatform::Jenkins => "Jenkins",
+            CIPlatform::Bamboo => "Bamboo",
+            CIPlatform::TFS => "Team Foundation Server",
+            CIPlatform::TeamCity => "TeamCity",
+            CIPlatform::Buildkite => "Buildkite",
+            CIPlatform::Hudson => "Hudson",
+            CIPlatform::TaskCluster => "TaskCluster",
+            CIPlatform::GoCD => "GoCD",
+            CIPlatform::BitBucket => "BitBucket",
+            CIPlatform::Generic => "Generic CI",
+        })
     }
 }
 
@@ -247,9 +247,11 @@ impl CIPlatform {
 
         detect!(("CI_NAME", "codeship", Codeship));
 
-        detect!("CI", // Could be Travis, Circle, GitLab, AppVeyor or CodeShip
-                "CONTINUOUS_INTEGRATION", // Probably Travis
-                "BUILD_NUMBER"); // Jenkins, TeamCity
+        detect!(
+            "CI", // Could be Travis, Circle, GitLab, AppVeyor or CodeShip
+            "CONTINUOUS_INTEGRATION", // Probably Travis
+            "BUILD_NUMBER" // Jenkins, TeamCity
+        ); 
         None
     }
 }
@@ -267,24 +269,12 @@ fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
 
     // Get the table of [[package]]s. This is the deep list of dependencies and
     // dependencies of dependencies.
-    for package in lock_toml
-            .lookup("package")
-            .unwrap()
-            .as_slice()
-            .unwrap() {
+    for package in lock_toml.lookup("package").unwrap().as_slice().unwrap() {
         let package = package.as_table().unwrap();
-        deps.push((package
-                       .get("name")
-                       .unwrap()
-                       .as_str()
-                       .unwrap()
-                       .to_owned(),
-                   package
-                       .get("version")
-                       .unwrap()
-                       .as_str()
-                       .unwrap()
-                       .to_owned()));
+        deps.push((
+            package.get("name").unwrap().as_str().unwrap().to_owned(),
+            package.get("version").unwrap().as_str().unwrap().to_owned(),
+        ));
     }
     deps.sort();
     deps
@@ -300,21 +290,26 @@ fn get_version_from_cmd<P: AsRef<ffi::OsStr>>(executable: P) -> io::Result<Strin
 }
 
 
-fn write_compiler_version<P: AsRef<ffi::OsStr> + fmt::Display, T: io::Write>(rustc: P,
-                                                                             rustdoc: P,
-                                                                             w: &mut T)
-                                                                             -> io::Result<()> {
+fn write_compiler_version<P: AsRef<ffi::OsStr> + fmt::Display, T: io::Write>(
+    rustc: P,
+    rustdoc: P,
+    w: &mut T,
+) -> io::Result<()> {
     let rustc_version = get_version_from_cmd(&rustc)?;
     let rustdoc_version = get_version_from_cmd(&rustdoc)?;
 
     write!(w, "/// The output of `{} -V`\n", &rustc)?;
-    write!(w,
-           "pub const RUSTC_VERSION: &'static str = \"{}\";\n",
-           &rustc_version)?;
+    write!(
+        w,
+        "pub const RUSTC_VERSION: &'static str = \"{}\";\n",
+        &rustc_version
+    )?;
     write!(w, "/// The output of `{} -V`\n", &rustdoc)?;
-    write!(w,
-           "pub const RUSTDOC_VERSION: &'static str = \"{}\";\n",
-           &rustdoc_version)?;
+    write!(
+        w,
+        "pub const RUSTDOC_VERSION: &'static str = \"{}\";\n",
+        &rustdoc_version
+    )?;
     Ok(())
 }
 
@@ -325,34 +320,44 @@ fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
     }
 }
 
-#[cfg(feature="serialized_git")]
-fn write_git_version<P: AsRef<path::Path>, T: io::Write>(manifest_location: P,
-                                                         envmap: &EnvironmentMap,
-                                                         w: &mut T)
-                                                         -> io::Result<()> {
+#[cfg(feature = "serialized_git")]
+fn write_git_version<P: AsRef<path::Path>, T: io::Write>(
+    manifest_location: P,
+    envmap: &EnvironmentMap,
+    w: &mut T,
+) -> io::Result<()> {
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
     // error.
     let tag = match util::get_repo_description(&manifest_location) {
         Ok(tag) => tag,
-        Err(ref e) if CIPlatform::detect_from_envmap(envmap).is_some() &&
-                      e.class() == git2::ErrorClass::Odb &&
-                      e.code() == git2::ErrorCode::NotFound => None,
+        Err(ref e)
+            if CIPlatform::detect_from_envmap(envmap).is_some() &&
+                   e.class() == git2::ErrorClass::Odb &&
+                   e.code() == git2::ErrorCode::NotFound => None,
         Err(e) => panic!(e),
     };
-    w.write_all(b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
-contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n")?;
-    write!(w,
-           "pub const GIT_VERSION: Option<&'static str> = {};\n",
-           &fmt_option_str(tag))?;
+    w.write_all(
+        b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
+contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
+    )?;
+    write!(
+        w,
+        "pub const GIT_VERSION: Option<&'static str> = {};\n",
+        &fmt_option_str(tag)
+    )?;
     Ok(())
 }
 
 fn write_ci<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
-    w.write_all(b"/// The Continuous Integration platform detected during compilation.\n")?;
-    write!(w,
-           "pub const CI_PLATFORM: Option<&'static str> = {};\n",
-           &fmt_option_str(CIPlatform::detect_from_envmap(envmap)))?;
+    w.write_all(
+        b"/// The Continuous Integration platform detected during compilation.\n",
+    )?;
+    write!(
+        w,
+        "pub const CI_PLATFORM: Option<&'static str> = {};\n",
+        &fmt_option_str(CIPlatform::detect_from_envmap(envmap))
+    )?;
     Ok(())
 }
 
@@ -366,17 +371,25 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
     }
     features.sort();
 
-    w.write_all(b"/// The features that were enabled during compilation.\n")?;
-    write!(w,
-           "pub const FEATURES: [&'static str; {}] = {:?};\n",
-           features.len(),
-           features)?;
+    w.write_all(
+        b"/// The features that were enabled during compilation.\n",
+    )?;
+    write!(
+        w,
+        "pub const FEATURES: [&'static str; {}] = {:?};\n",
+        features.len(),
+        features
+    )?;
 
     let features_str = features.join(", ");
-    w.write_all(b"/// The features as a comma-separated string.\n")?;
-    write!(w,
-           "pub const FEATURES_STR: &'static str = \"{}\";\n",
-           features_str)?;
+    w.write_all(
+        b"/// The features as a comma-separated string.\n",
+    )?;
+    write!(
+        w,
+        "pub const FEATURES_STR: &'static str = \"{}\";\n",
+        features_str
+    )?;
     Ok(())
 }
 
@@ -402,52 +415,69 @@ fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()>
                    (PROFILE, "PROFILE", "`release` for release builds, `debug` for other builds."),
                    (RUSTC, "RUSTC", "The compiler that cargo resolved to use."),
                    (RUSTDOC, "RUSTDOC", "The documentation generator that cargo resolved to use."));
-    write!(w,
-           "#[doc=\"Value of OPT_LEVEL for the profile used during compilation.\"]\npub const \
+    write!(
+        w,
+        "#[doc=\"Value of OPT_LEVEL for the profile used during compilation.\"]\npub const \
             OPT_LEVEL: u8 = {};\n",
-           env::var("OPT_LEVEL").unwrap())?;
-    write!(w,
-           "#[doc=\"The parallelism that was specified during compilation.\"]\npub const \
+        env::var("OPT_LEVEL").unwrap()
+    )?;
+    write!(
+        w,
+        "#[doc=\"The parallelism that was specified during compilation.\"]\npub const \
             NUM_JOBS: u32 = {};\n",
-           env::var("NUM_JOBS").unwrap())?;
-    write!(w,
-           "#[doc=\"Value of DEBUG for the profile used during compilation.\"]\npub const \
+        env::var("NUM_JOBS").unwrap()
+    )?;
+    write!(
+        w,
+        "#[doc=\"Value of DEBUG for the profile used during compilation.\"]\npub const \
             DEBUG: bool = {};\n",
-           env::var("DEBUG").unwrap() == "true")?;
+        env::var("DEBUG").unwrap() == "true"
+    )?;
     Ok(())
 }
 
-fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(manifest_location: P,
-                                                          w: &mut T)
-                                                          -> io::Result<()> {
+fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
+    manifest_location: P,
+    w: &mut T,
+) -> io::Result<()> {
     let deps = get_build_deps(manifest_location)?;
-    w.write_all(b"/// An array of effective dependencies as documented by `Cargo.lock`.\n")?;
-    write!(w,
-           "pub const DEPENDENCIES: [(&'static str, &'static str); {}] = {:?};\n",
-           deps.len(),
-           deps)?;
-    w.write_all(b"/// The effective dependencies as a comma-separated string.\n")?;
-    write!(w,
-           "pub const DEPENDENCIES_STR: &'static str = \"{}\";\n",
-           deps.iter()
-               .map(|&(ref n, ref v)| format!("{} {}", n, v))
-               .collect::<Vec<_>>()
-               .join(", "))?;
+    w.write_all(
+        b"/// An array of effective dependencies as documented by `Cargo.lock`.\n",
+    )?;
+    write!(
+        w,
+        "pub const DEPENDENCIES: [(&'static str, &'static str); {}] = {:?};\n",
+        deps.len(),
+        deps
+    )?;
+    w.write_all(
+        b"/// The effective dependencies as a comma-separated string.\n",
+    )?;
+    write!(
+        w,
+        "pub const DEPENDENCIES_STR: &'static str = \"{}\";\n",
+        deps.iter()
+            .map(|&(ref n, ref v)| format!("{} {}", n, v))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )?;
     Ok(())
 }
 
-#[cfg(feature="serialized_time")]
+#[cfg(feature = "serialized_time")]
 fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     let now = time::now_utc();
     w.write_all(b"/// The built-time in RFC822, UTC\n")?;
-    write!(w,
-           "pub const BUILT_TIME_UTC: &'static str = \"{}\";\n",
-           now.rfc822())?;
+    write!(
+        w,
+        "pub const BUILT_TIME_UTC: &'static str = \"{}\";\n",
+        now.rfc822()
+    )?;
     Ok(())
 }
 
 fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
-	macro_rules! get_cfg {
+    macro_rules! get_cfg {
         ($i:ident : $($s:expr),+) => (
             let $i = || { $( if cfg!($i=$s) { return $s; } );+ "unknown"};
         )
@@ -461,23 +491,55 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
                         "bitrig", "openbsd", "netbsd");
     get_cfg!(target_pointer_width: "32", "64");
 
-	w.write_all(b"/// The target architecture, given by `cfg!(target_arch)`.\n")?;
-	write!(w, "pub const CFG_TARGET_ARCH: &'static str = \"{}\";\n", target_arch())?;
+    w.write_all(
+        b"/// The target architecture, given by `cfg!(target_arch)`.\n",
+    )?;
+    write!(
+        w,
+        "pub const CFG_TARGET_ARCH: &'static str = \"{}\";\n",
+        target_arch()
+    )?;
 
-    w.write_all(b"/// The endianness, given by `cfg!(target_endian)`.\n")?;
-    write!(w, "pub const CFG_ENDIAN: &'static str = \"{}\";\n", target_endian())?;
+    w.write_all(
+        b"/// The endianness, given by `cfg!(target_endian)`.\n",
+    )?;
+    write!(
+        w,
+        "pub const CFG_ENDIAN: &'static str = \"{}\";\n",
+        target_endian()
+    )?;
 
-    w.write_all(b"/// The toolchain-environment, given by `cfg!(target_env)`.\n")?;
-    write!(w, "pub const CFG_ENV: &'static str = \"{}\";\n", target_env())?;
+    w.write_all(
+        b"/// The toolchain-environment, given by `cfg!(target_env)`.\n",
+    )?;
+    write!(
+        w,
+        "pub const CFG_ENV: &'static str = \"{}\";\n",
+        target_env()
+    )?;
 
-    w.write_all(b"/// The OS-family, given by `cfg!(target_family)`.\n")?;
-    write!(w, "pub const CFG_FAMILY: &'static str = \"{}\";\n", target_family())?;
+    w.write_all(
+        b"/// The OS-family, given by `cfg!(target_family)`.\n",
+    )?;
+    write!(
+        w,
+        "pub const CFG_FAMILY: &'static str = \"{}\";\n",
+        target_family()
+    )?;
 
-    w.write_all(b"/// The operating system, given by `cfg!(target_os)`.\n")?;
+    w.write_all(
+        b"/// The operating system, given by `cfg!(target_os)`.\n",
+    )?;
     write!(w, "pub const CFG_OS: &'static str = \"{}\";\n", target_os())?;
 
-    w.write_all(b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n")?;
-    write!(w, "pub const CFG_POINTER_WIDTH: &'static str = \"{}\";\n", target_pointer_width())?;
+    w.write_all(
+        b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n",
+    )?;
+    write!(
+        w,
+        "pub const CFG_POINTER_WIDTH: &'static str = \"{}\";\n",
+        target_pointer_width()
+    )?;
 
     Ok(())
 }
@@ -550,7 +612,7 @@ impl Options {
     /// result. The `GIT_VERSION` will therefor always be `None` if a CI-platform
     /// is detected.
     ///
-    #[cfg(feature="serialized_git")]
+    #[cfg(feature = "serialized_git")]
     pub fn set_git(&mut self, enabled: bool) -> &mut Self {
         self.git = enabled;
         self
@@ -671,7 +733,7 @@ impl Options {
     /// /// The built-time in RFC822, UTC
     /// pub const BUILT_TIME_UTC: &'static str = "Tue, 14 Feb 2017 01:12:35 GMT";
     /// ```
-    #[cfg(feature="serialized_time")]
+    #[cfg(feature = "serialized_time")]
     pub fn set_time(&mut self, enabled: bool) -> &mut Self {
         self.time = enabled;
         self
@@ -707,17 +769,19 @@ impl Options {
 /// The function returns an error if the file at `dst` already exists or can't
 /// be written to. This should not be a concern if the filename points to
 /// `OUR_DIR`.
-pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(options: &Options,
-                                              manifest_location: P,
-                                              dst: Q)
--> io::Result<()>{
+pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
+    options: &Options,
+    manifest_location: P,
+    dst: Q,
+) -> io::Result<()> {
     let mut built_file = fs::File::create(&dst)?;
-    built_file
-        .write_all(r#"//
+    built_file.write_all(
+        r#"//
 // EVERYTHING BELOW THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
 "#
-                           .as_ref())?;
+            .as_ref(),
+    )?;
 
     macro_rules! o {
         ($i:ident, $b:stmt) => {
@@ -731,25 +795,34 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(op
         o!(ci, write_ci(&envmap, &mut built_file)?);
         o!(env, write_env(&envmap, &mut built_file)?);
         o!(features, write_features(&envmap, &mut built_file)?);
-        o!(compiler,
-           write_compiler_version(&envmap["RUSTC"], &envmap["RUSTDOC"], &mut built_file)?);
-#[cfg(feature="serialized_git")]        {
-            o!(git,
-               write_git_version(&manifest_location, &envmap, &mut built_file)?);
+        o!(
+            compiler,
+            write_compiler_version(&envmap["RUSTC"], &envmap["RUSTDOC"], &mut built_file)?
+        );
+        #[cfg(feature = "serialized_git")]
+        {
+            o!(
+                git,
+                write_git_version(&manifest_location, &envmap, &mut built_file)?
+            );
         }
     }
-    o!(deps,
-       write_dependencies(&manifest_location, &mut built_file)?);
-#[cfg(feature="serialized_time")]    {
+    o!(
+        deps,
+        write_dependencies(&manifest_location, &mut built_file)?
+    );
+    #[cfg(feature = "serialized_time")]
+    {
         o!(time, write_time(&mut built_file)?);
     }
     o!(cfg, write_cfg(&mut built_file)?);
-    built_file
-        .write_all(r#"//
+    built_file.write_all(
+        r#"//
 // EVERYTHING ABOVE THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
 "#
-                           .as_ref())?;
+            .as_ref(),
+    )?;
     Ok(())
 }
 
@@ -766,7 +839,7 @@ pub fn write_built_file() -> io::Result<()> {
 mod tests {
 
     #[test]
-    #[cfg(feature="serialized_git")]
+    #[cfg(feature = "serialized_git")]
     fn parse_git_repo() {
         use super::util;
         use std::path;
@@ -778,13 +851,14 @@ mod tests {
         let repo_root = tempdir::TempDir::new("builttest").unwrap();
         assert_eq!(util::get_repo_description(&repo_root), Ok(None));
 
-        let repo = git2::Repository::init_opts(&repo_root,
-                                               git2::RepositoryInitOptions::new()
-                                                   .external_template(false)
-                                                   .mkdir(false)
-                                                   .no_reinit(true)
-                                                   .mkpath(false))
-                .unwrap();
+        let repo = git2::Repository::init_opts(
+            &repo_root,
+            git2::RepositoryInitOptions::new()
+                .external_template(false)
+                .mkdir(false)
+                .no_reinit(true)
+                .mkpath(false),
+        ).unwrap();
 
         let cruft_path = repo_root.path().join("cruftfile");
         let mut cruft_file = fs::File::create(cruft_path).unwrap();
@@ -797,27 +871,33 @@ mod tests {
         let sig = git2::Signature::now("foo", "bar").unwrap();
         let mut idx = repo.index().unwrap();
         idx.add_path(path::Path::new("cruftfile")).unwrap();
-        let commit_oid = repo.commit(Some("HEAD"),
-                                     &sig,
-                                     &sig,
-                                     "Testing testing 1 2 3",
-                                     &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
-                                     &[])
-            .unwrap();
+        let commit_oid = repo.commit(
+            Some("HEAD"),
+            &sig,
+            &sig,
+            "Testing testing 1 2 3",
+            &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
+            &[],
+        ).unwrap();
 
-        assert_ne!(util::get_repo_description(&project_root).unwrap().unwrap(),
-                   "".to_owned());
+        assert_ne!(
+            util::get_repo_description(&project_root).unwrap().unwrap(),
+            "".to_owned()
+        );
 
-        repo.tag("foobar",
-                 &repo.find_object(commit_oid, Some(git2::ObjectType::Commit))
-                      .unwrap(),
-                 &sig,
-                 "Tagged foobar",
-                 false)
-            .unwrap();
+        repo.tag(
+            "foobar",
+            &repo.find_object(commit_oid, Some(git2::ObjectType::Commit))
+                .unwrap(),
+            &sig,
+            "Tagged foobar",
+            false,
+        ).unwrap();
 
-        assert_eq!(util::get_repo_description(&project_root),
-                   Ok(Some("foobar".to_owned())));
+        assert_eq!(
+            util::get_repo_description(&project_root),
+            Ok(Some("foobar".to_owned()))
+        );
     }
 
     #[test]
@@ -846,9 +926,13 @@ mod tests {
             version = "7.8.9"
             source = "r+g""#;
         let deps = super::parse_dependencies(&lock_toml_buf);
-        assert_eq!(deps,
-                   [("dep_of_dep".to_owned(), "7.8.9".to_owned()),
-                    ("local_dep".to_owned(), "4.5.6".to_owned()),
-                    ("normal_dep".to_owned(), "1.2.3".to_owned())]);
+        assert_eq!(
+            deps,
+            [
+                ("dep_of_dep".to_owned(), "7.8.9".to_owned()),
+                ("local_dep".to_owned(), "4.5.6".to_owned()),
+                ("normal_dep".to_owned(), "1.2.3".to_owned()),
+            ]
+        );
     }
 }
