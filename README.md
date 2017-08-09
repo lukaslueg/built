@@ -70,7 +70,7 @@ if built_info::CI_PLATFORM.is_some() {
 let deps = built_info::DEPENDENCIES;
 if built::util::parse_versions(&deps)
                 .any(|(name, ver)| name == "DeleteAllMyFiles"
-                                   && ver < semver::Version::parse("1.1.4").unwrap())) {
+                                   && ver < semver::Version::parse("1.1.4").unwrap()) {
     warn!("DeleteAllMyFiles < 1.1.4 is known to sometimes not really delete all your files. Beware!");
 }
 ```
