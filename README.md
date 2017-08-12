@@ -9,6 +9,7 @@ it into the final crate. The information collected by `built` include:
 
  * Various metadata like version, authors, homepage etc. as set by `Cargo.toml`
  * The tag or commit id if the crate was being compiled from within a git repo.
+ * The values of various `cfg!`, like `target_os` and `target_arch`.
  * The features the crate was compiled with.
  * The various dependencies, dependencies of dependencies and their versions
    cargo ultimately chose to compile.
