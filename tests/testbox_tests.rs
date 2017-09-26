@@ -1,8 +1,5 @@
 #![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
 extern crate tempdir;
-extern crate time;
-extern crate semver;
-extern crate built;
 
 use std::env;
 use std::fs;

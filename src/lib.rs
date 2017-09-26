@@ -108,10 +108,8 @@
 extern crate git2;
 #[cfg(feature = "serialized_time")]
 extern crate time;
-#[cfg(feature = "serialized_version")]
-extern crate semver;
 extern crate toml;
-#[cfg(test)]
+#[cfg(all(test,feature="serialized_git"))]
 extern crate tempdir;
 
 pub mod util;
