@@ -1,4 +1,5 @@
 #![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
+extern crate git2;
 extern crate tempdir;
 
 use std::env;
@@ -26,7 +27,7 @@ impl Project {
         self.files.push((name.into(), content.into()))
     }
 
-    /// Hold on to the tempdir, it will be removed when droped!
+    /// Hold on to the tempdir, it will be removed when dropped!
     fn create(self) -> io::Result<tempdir::TempDir> {
         fs::DirBuilder::new()
             .create(&self.root.path().join("src"))
@@ -37,6 +38,10 @@ impl Project {
             file.write_all(&content)?;
         }
         Ok(self.root)
+    }
+
+    fn init_git(&self) -> git2::Repository {
+        git2::Repository::init(&self.root).expect("git-init failed")
     }
 }
 
@@ -165,6 +170,40 @@ fn main() {
         .current_dir(&root)
         .arg("run")
         .arg("-q")
+        .output()
+        .expect("cargo failed");
+    if !cargo_result.status.success() {
+        panic!(
+            "cargo failed with {}",
+            String::from_utf8_lossy(&cargo_result.stderr)
+        );
+    }
+}
+
+#[test]
+fn empty_git() {
+    // Issue #7, git can be there and still fail
+    let mut p = Project::new();
+    let built_root = get_built_root();
+    p.add_file("Cargo.toml", format!(r#"
+[package]
+name = "testbox"
+version = "0.0.1"
+build = "build.rs"
+
+[build-dependencies]
+built = {{ path = {:?} }}"#, &built_root));
+    p.add_file("build.rs", r#"
+extern crate built;
+fn main() {
+    built::write_built_file().expect("writing failed");
+}"#);
+    p.add_file("src/main.rs", "fn main() {}");
+    p.init_git();
+    let root = p.create().expect("Creating the project failed");
+    let cargo_result = process::Command::new("cargo")
+        .current_dir(&root)
+        .arg("run")
         .output()
         .expect("cargo failed");
     if !cargo_result.status.success() {

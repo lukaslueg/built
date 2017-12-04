@@ -24,3 +24,4 @@ git2 = { version="0.6", optional=true, default-features = false, features = [] }
 tempdir = "0.3"
 semver = "0.6"
 time = "0.1"
+git2 = "0.6"

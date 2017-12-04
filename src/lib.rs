@@ -322,7 +322,6 @@ fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
 #[cfg(feature = "serialized_git")]
 fn write_git_version<P: AsRef<path::Path>, T: io::Write>(
     manifest_location: P,
-    envmap: &EnvironmentMap,
     w: &mut T,
 ) -> io::Result<()> {
     // CIs will do shallow clones of repositories, causing libgit2 to error
@@ -330,11 +329,7 @@ fn write_git_version<P: AsRef<path::Path>, T: io::Write>(
     // error.
     let tag = match util::get_repo_description(&manifest_location) {
         Ok(tag) => tag,
-        Err(ref e)
-            if CIPlatform::detect_from_envmap(envmap).is_some() &&
-                   e.class() == git2::ErrorClass::Odb &&
-                   e.code() == git2::ErrorCode::NotFound => None,
-        Err(e) => panic!(e),
+        Err(_) => None,
     };
     w.write_all(
         b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
@@ -802,7 +797,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         {
             o!(
                 git,
-                write_git_version(&manifest_location, &envmap, &mut built_file)?
+                write_git_version(&manifest_location, &mut built_file)?
             );
         }
     }
