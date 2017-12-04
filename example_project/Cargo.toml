@@ -6,7 +6,7 @@ build = "build.rs"
 
 [dependencies]
 built = { version = "^0.2", path="../" }
-semver = "0.6"
+semver = "0.9"
 time = "0.1"
 
 [build-dependencies]

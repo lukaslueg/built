@@ -268,7 +268,7 @@ fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
 
     // Get the table of [[package]]s. This is the deep list of dependencies and
     // dependencies of dependencies.
-    for package in lock_toml.lookup("package").unwrap().as_slice().unwrap() {
+    for package in lock_toml["package"].as_array().unwrap() {
         let package = package.as_table().unwrap();
         deps.push((
             package.get("name").unwrap().as_str().unwrap().to_owned(),

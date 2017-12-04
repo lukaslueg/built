@@ -79,7 +79,7 @@ homepage = \"localhost\"
 
 [dependencies]
 time = \"0.1\"
-semver = \"0.6\"
+semver = \"0.9\"
 built = {{ path = {:?}, features=[\"serialized_git\", \"serialized_time\", \"serialized_version\"] }}
 
 [build-dependencies]
