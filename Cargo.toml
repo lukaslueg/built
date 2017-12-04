@@ -1,12 +1,16 @@
 [package]
 name = "built"
-version = "0.2.2"
+version = "0.2.3"
 description = "Provides a crate with information from the time it was built."
 repository = "https://github.com/lukaslueg/built"
 documentation = "https://docs.rs/built"
 authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 license = "MIT"
+readme = "README.md"
 keywords = ["cargo", "build"]
+
+[badges]
+travis-ci = { repository = "lukaslueg/built" }
 
 [features]
 default = ["serialized_git", "serialized_time", "serialized_version"]
