@@ -104,12 +104,12 @@
 
 #![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
 
-#[cfg(feature = "serialized_git")]
+#[cfg(all(test, feature = "serialized_git"))]
 extern crate git2;
 #[cfg(feature = "serialized_time")]
 extern crate time;
 extern crate toml;
-#[cfg(all(test,feature="serialized_git"))]
+#[cfg(all(test, feature="serialized_git"))]
 extern crate tempdir;
 
 pub mod util;
