@@ -101,16 +101,15 @@
 //!
 //! ```
 
-
 #![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
 
 #[cfg(all(test, feature = "serialized_git"))]
 extern crate git2;
+#[cfg(all(test, feature = "serialized_git"))]
+extern crate tempdir;
 #[cfg(feature = "serialized_time")]
 extern crate time;
 extern crate toml;
-#[cfg(all(test, feature="serialized_git"))]
-extern crate tempdir;
 
 pub mod util;
 
@@ -123,7 +122,6 @@ use std::ffi;
 use std::io;
 use std::path;
 use std::process;
-
 
 /// Various Continuous Integration platforms whose presence can be detected.
 pub enum CIPlatform {
@@ -224,21 +222,23 @@ impl CIPlatform {
             )*};
         }
         // Variable names collected by watson/ci-info
-        detect!(("TRAVIS", Travis),
-                ("CIRCLECI", Circle),
-                ("GITLAB_CI", GitLab),
-                ("APPVEYOR", AppVeyor),
-                ("DRONE", Drone),
-                ("MAGNUM", Magnum),
-                ("SEMAPHORE", Semaphore),
-                ("JENKINS_URL", Jenkins),
-                ("bamboo_planKey", Bamboo),
-                ("TF_BUILD", TFS),
-                ("TEAMCITY_VERSION", TeamCity),
-                ("BUILDKITE", Buildkite),
-                ("HUDSON_URL", Hudson),
-                ("GO_PIPELINE_LABEL", GoCD),
-                ("BITBUCKET_COMMIT", BitBucket));
+        detect!(
+            ("TRAVIS", Travis),
+            ("CIRCLECI", Circle),
+            ("GITLAB_CI", GitLab),
+            ("APPVEYOR", AppVeyor),
+            ("DRONE", Drone),
+            ("MAGNUM", Magnum),
+            ("SEMAPHORE", Semaphore),
+            ("JENKINS_URL", Jenkins),
+            ("bamboo_planKey", Bamboo),
+            ("TF_BUILD", TFS),
+            ("TEAMCITY_VERSION", TeamCity),
+            ("BUILDKITE", Buildkite),
+            ("HUDSON_URL", Hudson),
+            ("GO_PIPELINE_LABEL", GoCD),
+            ("BITBUCKET_COMMIT", BitBucket)
+        );
 
         if envmap.contains_key("TASK_ID") && envmap.contains_key("RUN_ID") {
             return Some(CIPlatform::TaskCluster);
@@ -247,9 +247,9 @@ impl CIPlatform {
         detect!(("CI_NAME", "codeship", Codeship));
 
         detect!(
-            "CI", // Could be Travis, Circle, GitLab, AppVeyor or CodeShip
+            "CI",                     // Could be Travis, Circle, GitLab, AppVeyor or CodeShip
             "CONTINUOUS_INTEGRATION", // Probably Travis
-            "BUILD_NUMBER" // Jenkins, TeamCity
+            "BUILD_NUMBER"            // Jenkins, TeamCity
         );
         None
     }
@@ -257,8 +257,7 @@ impl CIPlatform {
 
 fn get_build_deps<P: AsRef<path::Path>>(manifest_location: P) -> io::Result<Vec<(String, String)>> {
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.as_ref().join("Cargo.lock"))?
-        .read_to_string(&mut lock_buf)?;
+    fs::File::open(manifest_location.as_ref().join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
     Ok(parse_dependencies(&lock_buf))
 }
 
@@ -279,15 +278,12 @@ fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
     deps
 }
 
-
-
 fn get_version_from_cmd<P: AsRef<ffi::OsStr>>(executable: P) -> io::Result<String> {
     let output = process::Command::new(executable).arg("-V").output()?;
     let mut v = String::from_utf8(output.stdout).unwrap();
     v.pop(); // remove newline
     Ok(v)
 }
-
 
 fn write_compiler_version<P: AsRef<ffi::OsStr> + fmt::Display, T: io::Write>(
     rustc: P,
@@ -344,9 +340,7 @@ contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
 }
 
 fn write_ci<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
-    w.write_all(
-        b"/// The Continuous Integration platform detected during compilation.\n",
-    )?;
+    w.write_all(b"/// The Continuous Integration platform detected during compilation.\n")?;
     write!(
         w,
         "pub const CI_PLATFORM: Option<&str> = {};\n",
@@ -365,9 +359,7 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
     }
     features.sort();
 
-    w.write_all(
-        b"/// The features that were enabled during compilation.\n",
-    )?;
+    w.write_all(b"/// The features that were enabled during compilation.\n")?;
     write!(
         w,
         "pub const FEATURES: [&str; {}] = {:?};\n",
@@ -376,14 +368,8 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
     )?;
 
     let features_str = features.join(", ");
-    w.write_all(
-        b"/// The features as a comma-separated string.\n",
-    )?;
-    write!(
-        w,
-        "pub const FEATURES_STR: &str = \"{}\";\n",
-        features_str
-    )?;
+    w.write_all(b"/// The features as a comma-separated string.\n")?;
+    write!(w, "pub const FEATURES_STR: &str = \"{}\";\n", features_str)?;
     Ok(())
 }
 
@@ -395,36 +381,70 @@ fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()>
         )*}
     }
 
-    write_env_str!((PKG_VERSION, "CARGO_PKG_VERSION", "The full version."),
-                   (PKG_VERSION_MAJOR, "CARGO_PKG_VERSION_MAJOR", "The major version."),
-                   (PKG_VERSION_MINOR, "CARGO_PKG_VERSION_MINOR", "The minor version."),
-                   (PKG_VERSION_PATCH, "CARGO_PKG_VERSION_PATCH", "The patch version."),
-                   (PKG_VERSION_PRE, "CARGO_PKG_VERSION_PRE", "The pre-release version."),
-                   (PKG_AUTHORS, "CARGO_PKG_AUTHORS", "A colon-separated list of authors."),
-                   (PKG_NAME, "CARGO_PKG_NAME", "The name of the package."),
-                   (PKG_DESCRIPTION, "CARGO_PKG_DESCRIPTION", "The description."),
-                   (PKG_HOMEPAGE, "CARGO_PKG_HOMEPAGE", "The homepage."),
-                   (TARGET, "TARGET", "The target triple that was being compiled for."),
-                   (HOST, "HOST", "The host triple of the rust compiler."),
-                   (PROFILE, "PROFILE", "`release` for release builds, `debug` for other builds."),
-                   (RUSTC, "RUSTC", "The compiler that cargo resolved to use."),
-                   (RUSTDOC, "RUSTDOC", "The documentation generator that cargo resolved to use."));
+    write_env_str!(
+        (PKG_VERSION, "CARGO_PKG_VERSION", "The full version."),
+        (
+            PKG_VERSION_MAJOR,
+            "CARGO_PKG_VERSION_MAJOR",
+            "The major version."
+        ),
+        (
+            PKG_VERSION_MINOR,
+            "CARGO_PKG_VERSION_MINOR",
+            "The minor version."
+        ),
+        (
+            PKG_VERSION_PATCH,
+            "CARGO_PKG_VERSION_PATCH",
+            "The patch version."
+        ),
+        (
+            PKG_VERSION_PRE,
+            "CARGO_PKG_VERSION_PRE",
+            "The pre-release version."
+        ),
+        (
+            PKG_AUTHORS,
+            "CARGO_PKG_AUTHORS",
+            "A colon-separated list of authors."
+        ),
+        (PKG_NAME, "CARGO_PKG_NAME", "The name of the package."),
+        (PKG_DESCRIPTION, "CARGO_PKG_DESCRIPTION", "The description."),
+        (PKG_HOMEPAGE, "CARGO_PKG_HOMEPAGE", "The homepage."),
+        (
+            TARGET,
+            "TARGET",
+            "The target triple that was being compiled for."
+        ),
+        (HOST, "HOST", "The host triple of the rust compiler."),
+        (
+            PROFILE,
+            "PROFILE",
+            "`release` for release builds, `debug` for other builds."
+        ),
+        (RUSTC, "RUSTC", "The compiler that cargo resolved to use."),
+        (
+            RUSTDOC,
+            "RUSTDOC",
+            "The documentation generator that cargo resolved to use."
+        )
+    );
     write!(
         w,
         "#[doc=\"Value of OPT_LEVEL for the profile used during compilation.\"]\npub const \
-            OPT_LEVEL: u8 = {};\n",
+         OPT_LEVEL: u8 = {};\n",
         env::var("OPT_LEVEL").unwrap()
     )?;
     write!(
         w,
         "#[doc=\"The parallelism that was specified during compilation.\"]\npub const \
-            NUM_JOBS: u32 = {};\n",
+         NUM_JOBS: u32 = {};\n",
         env::var("NUM_JOBS").unwrap()
     )?;
     write!(
         w,
         "#[doc=\"Value of DEBUG for the profile used during compilation.\"]\npub const \
-            DEBUG: bool = {};\n",
+         DEBUG: bool = {};\n",
         env::var("DEBUG").unwrap() == "true"
     )?;
     Ok(())
@@ -435,18 +455,14 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
     w: &mut T,
 ) -> io::Result<()> {
     let deps = get_build_deps(manifest_location)?;
-    w.write_all(
-        b"/// An array of effective dependencies as documented by `Cargo.lock`.\n",
-    )?;
+    w.write_all(b"/// An array of effective dependencies as documented by `Cargo.lock`.\n")?;
     write!(
         w,
         "pub const DEPENDENCIES: [(&str, &str); {}] = {:?};\n",
         deps.len(),
         deps
     )?;
-    w.write_all(
-        b"/// The effective dependencies as a comma-separated string.\n",
-    )?;
+    w.write_all(b"/// The effective dependencies as a comma-separated string.\n")?;
     write!(
         w,
         "pub const DEPENDENCIES_STR: &str = \"{}\";\n",
@@ -485,50 +501,26 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
                         "bitrig", "openbsd", "netbsd");
     get_cfg!(target_pointer_width: "32", "64");
 
-    w.write_all(
-        b"/// The target architecture, given by `cfg!(target_arch)`.\n",
-    )?;
+    w.write_all(b"/// The target architecture, given by `cfg!(target_arch)`.\n")?;
     write!(
         w,
         "pub const CFG_TARGET_ARCH: &str = \"{}\";\n",
         target_arch()
     )?;
 
-    w.write_all(
-        b"/// The endianness, given by `cfg!(target_endian)`.\n",
-    )?;
-    write!(
-        w,
-        "pub const CFG_ENDIAN: &str = \"{}\";\n",
-        target_endian()
-    )?;
+    w.write_all(b"/// The endianness, given by `cfg!(target_endian)`.\n")?;
+    write!(w, "pub const CFG_ENDIAN: &str = \"{}\";\n", target_endian())?;
 
-    w.write_all(
-        b"/// The toolchain-environment, given by `cfg!(target_env)`.\n",
-    )?;
-    write!(
-        w,
-        "pub const CFG_ENV: &str = \"{}\";\n",
-        target_env()
-    )?;
+    w.write_all(b"/// The toolchain-environment, given by `cfg!(target_env)`.\n")?;
+    write!(w, "pub const CFG_ENV: &str = \"{}\";\n", target_env())?;
 
-    w.write_all(
-        b"/// The OS-family, given by `cfg!(target_family)`.\n",
-    )?;
-    write!(
-        w,
-        "pub const CFG_FAMILY: &str = \"{}\";\n",
-        target_family()
-    )?;
+    w.write_all(b"/// The OS-family, given by `cfg!(target_family)`.\n")?;
+    write!(w, "pub const CFG_FAMILY: &str = \"{}\";\n", target_family())?;
 
-    w.write_all(
-        b"/// The operating system, given by `cfg!(target_os)`.\n",
-    )?;
+    w.write_all(b"/// The operating system, given by `cfg!(target_os)`.\n")?;
     write!(w, "pub const CFG_OS: &str = \"{}\";\n", target_os())?;
 
-    w.write_all(
-        b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n",
-    )?;
+    w.write_all(b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n")?;
     write!(
         w,
         "pub const CFG_POINTER_WIDTH: &str = \"{}\";\n",
@@ -537,7 +529,6 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
 
     Ok(())
 }
-
 
 /// Selects which information `built` should retrieve and write as Rust code.
 #[allow(unused)]
@@ -670,7 +661,6 @@ impl Options {
         self
     }
 
-
     /// Parsing `Cargo.lock`and writing lists of dependencies and their versions.
     ///
     /// For this to work, `Cargo.lock` needs to actually be there; this is (usually)
@@ -773,8 +763,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         r#"//
 // EVERYTHING BELOW THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
-"#
-            .as_ref(),
+"#.as_ref(),
     )?;
 
     macro_rules! o {
@@ -795,10 +784,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         );
         #[cfg(feature = "serialized_git")]
         {
-            o!(
-                git,
-                write_git_version(&manifest_location, &mut built_file)?
-            );
+            o!(git, write_git_version(&manifest_location, &mut built_file)?);
         }
     }
     o!(
@@ -814,8 +800,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         r#"//
 // EVERYTHING ABOVE THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
-"#
-            .as_ref(),
+"#.as_ref(),
     )?;
     Ok(())
 }
