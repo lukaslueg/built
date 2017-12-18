@@ -300,13 +300,13 @@ fn write_compiler_version<P: AsRef<ffi::OsStr> + fmt::Display, T: io::Write>(
     write!(w, "/// The output of `{} -V`\n", &rustc)?;
     write!(
         w,
-        "pub const RUSTC_VERSION: &'static str = \"{}\";\n",
+        "pub const RUSTC_VERSION: &str = \"{}\";\n",
         &rustc_version
     )?;
     write!(w, "/// The output of `{} -V`\n", &rustdoc)?;
     write!(
         w,
-        "pub const RUSTDOC_VERSION: &'static str = \"{}\";\n",
+        "pub const RUSTDOC_VERSION: &str = \"{}\";\n",
         &rustdoc_version
     )?;
     Ok(())
@@ -337,7 +337,7 @@ contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
     )?;
     write!(
         w,
-        "pub const GIT_VERSION: Option<&'static str> = {};\n",
+        "pub const GIT_VERSION: Option<&str> = {};\n",
         &fmt_option_str(tag)
     )?;
     Ok(())
@@ -349,7 +349,7 @@ fn write_ci<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> 
     )?;
     write!(
         w,
-        "pub const CI_PLATFORM: Option<&'static str> = {};\n",
+        "pub const CI_PLATFORM: Option<&str> = {};\n",
         &fmt_option_str(CIPlatform::detect_from_envmap(envmap))
     )?;
     Ok(())
@@ -370,7 +370,7 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
     )?;
     write!(
         w,
-        "pub const FEATURES: [&'static str; {}] = {:?};\n",
+        "pub const FEATURES: [&str; {}] = {:?};\n",
         features.len(),
         features
     )?;
@@ -381,7 +381,7 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
     )?;
     write!(
         w,
-        "pub const FEATURES_STR: &'static str = \"{}\";\n",
+        "pub const FEATURES_STR: &str = \"{}\";\n",
         features_str
     )?;
     Ok(())
@@ -390,7 +390,7 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
 fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
     macro_rules! write_env_str {
         ($(($name:ident, $env_name:expr,$doc:expr)),*) => {$(
-            write!(w, "#[doc={}]\npub const {}: &'static str = \"{}\";\n",
+            write!(w, "#[doc={}]\npub const {}: &str = \"{}\";\n",
                    stringify!($doc), stringify!($name), envmap.get($env_name).unwrap())?;
         )*}
     }
@@ -440,7 +440,7 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
     )?;
     write!(
         w,
-        "pub const DEPENDENCIES: [(&'static str, &'static str); {}] = {:?};\n",
+        "pub const DEPENDENCIES: [(&str, &str); {}] = {:?};\n",
         deps.len(),
         deps
     )?;
@@ -449,7 +449,7 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
     )?;
     write!(
         w,
-        "pub const DEPENDENCIES_STR: &'static str = \"{}\";\n",
+        "pub const DEPENDENCIES_STR: &str = \"{}\";\n",
         deps.iter()
             .map(|&(ref n, ref v)| format!("{} {}", n, v))
             .collect::<Vec<_>>()
@@ -464,7 +464,7 @@ fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     w.write_all(b"/// The built-time in RFC822, UTC\n")?;
     write!(
         w,
-        "pub const BUILT_TIME_UTC: &'static str = \"{}\";\n",
+        "pub const BUILT_TIME_UTC: &str = \"{}\";\n",
         now.rfc822()
     )?;
     Ok(())
@@ -490,7 +490,7 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
     )?;
     write!(
         w,
-        "pub const CFG_TARGET_ARCH: &'static str = \"{}\";\n",
+        "pub const CFG_TARGET_ARCH: &str = \"{}\";\n",
         target_arch()
     )?;
 
@@ -499,7 +499,7 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
     )?;
     write!(
         w,
-        "pub const CFG_ENDIAN: &'static str = \"{}\";\n",
+        "pub const CFG_ENDIAN: &str = \"{}\";\n",
         target_endian()
     )?;
 
@@ -508,7 +508,7 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
     )?;
     write!(
         w,
-        "pub const CFG_ENV: &'static str = \"{}\";\n",
+        "pub const CFG_ENV: &str = \"{}\";\n",
         target_env()
     )?;
 
@@ -517,21 +517,21 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
     )?;
     write!(
         w,
-        "pub const CFG_FAMILY: &'static str = \"{}\";\n",
+        "pub const CFG_FAMILY: &str = \"{}\";\n",
         target_family()
     )?;
 
     w.write_all(
         b"/// The operating system, given by `cfg!(target_os)`.\n",
     )?;
-    write!(w, "pub const CFG_OS: &'static str = \"{}\";\n", target_os())?;
+    write!(w, "pub const CFG_OS: &str = \"{}\";\n", target_os())?;
 
     w.write_all(
         b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n",
     )?;
     write!(
         w,
-        "pub const CFG_POINTER_WIDTH: &'static str = \"{}\";\n",
+        "pub const CFG_POINTER_WIDTH: &str = \"{}\";\n",
         target_pointer_width()
     )?;
 
@@ -581,8 +581,8 @@ impl Options {
     /// result will something like
     ///
     /// ```rust,no_run
-    /// pub const RUSTC_VERSION: &'static str = "rustc 1.15.0";
-    /// pub const RUSTDOC_VERSION: &'static str = "rustdoc 1.15.0";
+    /// pub const RUSTC_VERSION: &str = "rustc 1.15.0";
+    /// pub const RUSTDOC_VERSION: &str = "rustdoc 1.15.0";
     /// ```
     pub fn set_compiler(&mut self, enabled: bool) -> &mut Self {
         self.compiler = enabled;
@@ -598,7 +598,7 @@ impl Options {
     /// tag or commit id.  The result will be something like
     ///
     /// ```rust,no_run
-    /// pub const GIT_VERSION: Option<&'static str> = Some("0.1");
+    /// pub const GIT_VERSION: Option<&str> = Some("0.1");
     /// ```
     ///
     /// Continuous Integration platforms like `Travis` and `AppVeyor` will
@@ -617,7 +617,7 @@ impl Options {
     /// Detect various CI-platforms (named or not) and write something like
     ///
     /// ```rust
-    /// pub const CI_PLATFORM: Option<&'static str> = Some("AppVeyor");
+    /// pub const CI_PLATFORM: Option<&str> = Some("AppVeyor");
     /// ```
     pub fn set_ci(&mut self, enabled: bool) -> &mut Self {
         self.ci = enabled;
@@ -630,33 +630,33 @@ impl Options {
     ///
     /// ```rust,no_run
     /// #[doc="The full version."]
-    /// pub const PKG_VERSION: &'static str = "1.2.3-rc1";
+    /// pub const PKG_VERSION: &str = "1.2.3-rc1";
     /// #[doc="The major version."]
-    /// pub const PKG_VERSION_MAJOR: &'static str = "1";
+    /// pub const PKG_VERSION_MAJOR: &str = "1";
     /// #[doc="The minor version."]
-    /// pub const PKG_VERSION_MINOR: &'static str = "2";
+    /// pub const PKG_VERSION_MINOR: &str = "2";
     /// #[doc="The patch version."]
-    /// pub const PKG_VERSION_PATCH: &'static str = "3";
+    /// pub const PKG_VERSION_PATCH: &str = "3";
     /// #[doc="The pre-release version."]
-    /// pub const PKG_VERSION_PRE: &'static str = "rc1";
+    /// pub const PKG_VERSION_PRE: &str = "rc1";
     /// #[doc="A colon-separated list of authors."]
-    /// pub const PKG_AUTHORS: &'static str = "Joe:Bob:Harry:Potter";
+    /// pub const PKG_AUTHORS: &str = "Joe:Bob:Harry:Potter";
     /// #[doc="The name of the package."]
-    /// pub const PKG_NAME: &'static str = "testbox";
+    /// pub const PKG_NAME: &str = "testbox";
     /// #[doc="The description."]
-    /// pub const PKG_DESCRIPTION: &'static str = "xobtset";
+    /// pub const PKG_DESCRIPTION: &str = "xobtset";
     /// #[doc="The home page."]
-    /// pub const PKG_HOMEPAGE: &'static str = "localhost";
+    /// pub const PKG_HOMEPAGE: &str = "localhost";
     /// #[doc="The target triple that was being compiled for."]
-    /// pub const TARGET: &'static str = "x86_64-apple-darwin";
+    /// pub const TARGET: &str = "x86_64-apple-darwin";
     /// #[doc="The host triple of the rust compiler."]
-    /// pub const HOST: &'static str = "x86_64-apple-darwin";
+    /// pub const HOST: &str = "x86_64-apple-darwin";
     /// #[doc="`release` for release builds, `debug` for other builds."]
-    /// pub const PROFILE: &'static str = "debug";
+    /// pub const PROFILE: &str = "debug";
     /// #[doc="The compiler that cargo resolved to use."]
-    /// pub const RUSTC: &'static str = "rustc";
+    /// pub const RUSTC: &str = "rustc";
     /// #[doc="The documentation generator that cargo resolved to use."]
-    /// pub const RUSTDOC: &'static str = "rustdoc";
+    /// pub const RUSTDOC: &str = "rustdoc";
     /// #[doc="Value of OPT_LEVEL for the profile used during compilation."]
     /// pub const OPT_LEVEL: u8 = 0;
     /// #[doc="The parallelism that was specified during compilation."]
@@ -689,9 +689,9 @@ impl Options {
     ///
     /// ```rust,no_run
     /// /// An array of effective dependencies as documented by `Cargo.lock`
-    /// pub const DEPENDENCIES: [(&'static str, &'static str); 2] = [("built", "0.1.0"), ("time", "0.1.36")];
+    /// pub const DEPENDENCIES: [(&str, &str); 2] = [("built", "0.1.0"), ("time", "0.1.36")];
     /// /// The effective dependencies as a comma-separated string.
-    /// pub const DEPENDENCIES_STR: &'static str = "built 0.1.0, time 0.1.36";
+    /// pub const DEPENDENCIES_STR: &str = "built 0.1.0, time 0.1.36";
     /// ```
     pub fn set_dependencies(&mut self, enabled: bool) -> &mut Self {
         self.deps = enabled;
@@ -705,9 +705,9 @@ impl Options {
     ///
     /// ```rust,no_run
     /// /// The features that were enabled during compilation.
-    /// pub const FEATURES: [&'static str; 2] = ["DEFAULT", "WAYLAND"];
+    /// pub const FEATURES: [&str; 2] = ["DEFAULT", "WAYLAND"];
     /// /// The features as a comma-separated string.
-    /// pub const FEATURES_STR: &'static str = "DEFAULT, WAYLAND";
+    /// pub const FEATURES_STR: &str = "DEFAULT, WAYLAND";
     /// ```
     pub fn set_features(&mut self, enabled: bool) -> &mut Self {
         self.features = enabled;
@@ -725,7 +725,7 @@ impl Options {
     ///
     /// ```rust,no_run
     /// /// The built-time in RFC822, UTC
-    /// pub const BUILT_TIME_UTC: &'static str = "Tue, 14 Feb 2017 01:12:35 GMT";
+    /// pub const BUILT_TIME_UTC: &str = "Tue, 14 Feb 2017 01:12:35 GMT";
     /// ```
     #[cfg(feature = "serialized_time")]
     pub fn set_time(&mut self, enabled: bool) -> &mut Self {
@@ -739,17 +739,17 @@ impl Options {
     ///
     /// ```rust,no_run
     /// /// The target architecture, given by `cfg!(target_arch)`.
-    /// pub const CFG_TARGET_ARCH: &'static str = "x86_64";
+    /// pub const CFG_TARGET_ARCH: &str = "x86_64";
     /// /// The endianness, given by `cfg!(target_endian)`.
-    /// pub const CFG_ENDIAN: &'static str = "little";
+    /// pub const CFG_ENDIAN: &str = "little";
     /// /// The toolchain-environment, given by `cfg!(target_env)`.
-    /// pub const CFG_ENV: &'static str = "gnu";
+    /// pub const CFG_ENV: &str = "gnu";
     /// /// The OS-family, given by `cfg!(target_family)`.
-    /// pub const CFG_FAMILY: &'static str = "unix";
+    /// pub const CFG_FAMILY: &str = "unix";
     /// /// The operating system, given by `cfg!(target_os)`.
-    /// pub const CFG_OS: &'static str = "linux";
+    /// pub const CFG_OS: &str = "linux";
     /// /// The pointer width, given by `cfg!(target_pointer_width)`.
-    /// pub const CFG_POINTER_WIDTH: &'static str = "64";
+    /// pub const CFG_POINTER_WIDTH: &str = "64";
     /// ```
     pub fn set_cfg(&mut self, enabled: bool) -> &mut Self {
         self.cfg = enabled;
