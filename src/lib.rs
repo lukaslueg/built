@@ -747,7 +747,7 @@ impl Options {
     }
 }
 
-/// Writes rust-code describing the crate at `src` to a new file named `dst`.
+/// Writes rust-code describing the crate at `manifest_location` to a new file named `dst`.
 ///
 /// # Errors
 /// The function returns an error if the file at `dst` already exists or can't
