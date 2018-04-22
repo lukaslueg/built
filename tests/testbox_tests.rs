@@ -136,7 +136,7 @@ fn main() {
     assert_eq!(built_info::PKG_DESCRIPTION, "xobtset");
     assert_eq!(built_info::PKG_HOMEPAGE, "localhost");
     assert!(built_info::NUM_JOBS > 0);
-    assert!(built_info::OPT_LEVEL == 0);
+    assert!(built_info::OPT_LEVEL == "0");
     assert!(built_info::DEBUG);
     assert_eq!(built_info::PROFILE, "debug");
     assert_eq!(built_info::FEATURES,

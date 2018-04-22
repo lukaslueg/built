@@ -432,7 +432,7 @@ fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()>
     write!(
         w,
         "#[doc=\"Value of OPT_LEVEL for the profile used during compilation.\"]\npub const \
-         OPT_LEVEL: u8 = {};\n",
+         OPT_LEVEL: &str = \"{}\";\n",
         env::var("OPT_LEVEL").unwrap()
     )?;
     write!(
@@ -649,7 +649,7 @@ impl Options {
     /// #[doc="The documentation generator that cargo resolved to use."]
     /// pub const RUSTDOC: &str = "rustdoc";
     /// #[doc="Value of OPT_LEVEL for the profile used during compilation."]
-    /// pub const OPT_LEVEL: u8 = 0;
+    /// pub const OPT_LEVEL: &str = "0";
     /// #[doc="The parallelism that was specified during compilation."]
     /// pub const NUM_JOBS: u32 = 8;
     /// #[doc="Value of DEBUG for the profile used during compilation."]
