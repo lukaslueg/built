@@ -293,16 +293,16 @@ fn write_compiler_version<P: AsRef<ffi::OsStr> + fmt::Display, T: io::Write>(
     let rustc_version = get_version_from_cmd(&rustc)?;
     let rustdoc_version = get_version_from_cmd(&rustdoc)?;
 
-    write!(w, "/// The output of `{} -V`\n", &rustc)?;
-    write!(
+    writeln!(w, "/// The output of `{} -V`", &rustc)?;
+    writeln!(
         w,
-        "pub const RUSTC_VERSION: &str = \"{}\";\n",
+        "pub const RUSTC_VERSION: &str = \"{}\";",
         &rustc_version
     )?;
-    write!(w, "/// The output of `{} -V`\n", &rustdoc)?;
-    write!(
+    writeln!(w, "/// The output of `{} -V`", &rustdoc)?;
+    writeln!(
         w,
-        "pub const RUSTDOC_VERSION: &str = \"{}\";\n",
+        "pub const RUSTDOC_VERSION: &str = \"{}\";",
         &rustdoc_version
     )?;
     Ok(())
@@ -331,9 +331,9 @@ fn write_git_version<P: AsRef<path::Path>, T: io::Write>(
         b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
 contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
     )?;
-    write!(
+    writeln!(
         w,
-        "pub const GIT_VERSION: Option<&str> = {};\n",
+        "pub const GIT_VERSION: Option<&str> = {};",
         &fmt_option_str(tag)
     )?;
     Ok(())
@@ -341,9 +341,9 @@ contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
 
 fn write_ci<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
     w.write_all(b"/// The Continuous Integration platform detected during compilation.\n")?;
-    write!(
+    writeln!(
         w,
-        "pub const CI_PLATFORM: Option<&str> = {};\n",
+        "pub const CI_PLATFORM: Option<&str> = {};",
         &fmt_option_str(CIPlatform::detect_from_envmap(envmap))
     )?;
     Ok(())
@@ -360,24 +360,24 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
     features.sort();
 
     w.write_all(b"/// The features that were enabled during compilation.\n")?;
-    write!(
+    writeln!(
         w,
-        "pub const FEATURES: [&str; {}] = {:?};\n",
+        "pub const FEATURES: [&str; {}] = {:?};",
         features.len(),
         features
     )?;
 
     let features_str = features.join(", ");
     w.write_all(b"/// The features as a comma-separated string.\n")?;
-    write!(w, "pub const FEATURES_STR: &str = \"{}\";\n", features_str)?;
+    writeln!(w, "pub const FEATURES_STR: &str = \"{}\";", features_str)?;
     Ok(())
 }
 
 fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
     macro_rules! write_env_str {
         ($(($name:ident, $env_name:expr,$doc:expr)),*) => {$(
-            write!(w, "#[doc={}]\npub const {}: &str = \"{}\";\n",
-                   stringify!($doc), stringify!($name), envmap.get($env_name).unwrap())?;
+            writeln!(w, "#[doc={}]\npub const {}: &str = \"{}\";",
+                    stringify!($doc), stringify!($name), envmap.get($env_name).unwrap())?;
         )*}
     }
 
@@ -429,22 +429,22 @@ fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()>
             "The documentation generator that cargo resolved to use."
         )
     );
-    write!(
+    writeln!(
         w,
         "#[doc=\"Value of OPT_LEVEL for the profile used during compilation.\"]\npub const \
-         OPT_LEVEL: &str = \"{}\";\n",
+         OPT_LEVEL: &str = \"{}\";",
         env::var("OPT_LEVEL").unwrap()
     )?;
-    write!(
+    writeln!(
         w,
         "#[doc=\"The parallelism that was specified during compilation.\"]\npub const \
-         NUM_JOBS: u32 = {};\n",
+         NUM_JOBS: u32 = {};",
         env::var("NUM_JOBS").unwrap()
     )?;
-    write!(
+    writeln!(
         w,
         "#[doc=\"Value of DEBUG for the profile used during compilation.\"]\npub const \
-         DEBUG: bool = {};\n",
+         DEBUG: bool = {};",
         env::var("DEBUG").unwrap() == "true"
     )?;
     Ok(())
@@ -456,16 +456,16 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
 ) -> io::Result<()> {
     let deps = get_build_deps(manifest_location)?;
     w.write_all(b"/// An array of effective dependencies as documented by `Cargo.lock`.\n")?;
-    write!(
+    writeln!(
         w,
-        "pub const DEPENDENCIES: [(&str, &str); {}] = {:?};\n",
+        "pub const DEPENDENCIES: [(&str, &str); {}] = {:?};",
         deps.len(),
         deps
     )?;
     w.write_all(b"/// The effective dependencies as a comma-separated string.\n")?;
-    write!(
+    writeln!(
         w,
-        "pub const DEPENDENCIES_STR: &str = \"{}\";\n",
+        "pub const DEPENDENCIES_STR: &str = \"{}\";",
         deps.iter()
             .map(|&(ref n, ref v)| format!("{} {}", n, v))
             .collect::<Vec<_>>()
@@ -478,9 +478,9 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
 fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     let now = time::now_utc();
     w.write_all(b"/// The built-time in RFC822, UTC\n")?;
-    write!(
+    writeln!(
         w,
-        "pub const BUILT_TIME_UTC: &str = \"{}\";\n",
+        "pub const BUILT_TIME_UTC: &str = \"{}\";",
         now.rfc822()
     )?;
     Ok(())
@@ -502,28 +502,28 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
     get_cfg!(target_pointer_width: "32", "64");
 
     w.write_all(b"/// The target architecture, given by `cfg!(target_arch)`.\n")?;
-    write!(
+    writeln!(
         w,
-        "pub const CFG_TARGET_ARCH: &str = \"{}\";\n",
+        "pub const CFG_TARGET_ARCH: &str = \"{}\";",
         target_arch()
     )?;
 
     w.write_all(b"/// The endianness, given by `cfg!(target_endian)`.\n")?;
-    write!(w, "pub const CFG_ENDIAN: &str = \"{}\";\n", target_endian())?;
+    writeln!(w, "pub const CFG_ENDIAN: &str = \"{}\";", target_endian())?;
 
     w.write_all(b"/// The toolchain-environment, given by `cfg!(target_env)`.\n")?;
-    write!(w, "pub const CFG_ENV: &str = \"{}\";\n", target_env())?;
+    writeln!(w, "pub const CFG_ENV: &str = \"{}\";", target_env())?;
 
     w.write_all(b"/// The OS-family, given by `cfg!(target_family)`.\n")?;
-    write!(w, "pub const CFG_FAMILY: &str = \"{}\";\n", target_family())?;
+    writeln!(w, "pub const CFG_FAMILY: &str = \"{}\";", target_family())?;
 
     w.write_all(b"/// The operating system, given by `cfg!(target_os)`.\n")?;
-    write!(w, "pub const CFG_OS: &str = \"{}\";\n", target_os())?;
+    writeln!(w, "pub const CFG_OS: &str = \"{}\";", target_os())?;
 
     w.write_all(b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n")?;
-    write!(
+    writeln!(
         w,
-        "pub const CFG_POINTER_WIDTH: &str = \"{}\";\n",
+        "pub const CFG_POINTER_WIDTH: &str = \"{}\";",
         target_pointer_width()
     )?;
 
