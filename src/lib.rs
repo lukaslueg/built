@@ -294,11 +294,7 @@ fn write_compiler_version<P: AsRef<ffi::OsStr> + fmt::Display, T: io::Write>(
     let rustdoc_version = get_version_from_cmd(&rustdoc)?;
 
     writeln!(w, "/// The output of `{} -V`", &rustc)?;
-    writeln!(
-        w,
-        "pub const RUSTC_VERSION: &str = \"{}\";",
-        &rustc_version
-    )?;
+    writeln!(w, "pub const RUSTC_VERSION: &str = \"{}\";", &rustc_version)?;
     writeln!(w, "/// The output of `{} -V`", &rustdoc)?;
     writeln!(
         w,
@@ -478,11 +474,7 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
 fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     let now = time::now_utc();
     w.write_all(b"/// The built-time in RFC822, UTC\n")?;
-    writeln!(
-        w,
-        "pub const BUILT_TIME_UTC: &str = \"{}\";",
-        now.rfc822()
-    )?;
+    writeln!(w, "pub const BUILT_TIME_UTC: &str = \"{}\";", now.rfc822())?;
     Ok(())
 }
 
