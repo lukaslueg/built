@@ -159,7 +159,7 @@ fn main() {
 
     let v = built_info::DEPENDENCIES;
     assert!(built::util::parse_versions(&v)
-        .any(|(name, ver)| name == "cmake" && ver >= semver::Version::parse("0.1.0").unwrap()));
+        .any(|(name, ver)| name == "toml" && ver >= semver::Version::parse("0.1.0").unwrap()));
 
     assert!((built::util::strptime(built_info::BUILT_TIME_UTC) - time::now()).num_days() <= 1);
 }"#,
