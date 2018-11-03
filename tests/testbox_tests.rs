@@ -73,7 +73,6 @@ fn new_testbox() {
 name = \"testbox\"
 version = \"1.2.3-rc1\"
 authors = [\"Joe\", \"Bob\", \"Harry:Potter\"]
-build = \"build.rs\"
 description = \"xobtset\"
 homepage = \"localhost\"
 
@@ -189,7 +188,6 @@ fn empty_git() {
 [package]
 name = "testbox"
 version = "0.0.1"
-build = "build.rs"
 
 [build-dependencies]
 built = {{ path = {:?} }}"#, &built_root));

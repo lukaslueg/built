@@ -2,7 +2,6 @@
 name = "example_project"
 version = "0.1.0"
 authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
-build = "build.rs"
 
 [dependencies]
 built = { version = "^0.3", path="../" }

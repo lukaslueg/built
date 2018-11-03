@@ -49,9 +49,6 @@
 //! Add this to `Cargo.toml`:
 //!
 //! ```toml
-//! [package]
-//! build = "build.rs"
-//!
 //! [build-dependencies]
 //! built = "0.3"
 //! ```
