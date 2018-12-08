@@ -1,14 +1,20 @@
-#![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
-extern crate git2;
-extern crate tempdir;
+#![deny(
+    warnings,
+    bad_style,
+    future_incompatible,
+    unused,
+    missing_docs,
+    unused_comparisons
+)]
+use git2;
+use tempdir;
 
 use std::env;
 use std::fs;
 use std::io;
-use std::process;
 use std::io::Write;
 use std::path;
-
+use std::process;
 
 struct Project {
     root: tempdir::TempDir,
@@ -185,19 +191,28 @@ fn empty_git() {
     // Issue #7, git can be there and still fail
     let mut p = Project::new();
     let built_root = get_built_root();
-    p.add_file("Cargo.toml", format!(r#"
+    p.add_file(
+        "Cargo.toml",
+        format!(
+            r#"
 [package]
 name = "testbox"
 version = "0.0.1"
 build = "build.rs"
 
 [build-dependencies]
-built = {{ path = {:?} }}"#, &built_root));
-    p.add_file("build.rs", r#"
+built = {{ path = {:?} }}"#,
+            &built_root
+        ),
+    );
+    p.add_file(
+        "build.rs",
+        r#"
 extern crate built;
 fn main() {
     built::write_built_file().expect("writing failed");
-}"#);
+}"#,
+    );
     p.add_file("src/main.rs", "fn main() {}");
     p.init_git();
     let root = p.create().expect("Creating the project failed");

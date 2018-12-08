@@ -101,7 +101,14 @@
 //!
 //! ```
 
-#![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
+#![deny(
+    warnings,
+    bad_style,
+    future_incompatible,
+    unused,
+    missing_docs,
+    unused_comparisons
+)]
 
 #[cfg(all(test, feature = "serialized_git"))]
 extern crate git2;
@@ -109,17 +116,17 @@ extern crate git2;
 extern crate tempdir;
 #[cfg(feature = "serialized_time")]
 extern crate time;
-extern crate toml;
+use toml;
 
 pub mod util;
 
 use std::collections;
 use std::env;
+use std::ffi;
 use std::fmt;
 use std::fs;
-use std::io::{Read, Write};
-use std::ffi;
 use std::io;
+use std::io::{Read, Write};
 use std::path;
 use std::process;
 
@@ -755,7 +762,8 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         r#"//
 // EVERYTHING BELOW THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
-"#.as_ref(),
+"#
+        .as_ref(),
     )?;
 
     macro_rules! o {
@@ -763,7 +771,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
             if options.$i {
                 $b
             }
-        }
+        };
     }
     if options.ci || options.env || options.features || options.compiler {
         let envmap = get_environment();
@@ -792,7 +800,8 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         r#"//
 // EVERYTHING ABOVE THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
 //
-"#.as_ref(),
+"#
+        .as_ref(),
     )?;
     Ok(())
 }
@@ -812,12 +821,12 @@ mod tests {
     #[test]
     #[cfg(feature = "serialized_git")]
     fn parse_git_repo() {
-        use super::util;
-        use std::path;
-        use std::io::Write;
-        use std::fs;
         use super::git2;
         use super::tempdir;
+        use super::util;
+        use std::fs;
+        use std::io::Write;
+        use std::path;
 
         let repo_root = tempdir::TempDir::new("builttest").unwrap();
         assert_eq!(util::get_repo_description(&repo_root), Ok(None));
@@ -829,7 +838,8 @@ mod tests {
                 .mkdir(false)
                 .no_reinit(true)
                 .mkpath(false),
-        ).unwrap();
+        )
+        .unwrap();
 
         let cruft_path = repo_root.path().join("cruftfile");
         let mut cruft_file = fs::File::create(cruft_path).unwrap();
@@ -842,14 +852,16 @@ mod tests {
         let sig = git2::Signature::now("foo", "bar").unwrap();
         let mut idx = repo.index().unwrap();
         idx.add_path(path::Path::new("cruftfile")).unwrap();
-        let commit_oid = repo.commit(
-            Some("HEAD"),
-            &sig,
-            &sig,
-            "Testing testing 1 2 3",
-            &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
-            &[],
-        ).unwrap();
+        let commit_oid = repo
+            .commit(
+                Some("HEAD"),
+                &sig,
+                &sig,
+                "Testing testing 1 2 3",
+                &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
+                &[],
+            )
+            .unwrap();
 
         assert_ne!(
             util::get_repo_description(&project_root).unwrap().unwrap(),
@@ -858,12 +870,14 @@ mod tests {
 
         repo.tag(
             "foobar",
-            &repo.find_object(commit_oid, Some(git2::ObjectType::Commit))
+            &repo
+                .find_object(commit_oid, Some(git2::ObjectType::Commit))
                 .unwrap(),
             &sig,
             "Tagged foobar",
             false,
-        ).unwrap();
+        )
+        .unwrap();
 
         assert_eq!(
             util::get_repo_description(&project_root),

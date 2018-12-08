@@ -8,6 +8,7 @@ authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 keywords = ["cargo", "build"]
+edition="2018"
 
 [badges]
 travis-ci = { repository = "lukaslueg/built" }
