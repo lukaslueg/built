@@ -1,7 +1,10 @@
 ```built``` provides a crate with information from the time it was built.
 
-Documentation for latest release [here](https://docs.rs/built),
-for master [here](https://lukaslueg.github.io/built).
+[![Crates.io Version](https://img.shields.io/crates/v/built.svg)](https://crates.io/crates/built)
+[![Docs](https://docs.rs/built/badge.svg)](https://docs.rs/built)
+[![Build status](https://ci.appveyor.com/api/projects/status/6dgxjfaisaee040f?svg=true)](https://ci.appveyor.com/project/lukaslueg/built)
+[![Build Status](https://travis-ci.org/lukaslueg/built.svg?branch=master)](https://travis-ci.org/lukaslueg/built)
+
 
 `built` is used as a build-time dependency to collect various information
 about the build environment, serialize it into Rust-code and compile
@@ -75,7 +78,3 @@ if built::util::parse_versions(&deps)
     warn!("DeleteAllMyFiles < 1.1.4 is known to sometimes not really delete all your files. Beware!");
 }
 ```
-
-[![Docs](https://docs.rs/built/badge.svg)](https://docs.rs/built)
-[![Build Status](https://travis-ci.org/lukaslueg/built.svg?branch=master)](https://travis-ci.org/lukaslueg/built)
-[![Build status](https://ci.appveyor.com/api/projects/status/6dgxjfaisaee040f?svg=true)](https://ci.appveyor.com/project/lukaslueg/built)
