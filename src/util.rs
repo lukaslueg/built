@@ -4,15 +4,10 @@ extern crate git2;
 #[cfg(feature = "serialized_version")]
 extern crate semver;
 #[cfg(feature = "serialized_time")]
-extern crate time;
+extern crate chrono;
 
-#[cfg(feature = "serialized_version")]
-use std::iter;
 #[cfg(feature = "serialized_git")]
 use std::path;
-
-#[cfg(feature = "serialized_version")]
-type VersionParser<'a> = fn(&'a (&'a str, &'a str)) -> (&'a str, semver::Version);
 
 /// Parses version-strings with `semver::Version::parse()`.
 ///
@@ -42,7 +37,7 @@ type VersionParser<'a> = fn(&'a (&'a str, &'a str)) -> (&'a str, semver::Version
 #[cfg(feature = "serialized_version")]
 pub fn parse_versions<'a, T>(
     name_and_versions: T,
-) -> iter::Map<<T as iter::IntoIterator>::IntoIter, VersionParser<'a>>
+) -> impl Iterator<Item=(&'a str, semver::Version)>
 where
     T: IntoIterator<Item = &'a (&'a str, &'a str)>,
 {
@@ -52,23 +47,26 @@ where
     name_and_versions.into_iter().map(parse_version)
 }
 
-/// Parse a time-string as formatted by `built` into a `time::Tm`.
+/// Parse a time-string as formatted by `built`.
 ///
 /// ```
 /// extern crate built;
+/// extern crate chrono;
+/// use chrono::Datelike;
+///
 /// pub mod build_info {
 ///     pub const BUILT_TIME_UTC: &'static str = "Tue, 14 Feb 2017 05:21:41 GMT";
 /// }
 ///
-/// assert_eq!(built::util::strptime(&build_info::BUILT_TIME_UTC).tm_year, 117);
+/// assert_eq!(built::util::strptime(&build_info::BUILT_TIME_UTC).year(), 2017);
 /// ```
 ///
 /// # Panics
 /// If the string can't be parsed. This should never happen with input provided
 /// by `built`.
 #[cfg(feature = "serialized_time")]
-pub fn strptime(s: &str) -> time::Tm {
-    time::strptime(s, "%a, %d %b %Y %T GMT").unwrap()
+pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
+    chrono::DateTime::parse_from_rfc2822(s).unwrap().with_timezone(&chrono::offset::Utc)
 }
 
 /// Retrieves the git-tag or hash describing the exact version.

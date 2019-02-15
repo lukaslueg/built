@@ -84,7 +84,7 @@ description = \"xobtset\"
 homepage = \"localhost\"
 
 [dependencies]
-time = \"0.1\"
+chrono = \"0.4\"
 semver = \"0.9\"
 built = {{ path = {:?}, features=[\"serialized_git\", \"serialized_time\", \"serialized_version\"] }}
 
@@ -123,7 +123,7 @@ fn main() {
 
 extern crate built;
 extern crate semver;
-extern crate time;
+extern crate chrono;
 
 mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
@@ -163,11 +163,10 @@ fn main() {
     assert_ne!(built_info::CFG_OS, "");
     assert_ne!(built_info::CFG_POINTER_WIDTH, "");
 
-    let v = built_info::DEPENDENCIES;
-    assert!(built::util::parse_versions(&v)
+    assert!(built::util::parse_versions(built_info::DEPENDENCIES.iter())
         .any(|(name, ver)| name == "toml" && ver >= semver::Version::parse("0.1.0").unwrap()));
 
-    assert!((built::util::strptime(built_info::BUILT_TIME_UTC) - time::now()).num_days() <= 1);
+    assert!((chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
 }"#,
     );
 
