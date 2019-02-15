@@ -24,3 +24,4 @@ script:
   - cargo fmt --all -- --check
   - cargo test
   - cargo test --no-default-features
+  - cargo run --manifest-path ./example_project/Cargo.toml

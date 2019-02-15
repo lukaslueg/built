@@ -3,11 +3,12 @@ name = "example_project"
 version = "0.1.0"
 authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 build = "build.rs"
+edition = "2018"
 
 [dependencies]
 built = { version = "^0.3", path="../" }
 semver = "0.9"
-time = "0.1"
+chrono = "0.4"
 
 [build-dependencies]
 built = { version = "^0.3", path="../" }

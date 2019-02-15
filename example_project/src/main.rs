@@ -1,7 +1,7 @@
 // The runtime dependency is optional
-extern crate built;
-extern crate semver;
-extern crate time;
+use built;
+use chrono;
+use semver;
 
 // The file `built.rs` was placed there by cargo and `build.rs`
 pub mod built_info {
@@ -42,19 +42,20 @@ fn main() {
         println!(" and I'm currently not executing on one!");
     }
 
+    let built_time = built::util::strptime(built_info::BUILT_TIME_UTC);
     println!(
         "I was built with profile \"{}\", features \"{}\" on {} ({} seconds ago) using {}",
         built_info::PROFILE,
         built_info::FEATURES_STR,
-        built_info::BUILT_TIME_UTC,
-        (time::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_seconds(),
+        built_time.with_timezone(&chrono::offset::Local),
+        (chrono::offset::Utc::now() - built_time).num_seconds(),
         built_info::DEPENDENCIES_STR
     );
 
-
-    let bad_dep = built::util::parse_versions(&built_info::DEPENDENCIES).any(|(name, ver)| {
-        name == "DeleteAllMyFiles" && ver < semver::Version::parse("1.1.4").unwrap()
-    });
+    let bad_dep =
+        built::util::parse_versions(built_info::DEPENDENCIES.iter()).any(|(name, ver)| {
+            name == "DeleteAllMyFiles" && ver < semver::Version::parse("1.1.4").unwrap()
+        });
     if bad_dep {
         println!(
             "I was built with DeleteAllMyFiles < 1.1.4, which is known to sometimes not really delete all your files. Beware!"
