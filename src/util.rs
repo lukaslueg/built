@@ -1,10 +1,10 @@
 //! Various convenience functions for `built` at runtime.
+#[cfg(feature = "serialized_time")]
+extern crate chrono;
 #[cfg(feature = "serialized_git")]
 extern crate git2;
 #[cfg(feature = "serialized_version")]
 extern crate semver;
-#[cfg(feature = "serialized_time")]
-extern crate chrono;
 
 #[cfg(feature = "serialized_git")]
 use std::path;
@@ -37,7 +37,7 @@ use std::path;
 #[cfg(feature = "serialized_version")]
 pub fn parse_versions<'a, T>(
     name_and_versions: T,
-) -> impl Iterator<Item=(&'a str, semver::Version)>
+) -> impl Iterator<Item = (&'a str, semver::Version)>
 where
     T: IntoIterator<Item = &'a (&'a str, &'a str)>,
 {
@@ -66,7 +66,9 @@ where
 /// by `built`.
 #[cfg(feature = "serialized_time")]
 pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
-    chrono::DateTime::parse_from_rfc2822(s).unwrap().with_timezone(&chrono::offset::Utc)
+    chrono::DateTime::parse_from_rfc2822(s)
+        .unwrap()
+        .with_timezone(&chrono::offset::Utc)
 }
 
 /// Retrieves the git-tag or hash describing the exact version.

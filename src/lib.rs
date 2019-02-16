@@ -110,12 +110,12 @@
     unused_comparisons
 )]
 
+#[cfg(feature = "serialized_time")]
+extern crate chrono;
 #[cfg(all(test, feature = "serialized_git"))]
 extern crate git2;
 #[cfg(all(test, feature = "serialized_git"))]
 extern crate tempdir;
-#[cfg(feature = "serialized_time")]
-extern crate chrono;
 use toml;
 
 pub mod util;
@@ -481,7 +481,11 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
 fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     let now = chrono::offset::Utc::now();
     w.write_all(b"/// The built-time in RFC2822, UTC\n")?;
-    writeln!(w, "pub const BUILT_TIME_UTC: &str = \"{}\";", now.to_rfc2822())?;
+    writeln!(
+        w,
+        "pub const BUILT_TIME_UTC: &str = \"{}\";",
+        now.to_rfc2822()
+    )?;
     Ok(())
 }
 
