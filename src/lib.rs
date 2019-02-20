@@ -264,7 +264,10 @@ impl CIPlatform {
 
 fn get_build_deps<P: AsRef<path::Path>>(manifest_location: P) -> io::Result<Vec<(String, String)>> {
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.as_ref().join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
+    let lock_file = manifest_location.as_ref().join("Cargo.lock");
+    fs::File::open(&lock_file)?.read_to_string(&mut lock_buf)?;
+    //Probably unnecessary, but covers any changes.
+    println!("cargo:rerun-if-changed={}", lock_file.to_string_lossy());
     Ok(parse_dependencies(&lock_buf))
 }
 
@@ -319,14 +322,16 @@ fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
 }
 
 #[cfg(feature = "serialized_git")]
-fn write_git_version<P: AsRef<path::Path>, T: io::Write>(
+fn write_git_version<P: AsRef<path::Path>, S: AsRef<str>, T: io::Write>(
     manifest_location: P,
+    dirty_suffix: S,
+    rerun_on_git_change: bool,
     w: &mut T,
 ) -> io::Result<()> {
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
     // error.
-    let tag = match util::get_repo_description(&manifest_location) {
+    let tag = match util::get_repo_description(&manifest_location, dirty_suffix, rerun_on_git_change) {
         Ok(tag) => tag,
         Err(_) => None,
     };
@@ -533,11 +538,13 @@ fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
     Ok(())
 }
 
-/// Selects which information `built` should retrieve and write as Rust code.
+/// Selects which information `built` should retrieve and write as Rust code and how it should be written.
 #[allow(unused)]
 pub struct Options {
     compiler: bool,
     git: bool,
+    git_dirty_suffix: String,
+    rerun_on_git_change: bool,
     ci: bool,
     env: bool,
     deps: bool,
@@ -558,6 +565,8 @@ impl Default for Options {
         Options {
             compiler: true,
             git: true,
+            git_dirty_suffix: "".to_string(),
+            rerun_on_git_change: false,
             ci: true,
             env: true,
             deps: false,
@@ -603,6 +612,33 @@ impl Options {
     #[cfg(feature = "serialized_git")]
     pub fn set_git(&mut self, enabled: bool) -> &mut Self {
         self.git = enabled;
+        self
+    }
+
+    /// This option is only useful if git is enabled. If so, it can change the output
+    /// of the GIT_VERSION variable to include a suffix if the git repo is determined
+    /// to have any changes.
+    ///
+    /// If set to `.dirty` the result will look something like
+    /// ```rust,no_run
+    /// pub const GIT_VERSION: Option<&str> = Some("0.1.dirty");
+    /// ```
+    ///
+    /// By default this variable is set to the empty string `""`
+    #[cfg(feature = "serialized_git")]
+    pub fn set_git_dirty_suffix(&mut self, suffix: String) -> &mut Self {
+        self.git_dirty_suffix = suffix;
+        self
+    }
+
+    /// This option is only useful is git is enabled. If so, it emits rerun-if-changed
+    /// directives to cargo so that changes to HEAD, tags, or where HEAD references will
+    /// cause the build script to rerun and grab the new commit or tag. If the binary/library
+    /// is built locally without a tag and then tagged, it will rerun the build script and
+    /// change the GIT_VERSION variable from a commit hash to the tag.
+    #[cfg(feature = "serialized_git")]
+    pub fn set_rerun_on_git_change(&mut self, enabled: bool) -> &mut Self {
+        self.rerun_on_git_change = enabled;
         self
     }
 
@@ -788,7 +824,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         );
         #[cfg(feature = "serialized_git")]
         {
-            o!(git, write_git_version(&manifest_location, &mut built_file)?);
+            o!(git, write_git_version(&manifest_location, &options.git_dirty_suffix, options.rerun_on_git_change, &mut built_file)?);
         }
     }
     o!(
@@ -833,7 +869,7 @@ mod tests {
         use std::path;
 
         let repo_root = tempdir::TempDir::new("builttest").unwrap();
-        assert_eq!(util::get_repo_description(&repo_root), Ok(None));
+        assert_eq!(util::get_repo_description(&repo_root, "", false), Ok(None));
 
         let repo = git2::Repository::init_opts(
             &repo_root,
@@ -848,7 +884,8 @@ mod tests {
         let cruft_path = repo_root.path().join("cruftfile");
         let mut cruft_file = fs::File::create(cruft_path).unwrap();
         writeln!(cruft_file, "Who? Me?").unwrap();
-        drop(cruft_file);
+        cruft_file.flush().unwrap();
+        //drop(cruft_file);
 
         let project_root = repo_root.path().join("project_root");
         fs::create_dir(&project_root).unwrap();
@@ -867,10 +904,17 @@ mod tests {
             )
             .unwrap();
 
+        let commit = util::get_repo_description(&project_root, "", true).unwrap().unwrap();
+
         assert_ne!(
-            util::get_repo_description(&project_root).unwrap().unwrap(),
+            commit,
             "".to_owned()
         );
+
+        cruft_file.write_all(b"This is a change\n").expect("Unable to write to cruftfile");
+        let dirty = ".dirty";
+
+        assert_eq!(commit + dirty, util::get_repo_description(&project_root, dirty, true).unwrap().unwrap());
 
         repo.tag(
             "foobar",
@@ -884,8 +928,13 @@ mod tests {
         .unwrap();
 
         assert_eq!(
-            util::get_repo_description(&project_root),
+            util::get_repo_description(&project_root, "", false),
             Ok(Some("foobar".to_owned()))
+        );
+
+        assert_eq!(
+            util::get_repo_description(&project_root, dirty, false),
+            Ok(Some("foobar".to_owned() + dirty))
         );
     }
 
