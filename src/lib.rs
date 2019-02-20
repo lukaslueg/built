@@ -884,8 +884,7 @@ mod tests {
         let cruft_path = repo_root.path().join("cruftfile");
         let mut cruft_file = fs::File::create(cruft_path).unwrap();
         writeln!(cruft_file, "Who? Me?").unwrap();
-        cruft_file.flush().unwrap();
-        //drop(cruft_file);
+        cruft_file.flush().expect("Unable to flush cruftfile");
 
         let project_root = repo_root.path().join("project_root");
         fs::create_dir(&project_root).unwrap();
@@ -912,6 +911,7 @@ mod tests {
         );
 
         cruft_file.write_all(b"This is a change\n").expect("Unable to write to cruftfile");
+        cruft_file.flush().expect("Unable to flush cruftfile");
         let dirty = ".dirty";
 
         assert_eq!(commit + dirty, util::get_repo_description(&project_root, dirty, true).unwrap().unwrap());

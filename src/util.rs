@@ -90,17 +90,14 @@ pub fn get_repo_description<P: AsRef<path::Path>, S: AsRef<str>>(root: P, dirty_
                 // Tags should never change, so if they do then it's probably ok to rerun.
                 println!("cargo:rerun-if-changed={}", tags.to_string_lossy());
                 if tags.exists() && tags.is_dir() {
-                    for read_dir in ::std::fs::read_dir(tags) {
-                        read_dir
-                          .filter_map(|r|r.ok())
-                          .for_each(|entry| {
-                              entry
-                                .file_type()
-                                .ok()
-                                .filter(std::fs::FileType::is_file)
-                                .map(|_| println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy()));
-                          });
-                    }
+                    std::fs::read_dir(tags).ok().map(|dir| dir
+                        .filter_map(Result::ok)
+                        .for_each(|entry| {
+                          if let Some(_) = entry.file_type().ok().filter(std::fs::FileType::is_file) {
+                              println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
+                          }
+                        })
+                    );
                 }
                 // HEAD changes on checkout of a branch/tag/commit.
                 println!("cargo:rerun-if-changed={}", path.join("HEAD").to_string_lossy());
@@ -109,12 +106,11 @@ pub fn get_repo_description<P: AsRef<path::Path>, S: AsRef<str>>(root: P, dirty_
                 repo.head()
                   .and_then(|r|r.resolve())
                   .ok()
-                  .and_then(|r|
-                    r.name()
-                      .map(|n|
-                        println!("cargo:rerun-if-changed={}", path.join(n).to_string_lossy())
-                      )
-                  );
+                  .map(|r| {
+                      if let Some(n) = r.name() {
+                          println!("cargo:rerun-if-changed={}", path.join(n).to_string_lossy());
+                      }
+                  });
             }
             let mut desc_opt = DescribeOptions::new();
             desc_opt.describe_tags().show_commit_oid_as_fallback(true);
