@@ -914,7 +914,9 @@ mod tests {
 
         let commit = util::get_repo_description(&project_root, "", true);
 
-        assert_ne!(Ok(Some(commit)), "".to_owned());
+        assert_ne!(commit, Ok(Some("".to_owned())));
+
+        let commit = commit.unwrap().unwrap();
 
         cruft_file
             .write_all(b"This is a change\n")
