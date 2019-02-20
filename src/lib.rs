@@ -331,10 +331,11 @@ fn write_git_version<P: AsRef<path::Path>, S: AsRef<str>, T: io::Write>(
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
     // error.
-    let tag = match util::get_repo_description(&manifest_location, dirty_suffix, rerun_on_git_change) {
-        Ok(tag) => tag,
-        Err(_) => None,
-    };
+    let tag =
+        match util::get_repo_description(&manifest_location, dirty_suffix, rerun_on_git_change) {
+            Ok(tag) => tag,
+            Err(_) => None,
+        };
     w.write_all(
         b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
 contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
@@ -824,7 +825,15 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         );
         #[cfg(feature = "serialized_git")]
         {
-            o!(git, write_git_version(&manifest_location, &options.git_dirty_suffix, options.rerun_on_git_change, &mut built_file)?);
+            o!(
+                git,
+                write_git_version(
+                    &manifest_location,
+                    &options.git_dirty_suffix,
+                    options.rerun_on_git_change,
+                    &mut built_file
+                )?
+            );
         }
     }
     o!(
@@ -903,18 +912,20 @@ mod tests {
             )
             .unwrap();
 
-        let commit = util::get_repo_description(&project_root, "", true).unwrap().unwrap();
+        let commit = util::get_repo_description(&project_root, "", true);
 
-        assert_ne!(
-            commit,
-            "".to_owned()
-        );
+        assert_ne!(Ok(Some(commit)), "".to_owned());
 
-        cruft_file.write_all(b"This is a change\n").expect("Unable to write to cruftfile");
+        cruft_file
+            .write_all(b"This is a change\n")
+            .expect("Unable to write to cruftfile");
         cruft_file.flush().expect("Unable to flush cruftfile");
         let dirty = ".dirty";
 
-        assert_eq!(commit + dirty, util::get_repo_description(&project_root, dirty, true).unwrap().unwrap());
+        assert_eq!(
+            Ok(Some(commit + dirty)),
+            util::get_repo_description(&project_root, dirty, true)
+        );
 
         repo.tag(
             "foobar",

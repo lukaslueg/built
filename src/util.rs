@@ -79,7 +79,11 @@ pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
 #[cfg(feature = "serialized_git")]
-pub fn get_repo_description<P: AsRef<path::Path>, S: AsRef<str>>(root: P, dirty_suffix: S, rerun_on_git_change: bool) -> Result<Option<String>, git2::Error> {
+pub fn get_repo_description<P: AsRef<path::Path>, S: AsRef<str>>(
+    root: P,
+    dirty_suffix: S,
+    rerun_on_git_change: bool,
+) -> Result<Option<String>, git2::Error> {
     use git2::*;
     match Repository::discover(root) {
         Ok(repo) => {
@@ -90,27 +94,33 @@ pub fn get_repo_description<P: AsRef<path::Path>, S: AsRef<str>>(root: P, dirty_
                 // Tags should never change, so if they do then it's probably ok to rerun.
                 println!("cargo:rerun-if-changed={}", tags.to_string_lossy());
                 if tags.exists() && tags.is_dir() {
-                    std::fs::read_dir(tags).ok().map(|dir| dir
-                        .filter_map(Result::ok)
-                        .for_each(|entry| {
-                          if let Some(_) = entry.file_type().ok().filter(std::fs::FileType::is_file) {
-                              println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
-                          }
-                        })
-                    );
+                    std::fs::read_dir(tags).ok().map(|dir| {
+                        dir.filter_map(Result::ok).for_each(|entry| {
+                            entry
+                                .file_type()
+                                .ok()
+                                .filter(std::fs::FileType::is_file)
+                                .map(|_| {
+                                    println!(
+                                        "cargo:rerun-if-changed={}",
+                                        entry.path().to_string_lossy()
+                                    );
+                                });
+                        });
+                    });
                 }
                 // HEAD changes on checkout of a branch/tag/commit.
-                println!("cargo:rerun-if-changed={}", path.join("HEAD").to_string_lossy());
+                println!(
+                    "cargo:rerun-if-changed={}",
+                    path.join("HEAD").to_string_lossy()
+                );
                 // The ref that head points at (in case of a branch at refs/heads/<branch name>) changes as commits are added,
                 // so we want to trigger reruns since that would change the output of the build script
-                repo.head()
-                  .and_then(|r|r.resolve())
-                  .ok()
-                  .map(|r| {
-                      if let Some(n) = r.name() {
-                          println!("cargo:rerun-if-changed={}", path.join(n).to_string_lossy());
-                      }
-                  });
+                repo.head().and_then(|r| r.resolve()).ok().map(|r| {
+                    if let Some(n) = r.name() {
+                        println!("cargo:rerun-if-changed={}", path.join(n).to_string_lossy());
+                    }
+                });
             }
             let mut desc_opt = DescribeOptions::new();
             desc_opt.describe_tags().show_commit_oid_as_fallback(true);
@@ -121,10 +131,7 @@ pub fn get_repo_description<P: AsRef<path::Path>, S: AsRef<str>>(root: P, dirty_
                     .and_then(|desc| desc.format(Some(&format_opts)))?,
             ))
         }
-        Err(ref e)
-            if e.class() == ErrorClass::Repository
-                && e.code() == ErrorCode::NotFound =>
-        {
+        Err(ref e) if e.class() == ErrorClass::Repository && e.code() == ErrorCode::NotFound => {
             Ok(None)
         }
         Err(e) => Err(e),
