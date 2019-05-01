@@ -20,7 +20,7 @@ serialized_time = ["chrono"]
 serialized_version = ["semver"]
 
 [dependencies]
-toml = "0.4"
+toml = "0.5"
 semver = { version="0.9", optional=true }
 chrono = { version="0.4", optional=true }
 git2 = { version="0.8", optional=true, default-features = false, features = [] }
