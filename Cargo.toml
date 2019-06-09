@@ -23,10 +23,10 @@ serialized_version = ["semver"]
 toml = "0.5"
 semver = { version="0.9", optional=true }
 chrono = { version="0.4", optional=true }
-git2 = { version="0.8", optional=true, default-features = false, features = [] }
+git2 = { version="0.9", optional=true, default-features = false, features = [] }
 
 [dev-dependencies]
 tempdir = "0.3"
 semver = "0.9"
 chrono = "0.4"
-git2 = "0.8"
+git2 = "0.9"
