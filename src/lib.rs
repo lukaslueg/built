@@ -318,10 +318,7 @@ fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
 }
 
 #[cfg(feature = "git2")]
-fn write_git_version(
-    manifest_location: &path::Path,
-    w: &mut fs::File,
-) -> io::Result<()> {
+fn write_git_version(manifest_location: &path::Path, w: &mut fs::File) -> io::Result<()> {
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
     // error.
@@ -452,10 +449,7 @@ fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
     Ok(())
 }
 
-fn write_dependencies(
-    manifest_location: &path::Path,
-    w: &mut fs::File,
-) -> io::Result<()> {
+fn write_dependencies(manifest_location: &path::Path, w: &mut fs::File) -> io::Result<()> {
     let deps = get_build_deps(&manifest_location)?;
     w.write_all(b"/// An array of effective dependencies as documented by `Cargo.lock`.\n")?;
     writeln!(
@@ -783,7 +777,11 @@ pub fn write_built_file_with_opts(
         o!(features, write_features(&envmap, &mut built_file)?);
         o!(
             compiler,
-            write_compiler_version(&envmap["RUSTC"].as_ref(), &envmap["RUSTDOC"].as_ref(), &mut built_file)?
+            write_compiler_version(
+                &envmap["RUSTC"].as_ref(),
+                &envmap["RUSTDOC"].as_ref(),
+                &mut built_file
+            )?
         );
         #[cfg(feature = "git2")]
         {
