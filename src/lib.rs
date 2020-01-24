@@ -41,9 +41,7 @@
 //!
 //! `built` does not add any further dependencies to a crate; all information
 //! is serialized as types from `stdlib`. One can include `built` as a
-//! runtime-dependency and use it's convenience functions.  The code generated
-//! by `built` will not interfere with
-//! `#![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]`.
+//! runtime-dependency and use it's convenience functions.
 //!
 //! To add `built` to a crate, add it as a build-time dependency, use a build
 //! script that collects and serializes the build-time information and `include!`
@@ -61,7 +59,7 @@
 //!
 //! Add or modify a build script. In `build.rs`:
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! fn main() {
 //!     built::write_built_file().expect("Failed to acquire build-time information");
 //! }
@@ -80,27 +78,40 @@
 //!
 //! And then used somewhere in the crate's code:
 //!
-//! ```rust,ignore
-//! extern crate built;
-//! extern crate time;
-//! extern crate semver;
+//! ```rust
+//! # mod built_info {
+//! #    pub const PKG_VERSION_PRE: &str = "";
+//! #    pub const CI_PLATFORM: Option<&str> = None;
+//! #    pub const GIT_VERSION: Option<&str> = None;
+//! #    pub const DEPENDENCIES: [(&str, &str); 0] = [];
+//! #    pub const BUILT_TIME_UTC: &str = "Tue, 14 Feb 2017 05:21:41 GMT";
+//! # }
+//! #
+//! # enum LogLevel { TRACE, ERROR };
 //!
-//! if (built_info::PKG_VERSION_PRE != "" || built_info::GIT_VERSION.is_some())
-//!    && (built::util::strptime(built_info::BUILT_TIME_UTC) - time::now()).num_days() > 180 {
-//!     println!("You are running a development version that is really old. Update soon!");
+//! /// Determine if current version is a pre-release or was built from a git-repo
+//! fn release_is_unstable() -> bool {
+//!     return !built_info::PKG_VERSION_PRE.is_empty() || built_info::GIT_VERSION.is_some()
 //! }
 //!
-//! if built_info::CI_PLATFORM.is_some() {
-//!     panic!("Muahahaha, there will be no commit for you, Peter Pan!");
+//! /// Default log-level, enhanced on CI
+//! fn default_log_level() -> LogLevel {
+//!     if built_info::CI_PLATFORM.is_some() {
+//!         LogLevel::TRACE
+//!     } else {
+//!         LogLevel::ERROR
+//!     }
 //! }
 //!
-//! let deps = built_info::DEPENDENCIES;
-//! if built::util::parse_versions(&deps)
-//!                 .any(|(name, ver)| name == "DeleteAllMyFiles"
-//!                                    && ver < semver::Version::parse("1.1.4").unwrap())) {
-//!     warn!("DeleteAllMyFiles < 1.1.4 is known to sometimes not really delete all your files. Beware!");
+//! /// If another crate pulls in a dependency we don't like, print a warning
+//! #[cfg(feature = "semver")]
+//! fn check_sane_dependencies() {
+//!     if built::util::parse_versions(&built_info::DEPENDENCIES)
+//!                     .any(|(name, ver)| name == "DeleteAllMyFiles"
+//!                                        && ver < semver::Version::parse("1.1.4").unwrap()) {
+//!         eprintln!("DeleteAllMyFiles < 1.1.4 may not delete all your files. Beware!");
+//!     }
 //! }
-//!
 //! ```
 
 #![cfg_attr(feature = "nightly", feature(external_doc))]
