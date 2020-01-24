@@ -18,6 +18,7 @@ default = ["serialized_git", "serialized_time", "serialized_version"]
 serialized_git = ["git2"]
 serialized_time = ["chrono"]
 serialized_version = ["semver"]
+nightly = []
 
 [dependencies]
 toml = "0.5"

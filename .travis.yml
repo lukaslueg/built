@@ -28,3 +28,6 @@ script:
   - cargo test
   - cargo test --no-default-features
   - cargo run --manifest-path ./example_project/Cargo.toml
+  - if [ "$TRAVIS_RUST_VERSION" = "nightly" ]; then
+    cargo test --doc --features nightly README;
+    fi

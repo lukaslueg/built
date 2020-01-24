@@ -111,6 +111,7 @@
     missing_docs,
     unused_comparisons
 )]
+#![cfg_attr(feature = "nightly", feature(external_doc))]
 
 #[cfg(feature = "serialized_time")]
 extern crate chrono;
@@ -122,15 +123,16 @@ use toml;
 
 pub mod util;
 
-use std::collections;
-use std::env;
-use std::ffi;
-use std::fmt;
-use std::fs;
-use std::io;
-use std::io::{Read, Write};
-use std::path;
-use std::process;
+use std::{
+    collections, env, ffi, fmt, fs, io,
+    io::{Read, Write},
+    path, process,
+};
+
+#[cfg(feature = "nightly")]
+#[doc(include = "../README.md")]
+#[allow(dead_code)]
+type _READMETEST = ();
 
 /// Various Continuous Integration platforms whose presence can be detected.
 pub enum CIPlatform {
