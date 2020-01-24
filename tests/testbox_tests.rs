@@ -1,12 +1,3 @@
-#![deny(
-    warnings,
-    bad_style,
-    future_incompatible,
-    unused,
-    missing_docs,
-    unused_comparisons
-)]
-use git2;
 use tempdir;
 
 use std::env;
@@ -46,6 +37,7 @@ impl Project {
         Ok(self.root)
     }
 
+    #[cfg(feature = "git2")]
     fn init_git(&self) -> git2::Repository {
         git2::Repository::init(&self.root).expect("git-init failed")
     }
@@ -86,10 +78,10 @@ homepage = \"localhost\"
 [dependencies]
 chrono = \"0.4\"
 semver = \"0.9\"
-built = {{ path = {:?}, features=[\"serialized_git\", \"serialized_time\", \"serialized_version\"] }}
+built = {{ path = {:?}, features=[\"git2\", \"chrono\", \"semver\"] }}
 
 [build-dependencies]
-built = {{ path = {:?}, features=[\"serialized_git\", \"serialized_time\", \"serialized_version\"] }}
+built = {{ path = {:?}, features=[\"git2\", \"chrono\", \"semver\"] }}
 
 [features]
 default = [\"SuperAwesome\", \"MegaAwesome\"]
@@ -186,6 +178,7 @@ fn main() {
 }
 
 #[test]
+#[cfg(feature = "git2")]
 fn empty_git() {
     // Issue #7, git can be there and still fail
     let mut p = Project::new();

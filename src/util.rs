@@ -1,12 +1,6 @@
 //! Various convenience functions for `built` at runtime.
-#[cfg(feature = "serialized_time")]
-extern crate chrono;
-#[cfg(feature = "serialized_git")]
-extern crate git2;
-#[cfg(feature = "serialized_version")]
-extern crate semver;
 
-#[cfg(feature = "serialized_git")]
+#[cfg(feature = "git2")]
 use std::path;
 
 /// Parses version-strings with `semver::Version::parse()`.
@@ -34,7 +28,7 @@ use std::path;
 /// # Panics
 /// If a version can't be parsed by `semver::Version::parse()`. This should never
 /// happen with version strings provided by Cargo and `built`.
-#[cfg(feature = "serialized_version")]
+#[cfg(feature = "semver")]
 pub fn parse_versions<'a, T>(
     name_and_versions: T,
 ) -> impl Iterator<Item = (&'a str, semver::Version)>
@@ -64,7 +58,7 @@ where
 /// # Panics
 /// If the string can't be parsed. This should never happen with input provided
 /// by `built`.
-#[cfg(feature = "serialized_time")]
+#[cfg(feature = "chrono")]
 pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
     chrono::DateTime::parse_from_rfc2822(s)
         .unwrap()
@@ -78,7 +72,7 @@ pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
 ///
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
-#[cfg(feature = "serialized_git")]
+#[cfg(feature = "git2")]
 pub fn get_repo_description<P: AsRef<path::Path>>(root: P) -> Result<Option<String>, git2::Error> {
     match git2::Repository::discover(root) {
         Ok(repo) => {

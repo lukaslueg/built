@@ -116,14 +116,6 @@
 
 #![cfg_attr(feature = "nightly", feature(external_doc))]
 
-#[cfg(feature = "serialized_time")]
-extern crate chrono;
-#[cfg(all(test, feature = "serialized_git"))]
-extern crate git2;
-#[cfg(all(test, feature = "serialized_git"))]
-extern crate tempdir;
-use toml;
-
 pub mod util;
 
 use std::{
@@ -325,7 +317,7 @@ fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
     }
 }
 
-#[cfg(feature = "serialized_git")]
+#[cfg(feature = "git2")]
 fn write_git_version<P: AsRef<path::Path>, T: io::Write>(
     manifest_location: P,
     w: &mut T,
@@ -484,7 +476,7 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
     Ok(())
 }
 
-#[cfg(feature = "serialized_time")]
+#[cfg(feature = "chrono")]
 fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     let now = chrono::offset::Utc::now();
     w.write_all(b"/// The built-time in RFC2822, UTC\n")?;
@@ -593,7 +585,7 @@ impl Options {
     /// Detecting and writing the tag or commit id of the crate's git repository (if any).
     ///
     /// This option is only available if `built` was compiled with the
-    /// `serialized_git` feature.
+    /// `git2` feature.
     ///
     /// Try to open the git-repository at `manifest_location` and retrieve `HEAD`
     /// tag or commit id.  The result will be something like
@@ -607,7 +599,7 @@ impl Options {
     /// result. The `GIT_VERSION` will therefor always be `None` if a CI-platform
     /// is detected.
     ///
-    #[cfg(feature = "serialized_git")]
+    #[cfg(feature = "git2")]
     pub fn set_git(&mut self, enabled: bool) -> &mut Self {
         self.git = enabled;
         self
@@ -727,7 +719,7 @@ impl Options {
     /// /// The built-time in RFC822, UTC
     /// pub const BUILT_TIME_UTC: &str = "Tue, 14 Feb 2017 01:12:35 GMT";
     /// ```
-    #[cfg(feature = "serialized_time")]
+    #[cfg(feature = "chrono")]
     pub fn set_time(&mut self, enabled: bool) -> &mut Self {
         self.time = enabled;
         self
@@ -793,7 +785,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
             compiler,
             write_compiler_version(&envmap["RUSTC"], &envmap["RUSTDOC"], &mut built_file)?
         );
-        #[cfg(feature = "serialized_git")]
+        #[cfg(feature = "git2")]
         {
             o!(git, write_git_version(&manifest_location, &mut built_file)?);
         }
@@ -802,7 +794,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         deps,
         write_dependencies(&manifest_location, &mut built_file)?
     );
-    #[cfg(feature = "serialized_time")]
+    #[cfg(feature = "chrono")]
     {
         o!(time, write_time(&mut built_file)?);
     }
@@ -830,10 +822,8 @@ pub fn write_built_file() -> io::Result<()> {
 mod tests {
 
     #[test]
-    #[cfg(feature = "serialized_git")]
+    #[cfg(feature = "git2")]
     fn parse_git_repo() {
-        use super::git2;
-        use super::tempdir;
         use super::util;
         use std::fs;
         use std::io::Write;

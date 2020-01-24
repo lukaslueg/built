@@ -1,6 +1,6 @@
 [package]
 name = "built"
-version = "0.3.2"
+version = "0.3.2" # TODO: Bump to 0.4
 description = "Provides a crate with information from the time it was built."
 repository = "https://github.com/lukaslueg/built"
 documentation = "https://docs.rs/built"
@@ -14,10 +14,6 @@ edition = "2018"
 travis-ci = { repository = "lukaslueg/built" }
 
 [features]
-default = ["serialized_git", "serialized_time", "serialized_version"]
-serialized_git = ["git2"]
-serialized_time = ["chrono"]
-serialized_version = ["semver"]
 nightly = []
 
 [dependencies]
@@ -28,6 +24,3 @@ git2 = { version = "0.11", optional = true, default-features = false, features =
 
 [dev-dependencies]
 tempdir = "0.3"
-semver = "0.9"
-chrono = "0.4"
-git2 = "0.11"
