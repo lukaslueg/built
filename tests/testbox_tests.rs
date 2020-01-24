@@ -65,8 +65,10 @@ fn new_testbox() {
 
     let built_root = get_built_root();
 
-    p.add_file("Cargo.toml",
-               format!("
+    p.add_file(
+        "Cargo.toml",
+        format!(
+            "
 [package]
 name = \"testbox\"
 version = \"1.2.3-rc1\"
@@ -86,7 +88,10 @@ built = {{ path = {:?}, features=[\"git2\", \"chrono\", \"semver\"] }}
 [features]
 default = [\"SuperAwesome\", \"MegaAwesome\"]
 SuperAwesome = []
-MegaAwesome = []", &built_root, &built_root));
+MegaAwesome = []",
+            &built_root, &built_root
+        ),
+    );
 
     p.add_file(
         "build.rs",
