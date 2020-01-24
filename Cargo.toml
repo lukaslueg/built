@@ -17,7 +17,7 @@ travis-ci = { repository = "lukaslueg/built" }
 nightly = []
 
 [dependencies]
-toml = "0.5"
+cargo-lock = { version = "4.0", default-features = false }
 semver = { version = "0.9", optional = true }
 chrono = { version = "0.4", optional = true }
 git2 = { version = "0.11", optional = true, default-features = false, features = [] }

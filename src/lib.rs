@@ -268,19 +268,13 @@ fn get_build_deps(manifest_location: &path::Path) -> io::Result<Vec<(String, Str
 }
 
 fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
-    let lock_toml: toml::Value = lock_toml_buf.parse().unwrap();
+    let lockfile: cargo_lock::Lockfile = lock_toml_buf.parse().expect("Failed to parse lockfile");
     let mut deps = Vec::new();
 
-    // Get the table of [[package]]s. This is the deep list of dependencies and
-    // dependencies of dependencies.
-    for package in lock_toml["package"].as_array().unwrap() {
-        let package = package.as_table().unwrap();
-        deps.push((
-            package.get("name").unwrap().as_str().unwrap().to_owned(),
-            package.get("version").unwrap().as_str().unwrap().to_owned(),
-        ));
+    for package in lockfile.packages {
+        deps.push((package.name.to_string(), package.version.to_string()));
     }
-    deps.sort();
+    deps.sort_unstable();
     deps
 }
 
@@ -888,17 +882,18 @@ mod tests {
     fn parse_deps() {
         let lock_toml_buf = r#"
             [root]
+            name = "foobar"
+            version = "1.0.0"
             dependencies = [
-                "normal_dep 1.2.3 (r+g)",
+                "normal_dep 1.2.3",
                 "local_dep 4.5.6",
             ]
 
             [[package]]
             name = "normal_dep"
             version = "1.2.3"
-            source = "r+g"
             dependencies = [
-                "dep_of_dep 7.8.9 (r+g)",
+                "dep_of_dep 7.8.9",
             ]
 
             [[package]]
@@ -907,8 +902,7 @@ mod tests {
 
             [[package]]
             name = "dep_of_dep"
-            version = "7.8.9"
-            source = "r+g""#;
+            version = "7.8.9""#;
         let deps = super::parse_dependencies(&lock_toml_buf);
         assert_eq!(
             deps,
