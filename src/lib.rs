@@ -261,9 +261,9 @@ impl CIPlatform {
     }
 }
 
-fn get_build_deps<P: AsRef<path::Path>>(manifest_location: P) -> io::Result<Vec<(String, String)>> {
+fn get_build_deps(manifest_location: &path::Path) -> io::Result<Vec<(String, String)>> {
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.as_ref().join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
+    fs::File::open(manifest_location.join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
     Ok(parse_dependencies(&lock_buf))
 }
 
@@ -284,24 +284,24 @@ fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
     deps
 }
 
-fn get_version_from_cmd<P: AsRef<ffi::OsStr>>(executable: P) -> io::Result<String> {
+fn get_version_from_cmd(executable: &ffi::OsStr) -> io::Result<String> {
     let output = process::Command::new(executable).arg("-V").output()?;
     let mut v = String::from_utf8(output.stdout).unwrap();
     v.pop(); // remove newline
     Ok(v)
 }
 
-fn write_compiler_version<P: AsRef<ffi::OsStr> + fmt::Display, T: io::Write>(
-    rustc: P,
-    rustdoc: P,
-    w: &mut T,
+fn write_compiler_version(
+    rustc: &ffi::OsStr,
+    rustdoc: &ffi::OsStr,
+    w: &mut fs::File,
 ) -> io::Result<()> {
     let rustc_version = get_version_from_cmd(&rustc)?;
     let rustdoc_version = get_version_from_cmd(&rustdoc)?;
 
-    writeln!(w, "/// The output of `{} -V`", &rustc)?;
+    writeln!(w, "/// The output of `{} -V`", rustc.to_string_lossy())?;
     writeln!(w, "pub const RUSTC_VERSION: &str = \"{}\";", &rustc_version)?;
-    writeln!(w, "/// The output of `{} -V`", &rustdoc)?;
+    writeln!(w, "/// The output of `{} -V`", rustdoc.to_string_lossy())?;
     writeln!(
         w,
         "pub const RUSTDOC_VERSION: &str = \"{}\";",
@@ -318,9 +318,9 @@ fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
 }
 
 #[cfg(feature = "git2")]
-fn write_git_version<P: AsRef<path::Path>, T: io::Write>(
-    manifest_location: P,
-    w: &mut T,
+fn write_git_version(
+    manifest_location: &path::Path,
+    w: &mut fs::File,
 ) -> io::Result<()> {
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
@@ -341,7 +341,7 @@ contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
     Ok(())
 }
 
-fn write_ci<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
+fn write_ci(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
     w.write_all(b"/// The Continuous Integration platform detected during compilation.\n")?;
     writeln!(
         w,
@@ -351,7 +351,7 @@ fn write_ci<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> 
     Ok(())
 }
 
-fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
+fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
     let prefix = "CARGO_FEATURE_";
     let mut features = Vec::new();
     for name in envmap.keys() {
@@ -375,7 +375,7 @@ fn write_features<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Resul
     Ok(())
 }
 
-fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()> {
+fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
     macro_rules! write_env_str {
         ($(($name:ident, $env_name:expr,$doc:expr)),*) => {$(
             writeln!(w, "#[doc={}]\npub const {}: &str = \"{}\";",
@@ -452,11 +452,11 @@ fn write_env<T: io::Write>(envmap: &EnvironmentMap, w: &mut T) -> io::Result<()>
     Ok(())
 }
 
-fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
-    manifest_location: P,
-    w: &mut T,
+fn write_dependencies(
+    manifest_location: &path::Path,
+    w: &mut fs::File,
 ) -> io::Result<()> {
-    let deps = get_build_deps(manifest_location)?;
+    let deps = get_build_deps(&manifest_location)?;
     w.write_all(b"/// An array of effective dependencies as documented by `Cargo.lock`.\n")?;
     writeln!(
         w,
@@ -477,7 +477,7 @@ fn write_dependencies<P: AsRef<path::Path>, T: io::Write>(
 }
 
 #[cfg(feature = "chrono")]
-fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
+fn write_time(w: &mut fs::File) -> io::Result<()> {
     let now = chrono::offset::Utc::now();
     w.write_all(b"/// The built-time in RFC2822, UTC\n")?;
     writeln!(
@@ -488,7 +488,7 @@ fn write_time<T: io::Write>(w: &mut T) -> io::Result<()> {
     Ok(())
 }
 
-fn write_cfg<T: io::Write>(w: &mut T) -> io::Result<()> {
+fn write_cfg(w: &mut fs::File) -> io::Result<()> {
     macro_rules! get_cfg {
         ($i:ident : $($s:expr),+) => (
             let $i = || { $( if cfg!($i=$s) { return $s; } );+ "unknown"};
@@ -755,10 +755,10 @@ impl Options {
 /// The function returns an error if the file at `dst` already exists or can't
 /// be written to. This should not be a concern if the filename points to
 /// `OUR_DIR`.
-pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
+pub fn write_built_file_with_opts(
     options: &Options,
-    manifest_location: P,
-    dst: Q,
+    manifest_location: &path::Path,
+    dst: &path::Path,
 ) -> io::Result<()> {
     let mut built_file = fs::File::create(&dst)?;
     built_file.write_all(
@@ -783,7 +783,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
         o!(features, write_features(&envmap, &mut built_file)?);
         o!(
             compiler,
-            write_compiler_version(&envmap["RUSTC"], &envmap["RUSTDOC"], &mut built_file)?
+            write_compiler_version(&envmap["RUSTC"].as_ref(), &envmap["RUSTDOC"].as_ref(), &mut built_file)?
         );
         #[cfg(feature = "git2")]
         {
@@ -814,7 +814,7 @@ pub fn write_built_file_with_opts<P: AsRef<path::Path>, Q: AsRef<path::Path>>(
 pub fn write_built_file() -> io::Result<()> {
     let src = env::var("CARGO_MANIFEST_DIR").unwrap();
     let dst = path::Path::new(&env::var("OUT_DIR").unwrap()).join("built.rs");
-    write_built_file_with_opts(&Options::default(), &src, &dst)?;
+    write_built_file_with_opts(&Options::default(), src.as_ref(), &dst)?;
     Ok(())
 }
 

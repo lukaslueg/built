@@ -108,7 +108,7 @@ fn main() {
     options.set_dependencies(true);
     let src = env::var("CARGO_MANIFEST_DIR").unwrap();
     let dst = path::Path::new(&env::var("OUT_DIR").unwrap()).join("built.rs");
-    built::write_built_file_with_opts(&options, &src, &dst).unwrap();
+    built::write_built_file_with_opts(&options, src.as_ref(), &dst).unwrap();
 }"#,
     );
 
