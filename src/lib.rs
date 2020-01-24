@@ -103,14 +103,6 @@
 //!
 //! ```
 
-#![deny(
-    warnings,
-    bad_style,
-    future_incompatible,
-    unused,
-    missing_docs,
-    unused_comparisons
-)]
 #![cfg_attr(feature = "nightly", feature(external_doc))]
 
 #[cfg(feature = "serialized_time")]
