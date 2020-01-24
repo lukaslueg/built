@@ -1,5 +1,4 @@
 language: rust
-sudo: false
 
 cache: cargo
 
@@ -13,15 +12,19 @@ rust:
 - nightly
 
 matrix:
-  allow_failures:
-  - rust: nightly
   fast_finish: true
 
-before_script:
-  - rustup component add rustfmt
+before_install:
+  - if [ "$TRAVIS_RUST_VERSION" != "nightly" ]; then
+    rustup self update &&
+    rustup component add rustfmt clippy;
+    fi
 
 script:
-  - cargo fmt --all -- --check
+  - if [ "$TRAVIS_RUST_VERSION" != "nightly" ]; then
+    cargo fmt --all -- --check &&
+    cargo clippy --all --tests --examples;
+    fi
   - cargo test
   - cargo test --no-default-features
   - cargo run --manifest-path ./example_project/Cargo.toml
