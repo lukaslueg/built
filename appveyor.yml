@@ -26,4 +26,4 @@ build: false
 
 test_script:
   - cargo build --verbose
-  - cargo test --verbose --all-features
+  - cargo test --verbose --features chrono,git2,semver
