@@ -6,9 +6,9 @@ build = "build.rs"
 edition = "2018"
 
 [dependencies]
-built = { version = "^0.3", path="../" }
+built = { version = "0.3", path="../", features = ["git2", "chrono", "semver"] }
 semver = "0.9"
 chrono = "0.4"
 
 [build-dependencies]
-built = { version = "^0.3", path="../" }
+built = { version = "0.3", path="../" }
