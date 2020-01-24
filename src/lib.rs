@@ -20,6 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
+#![allow(clippy::needless_doctest_main)]
+
 //! Provides a crate with information from the time it was built.
 //!
 //! `built` is used as a build-time dependency to collect various information
@@ -59,7 +62,6 @@
 //! Add or modify a build script. In `build.rs`:
 //!
 //! ```rust,ignore
-//! extern crate built;
 //! fn main() {
 //!     built::write_built_file().expect("Failed to acquire build-time information");
 //! }
