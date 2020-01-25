@@ -68,7 +68,9 @@ pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
 #[cfg(feature = "git2")]
-pub fn get_repo_description<P: AsRef<std::path::Path>>(root: P) -> Result<Option<String>, git2::Error> {
+pub fn get_repo_description<P: AsRef<std::path::Path>>(
+    root: P,
+) -> Result<Option<String>, git2::Error> {
     match git2::Repository::discover(root) {
         Ok(repo) => {
             let mut desc_opt = git2::DescribeOptions::new();
