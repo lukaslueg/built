@@ -1,8 +1,5 @@
 //! Various convenience functions for `built` at runtime.
 
-#[cfg(feature = "git2")]
-use std::path;
-
 /// Parses version-strings with `semver::Version::parse()`.
 ///
 /// This function is only available if `built` was compiled with the
@@ -44,8 +41,6 @@ where
 /// Parse a time-string as formatted by `built`.
 ///
 /// ```
-/// extern crate built;
-/// extern crate chrono;
 /// use chrono::Datelike;
 ///
 /// pub mod build_info {
@@ -73,7 +68,7 @@ pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
 #[cfg(feature = "git2")]
-pub fn get_repo_description<P: AsRef<path::Path>>(root: P) -> Result<Option<String>, git2::Error> {
+pub fn get_repo_description<P: AsRef<std::path::Path>>(root: P) -> Result<Option<String>, git2::Error> {
     match git2::Repository::discover(root) {
         Ok(repo) => {
             let mut desc_opt = git2::DescribeOptions::new();
