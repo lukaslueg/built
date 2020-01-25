@@ -3,7 +3,7 @@
 /// Parses version-strings with `semver::Version::parse()`.
 ///
 /// This function is only available if `built` was compiled with the
-/// `serialized_version` feature.
+/// `semver` feature.
 ///
 /// The function takes a reference to an array of names and version numbers as
 /// serialized by `built` and returns an iterator over the unchanged names

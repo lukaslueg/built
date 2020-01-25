@@ -697,7 +697,7 @@ impl Options {
     /// Writing the current timestamp.
     ///
     /// This option is only available if `built` is compiled with the
-    /// `serialized_time` feature.
+    /// `chrono` feature.
     ///
     /// If `built` is included as a runtime-dependency, it can parse the
     /// string-representation into a `time:Tm` with the help
