@@ -821,7 +821,7 @@ mod tests {
         use std::path;
 
         let repo_root = tempdir::TempDir::new("builttest").unwrap();
-        assert_eq!(util::get_repo_description(&repo_root), Ok(None));
+        assert_eq!(util::get_repo_description(repo_root.as_ref()), Ok(None));
 
         let repo = git2::Repository::init_opts(
             &repo_root,
