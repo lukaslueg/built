@@ -88,7 +88,6 @@
 //! # }
 //! #
 //! # enum LogLevel { TRACE, ERROR };
-//!
 //! /// Determine if current version is a pre-release or was built from a git-repo
 //! fn release_is_unstable() -> bool {
 //!     return !built_info::PKG_VERSION_PRE.is_empty() || built_info::GIT_VERSION.is_some()

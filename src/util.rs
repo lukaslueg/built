@@ -10,8 +10,6 @@
 /// and parsed version numbers.
 ///
 /// ```
-/// extern crate built;
-/// extern crate semver;
 /// pub mod build_info {
 ///     pub const DEPENDENCIES: [(&'static str, &'static str); 1] = [("built", "0.1.0")];
 /// }
