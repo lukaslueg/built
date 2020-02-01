@@ -39,6 +39,8 @@
 //!  * The used compiler and it's version; the used documentation generator and
 //!    it's version.
 //!
+//! See the [`Options`][options]-type regarding what `built` can serialize.
+//!
 //! `built` does not add any further dependencies to a crate; all information
 //! is serialized as types from `stdlib`. One can include `built` as a
 //! runtime-dependency and use it's convenience functions.
@@ -112,6 +114,8 @@
 //!     }
 //! }
 //! ```
+//!
+//! [options]: struct.Options.html
 
 #![cfg_attr(feature = "nightly", feature(external_doc))]
 
@@ -520,6 +524,9 @@ fn write_cfg(w: &mut fs::File) -> io::Result<()> {
 }
 
 /// Selects which information `built` should retrieve and write as Rust code.
+/// Used in conjunction with [`write_built_file_with_opts`][wrt].
+///
+/// [wrt]: fn.write_built_file_with_opts.html
 #[allow(unused)]
 pub struct Options {
     compiler: bool,
