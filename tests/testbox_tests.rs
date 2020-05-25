@@ -128,6 +128,8 @@ mod built_info {
 
 fn main() {
     assert_eq!(built_info::GIT_VERSION, None);
+    assert_eq!(built_info::GIT_COMMIT_HASH, None);
+    assert_eq!(built_info::GIT_HEAD_REF, None);
     assert!(built_info::CI_PLATFORM.is_some());
     assert_eq!(built_info::PKG_VERSION, "1.2.3-rc1");
     assert_eq!(built_info::PKG_VERSION_MAJOR, "1");

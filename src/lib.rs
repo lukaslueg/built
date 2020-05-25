@@ -332,6 +332,34 @@ contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
         "pub const GIT_VERSION: Option<&str> = {};",
         &fmt_option_str(tag)
     )?;
+
+    let (branch, commit) = match util::get_repo_head(&manifest_location) {
+        Ok(Some((b, c))) => (b, Some(c)),
+        _ => (None, None),
+    };
+
+    w.write_all(
+        b"/// If the crate was compiled from within a git-repository, `GIT_HEAD_REF` \
+contains full name to the reference pointed to by HEAD \
+(e.g.: `refs/heads/master`). If HEAD is detached or the branch name is not \
+valid UTF-8 `None` will be stored.\n",
+    )?;
+    writeln!(
+        w,
+        "pub const GIT_HEAD_REF: Option<&str> = {};",
+        &fmt_option_str(branch)
+    )?;
+
+    w.write_all(
+        b"/// If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH` \
+contains HEAD's full commit SHA-1 hash.\n",
+    )?;
+    writeln!(
+        w,
+        "pub const GIT_COMMIT_HASH: Option<&str> = {};",
+        &fmt_option_str(commit)
+    )?;
+
     Ok(())
 }
 
@@ -586,6 +614,8 @@ impl Options {
     ///
     /// ```rust,no_run
     /// pub const GIT_VERSION: Option<&str> = Some("0.1");
+    /// pub const GIT_COMMIT_HASH: Option<&str> = Some("18b2eabfb47998c296f9d5183f617f1b1cc2d321");
+    /// pub const GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
     /// ```
     ///
     /// Continuous Integration platforms like `Travis` and `AppVeyor` will
@@ -862,6 +892,8 @@ mod tests {
             )
             .unwrap();
 
+        let commit_hash = format!("{}", commit_oid);
+
         assert_ne!(
             util::get_repo_description(&project_root).unwrap().unwrap(),
             "".to_owned()
@@ -881,6 +913,17 @@ mod tests {
         assert_eq!(
             util::get_repo_description(&project_root),
             Ok(Some("foobar".to_owned()))
+        );
+
+        let branch_short_name = "baz";
+        let branch_name = "refs/heads/baz";
+        let commit = repo.find_commit(commit_oid).unwrap();
+        repo.branch(branch_short_name, &commit, true).unwrap();
+        repo.set_head(branch_name).unwrap();
+
+        assert_eq!(
+            util::get_repo_head(&project_root),
+            Ok(Some((Some(branch_name.to_owned()), commit_hash)))
         );
     }
 
