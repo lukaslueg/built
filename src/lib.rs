@@ -115,6 +115,77 @@
 //! }
 //! ```
 //!
+//! A full `built.rs` will look something like:
+//! ```
+//! /// The Continuous Integration platform detected during compilation.
+//! pub const CI_PLATFORM: Option<&str> = None;
+//! #[doc="The full version."]
+//! pub const PKG_VERSION: &str = "0.1.0";
+//! #[doc="The major version."]
+//! pub const PKG_VERSION_MAJOR: &str = "0";
+//! #[doc="The minor version."]
+//! pub const PKG_VERSION_MINOR: &str = "1";
+//! #[doc="The patch version."]
+//! pub const PKG_VERSION_PATCH: &str = "0";
+//! #[doc="The pre-release version."]
+//! pub const PKG_VERSION_PRE: &str = "";
+//! #[doc="A colon-separated list of authors."]
+//! pub const PKG_AUTHORS: &str = "Lukas Lueg <lukas.lueg@gmail.com>";
+//! #[doc="The name of the package."]
+//! pub const PKG_NAME: &str = "example_project";
+//! #[doc="The description."]
+//! pub const PKG_DESCRIPTION: &str = "";
+//! #[doc="The homepage."]
+//! pub const PKG_HOMEPAGE: &str = "";
+//! #[doc="The target triple that was being compiled for."]
+//! pub const TARGET: &str = "x86_64-unknown-linux-gnu";
+//! #[doc="The host triple of the rust compiler."]
+//! pub const HOST: &str = "x86_64-unknown-linux-gnu";
+//! #[doc="`release` for release builds, `debug` for other builds."]
+//! pub const PROFILE: &str = "debug";
+//! #[doc="The compiler that cargo resolved to use."]
+//! pub const RUSTC: &str = "rustc";
+//! #[doc="The documentation generator that cargo resolved to use."]
+//! pub const RUSTDOC: &str = "rustdoc";
+//! #[doc="Value of OPT_LEVEL for the profile used during compilation."]
+//! pub const OPT_LEVEL: &str = "0";
+//! #[doc="The parallelism that was specified during compilation."]
+//! pub const NUM_JOBS: u32 = 8;
+//! #[doc="Value of DEBUG for the profile used during compilation."]
+//! pub const DEBUG: bool = true;
+//! /// The features that were enabled during compilation.
+//! pub const FEATURES: [&str; 0] = [];
+//! /// The features as a comma-separated string.
+//! pub const FEATURES_STR: &str = "";
+//! /// The output of `rustc -V`
+//! pub const RUSTC_VERSION: &str = "rustc 1.43.1 (8d69840ab 2020-05-04)";
+//! /// The output of `rustdoc -V`
+//! pub const RUSTDOC_VERSION: &str = "rustdoc 1.43.1 (8d69840ab 2020-05-04)";
+//! /// If the crate was compiled from within a git-repository, `GIT_VERSION` contains HEAD's tag. The short commit id is used if HEAD is not tagged.
+//! pub const GIT_VERSION: Option<&str> = Some("0.4.1-5-g1a2b22d");
+//! /// If the crate was compiled from within a git-repository, `GIT_HEAD_REF` contains full name to the reference pointed to by HEAD (e.g.: `refs/heads/master`). If HEAD is detached or the branch name is not valid UTF-8 `None` will be stored.
+//! pub const GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
+//! /// If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
+//! pub const GIT_COMMIT_HASH: Option<&str> = Some("1a2b22d27d21200e1ab7a252db20df3a2e3591dc");
+//! /// An array of effective dependencies as documented by `Cargo.lock`.
+//! pub const DEPENDENCIES: [(&str, &str); 39] = [("autocfg", "1.0.0"), ("bitflags", "1.2.1"), ("built", "0.4.1"), ("cargo-lock", "4.0.1"), ("cc", "1.0.54"), ("cfg-if", "0.1.10"), ("chrono", "0.4.11"), ("example_project", "0.1.0"), ("git2", "0.13.6"), ("idna", "0.2.0"), ("jobserver", "0.1.21"), ("libc", "0.2.71"), ("libgit2-sys", "0.12.6+1.0.0"), ("libz-sys", "1.0.25"), ("log", "0.4.8"), ("matches", "0.1.8"), ("num-integer", "0.1.42"), ("num-traits", "0.2.11"), ("percent-encoding", "2.1.0"), ("pkg-config", "0.3.17"), ("proc-macro2", "1.0.17"), ("quote", "1.0.6"), ("semver", "0.10.0"), ("semver", "0.9.0"), ("semver-parser", "0.7.0"), ("serde", "1.0.110"), ("serde_derive", "1.0.110"), ("smallvec", "1.4.0"), ("syn", "1.0.25"), ("time", "0.1.43"), ("toml", "0.5.6"), ("unicode-bidi", "0.3.4"), ("unicode-normalization", "0.1.12"), ("unicode-xid", "0.2.0"), ("url", "2.1.1"), ("vcpkg", "0.2.8"), ("winapi", "0.3.8"), ("winapi-i686-pc-windows-gnu", "0.4.0"), ("winapi-x86_64-pc-windows-gnu", "0.4.0")];
+//! /// The effective dependencies as a comma-separated string.
+//! pub const DEPENDENCIES_STR: &str = "autocfg 1.0.0, bitflags 1.2.1, built 0.4.1, cargo-lock 4.0.1, cc 1.0.54, cfg-if 0.1.10, chrono 0.4.11, example_project 0.1.0, git2 0.13.6, idna 0.2.0, jobserver 0.1.21, libc 0.2.71, libgit2-sys 0.12.6+1.0.0, libz-sys 1.0.25, log 0.4.8, matches 0.1.8, num-integer 0.1.42, num-traits 0.2.11, percent-encoding 2.1.0, pkg-config 0.3.17, proc-macro2 1.0.17, quote 1.0.6, semver 0.10.0, semver 0.9.0, semver-parser 0.7.0, serde 1.0.110, serde_derive 1.0.110, smallvec 1.4.0, syn 1.0.25, time 0.1.43, toml 0.5.6, unicode-bidi 0.3.4, unicode-normalization 0.1.12, unicode-xid 0.2.0, url 2.1.1, vcpkg 0.2.8, winapi 0.3.8, winapi-i686-pc-windows-gnu 0.4.0, winapi-x86_64-pc-windows-gnu 0.4.0";
+//! /// The built-time in RFC2822, UTC
+//! pub const BUILT_TIME_UTC: &str = "Tue, 26 May 2020 17:52:24 +0000";
+//! /// The target architecture, given by `cfg!(target_arch)`.
+//! pub const CFG_TARGET_ARCH: &str = "x86_64";
+//! /// The endianness, given by `cfg!(target_endian)`.
+//! pub const CFG_ENDIAN: &str = "little";
+//! /// The toolchain-environment, given by `cfg!(target_env)`.
+//! pub const CFG_ENV: &str = "gnu";
+//! /// The OS-family, given by `cfg!(target_family)`.
+//! pub const CFG_FAMILY: &str = "unix";
+//! /// The operating system, given by `cfg!(target_os)`.
+//! pub const CFG_OS: &str = "linux";
+//! /// The pointer width, given by `cfg!(target_pointer_width)`.
+//! pub const CFG_POINTER_WIDTH: &str = "64";
+//! ```
 //! [options]: struct.Options.html
 
 #![cfg_attr(feature = "nightly", feature(external_doc))]
@@ -617,6 +688,8 @@ impl Options {
     /// pub const GIT_COMMIT_HASH: Option<&str> = Some("18b2eabfb47998c296f9d5183f617f1b1cc2d321");
     /// pub const GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
     /// ```
+    ///
+    /// Notice that `GIT_HEAD_REF` is `None` if `HEAD` is detached or not valid UTF-8.
     ///
     /// Continuous Integration platforms like `Travis` and `AppVeyor` will
     /// do shallow clones, causing `libgit2` to be unable to get a meaningful
