@@ -79,7 +79,7 @@ homepage = \"localhost\"
 
 [dependencies]
 chrono = \"0.4\"
-semver = \"0.9\"
+semver = \"0.10\"
 built = {{ path = {:?}, features=[\"git2\", \"chrono\", \"semver\"] }}
 
 [build-dependencies]
