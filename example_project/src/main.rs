@@ -7,12 +7,20 @@ fn main() {
     // Print various information produced by `built`. See the docs for a full list.
 
     println!(
-        "This is version {}{}, built for {} by {}.",
+        "This is version {}, built for {} by {}.\n",
         built_info::PKG_VERSION,
-        built_info::GIT_VERSION.map_or_else(|| "".to_owned(), |v| format!(" (git {})", v)),
         built_info::TARGET,
         built_info::RUSTC_VERSION
     );
+
+    if let (Some(v), Some(hash)) = (built_info::GIT_VERSION, built_info::GIT_COMMIT_HASH) {
+        print!("I was built from git `{}`, commit {}.", v, hash);
+    }
+
+    match built_info::GIT_HEAD_REF {
+        Some(r) => println!(" The branch was `{}`.\n", r),
+        None => println!("\n"),
+    }
 
     print!(
         "I was built for a {}-CPU, which is a {}-endian architecture. ",
@@ -21,7 +29,7 @@ fn main() {
     );
 
     println!(
-        "I was compiled to run on {} (a {}-breed) and my runtime should be {}.",
+        "I was compiled to run on {} (a {}-breed) and my runtime should be {}.\n",
         built_info::CFG_OS,
         built_info::CFG_FAMILY,
         built_info::CFG_ENV
@@ -32,9 +40,9 @@ fn main() {
         Some(ci) => print!("I've been built on CI-platform {},", ci),
     }
     if built::util::detect_ci().is_some() {
-        println!(" but I'm currently executing on one!");
+        println!(" but I'm currently executing on one!\n");
     } else {
-        println!(" and I'm currently not executing on one!");
+        println!(" and I'm currently not executing on one!\n");
     }
 
     let built_time = built::util::strptime(built_info::BUILT_TIME_UTC);
