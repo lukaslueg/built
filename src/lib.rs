@@ -912,6 +912,12 @@ pub fn write_built_file_with_opts(
 
 /// A shorthand for calling `write_built_file()` with `CARGO_MANIFEST_DIR` and
 /// `[OUT_DIR]/built.rs`.
+///
+/// # Errors
+/// Same as `write_built_file_with_opts()`.
+///
+/// # Panics
+/// If `CARGO_MANIFEST_DIR` or `OUT_DIR` are not set.
 pub fn write_built_file() -> io::Result<()> {
     let src = env::var("CARGO_MANIFEST_DIR").unwrap();
     let dst = path::Path::new(&env::var("OUT_DIR").unwrap()).join("built.rs");

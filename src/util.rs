@@ -139,6 +139,7 @@ pub fn get_repo_head(
 ///
 /// Since some platforms have fairly generic environment variables to begin with
 /// (e.g. `TASK_ID`), this function may have false positives.
+#[must_use]
 pub fn detect_ci() -> Option<super::CIPlatform> {
     super::CIPlatform::detect_from_envmap(&super::get_environment())
 }
