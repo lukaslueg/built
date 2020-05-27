@@ -18,8 +18,46 @@ impl Project {
         }
     }
 
-    fn add_file<N: Into<path::PathBuf>, C: Into<Vec<u8>>>(&mut self, name: N, content: C) {
-        self.files.push((name.into(), content.into()))
+    fn add_file<N: Into<path::PathBuf>, C: Into<Vec<u8>>>(
+        &mut self,
+        name: N,
+        content: C,
+    ) -> &mut Self {
+        self.files.push((name.into(), content.into()));
+        self
+    }
+
+    #[cfg(feature = "git2")]
+    fn bootstrap(&mut self) -> &mut Self {
+        let built_root = get_built_root();
+        let features = if cfg!(feature = "git2") {
+            r#"["git2"]"#
+        } else {
+            "[]"
+        };
+        self.add_file(
+            "Cargo.toml",
+            format!(
+                r#"
+[package]
+name = "testbox"
+version = "0.0.1"
+build = "build.rs"
+
+[build-dependencies]
+built = {{ path = {:?}, features = {} }}"#,
+                &built_root, &features,
+            ),
+        )
+        .add_file(
+            "build.rs",
+            r#"
+extern crate built;
+fn main() {
+    built::write_built_file().expect("writing failed");
+}"#,
+        );
+        self
     }
 
     /// Hold on to the tempdir, it will be removed when dropped!
@@ -35,9 +73,36 @@ impl Project {
         Ok(self.root)
     }
 
+    fn create_and_run(self) {
+        let root = self.create().expect("Creating the project failed");
+        Self::run(root.as_ref())
+    }
+
+    fn run(root: &std::path::Path) {
+        let cargo_result = process::Command::new("cargo")
+            .current_dir(&root)
+            .arg("run")
+            .output()
+            .expect("cargo failed");
+        if !cargo_result.status.success() {
+            panic!(
+                "cargo failed with {}",
+                String::from_utf8_lossy(&cargo_result.stderr)
+            );
+        }
+    }
+
     #[cfg(feature = "git2")]
     fn init_git(&self) -> git2::Repository {
-        git2::Repository::init(&self.root).expect("git-init failed")
+        git2::Repository::init_opts(
+            &self.root,
+            git2::RepositoryInitOptions::new()
+                .external_template(false)
+                .mkdir(false)
+                .no_reinit(true)
+                .mkpath(false),
+        )
+        .expect("git-init failed")
     }
 }
 
@@ -114,11 +179,6 @@ fn main() {
         "src/main.rs",
         r#"
 //! The testbox.
-#![deny(warnings, bad_style, future_incompatible, unused, missing_docs, unused_comparisons)]
-
-extern crate built;
-extern crate semver;
-extern crate chrono;
 
 mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
@@ -126,6 +186,7 @@ mod built_info {
 
 fn main() {
     assert_eq!(built_info::GIT_VERSION, None);
+    assert_eq!(built_info::GIT_DIRTY, None);
     assert_eq!(built_info::GIT_COMMIT_HASH, None);
     assert_eq!(built_info::GIT_HEAD_REF, None);
     assert!(built_info::CI_PLATFORM.is_some());
@@ -166,20 +227,66 @@ fn main() {
     assert!((chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
 }"#,
     );
+    p.create_and_run();
+}
 
+#[test]
+#[cfg(feature = "git2")]
+fn clean_then_dirty_git() {
+    let mut p = Project::new();
+    p.bootstrap().add_file(
+        "src/main.rs",
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built_info::GIT_DIRTY, Some(false));
+}
+"#,
+    );
+    let repo = p.init_git();
     let root = p.create().expect("Creating the project failed");
-    let cargo_result = process::Command::new("cargo")
-        .current_dir(&root)
-        .arg("run")
-        .arg("-q")
-        .output()
-        .expect("cargo failed");
-    if !cargo_result.status.success() {
-        panic!(
-            "cargo failed with {}",
-            String::from_utf8_lossy(&cargo_result.stderr)
-        );
+
+    let sig = git2::Signature::now("foo", "bar").unwrap();
+
+    let mut idx = repo.index().unwrap();
+    for p in &["src/main.rs", "build.rs"] {
+        idx.add_path(path::Path::new(p)).unwrap();
     }
+    idx.write().unwrap();
+    repo.commit(
+        Some("HEAD"),
+        &sig,
+        &sig,
+        "Testing testing 1 2 3",
+        &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
+        &[],
+    )
+    .unwrap();
+    Project::run(root.as_ref());
+
+    let mut f = std::fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(&root.path().join("src/main.rs"))
+        .unwrap();
+    f.write_all(
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built_info::GIT_DIRTY, Some(true));
+}
+"#
+        .as_bytes(),
+    )
+    .unwrap();
+
+    Project::run(root.as_ref());
 }
 
 #[test]
@@ -187,41 +294,16 @@ fn main() {
 fn empty_git() {
     // Issue #7, git can be there and still fail
     let mut p = Project::new();
-    let built_root = get_built_root();
-    p.add_file(
-        "Cargo.toml",
-        format!(
-            r#"
-[package]
-name = "testbox"
-version = "0.0.1"
-build = "build.rs"
-
-[build-dependencies]
-built = {{ path = {:?} }}"#,
-            &built_root
-        ),
-    );
-    p.add_file(
-        "build.rs",
+    p.bootstrap().add_file(
+        "src/main.rs",
         r#"
-extern crate built;
-fn main() {
-    built::write_built_file().expect("writing failed");
-}"#,
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {}
+"#,
     );
-    p.add_file("src/main.rs", "fn main() {}");
     p.init_git();
-    let root = p.create().expect("Creating the project failed");
-    let cargo_result = process::Command::new("cargo")
-        .current_dir(&root)
-        .arg("run")
-        .output()
-        .expect("cargo failed");
-    if !cargo_result.status.success() {
-        panic!(
-            "cargo failed with {}",
-            String::from_utf8_lossy(&cargo_result.stderr)
-        );
-    }
+    p.create_and_run();
 }

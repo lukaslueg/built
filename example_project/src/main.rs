@@ -13,8 +13,17 @@ fn main() {
         built_info::RUSTC_VERSION
     );
 
-    if let (Some(v), Some(hash)) = (built_info::GIT_VERSION, built_info::GIT_COMMIT_HASH) {
-        print!("I was built from git `{}`, commit {}.", v, hash);
+    if let (Some(v), Some(dirty), Some(hash)) = (
+        built_info::GIT_VERSION,
+        built_info::GIT_DIRTY,
+        built_info::GIT_COMMIT_HASH,
+    ) {
+        print!(
+            "I was built from git `{}`, commit {}; the working directory was \"{}\".",
+            v,
+            hash,
+            if dirty { "dirty" } else { "clean" }
+        );
     }
 
     match built_info::GIT_HEAD_REF {

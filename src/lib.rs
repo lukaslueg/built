@@ -162,17 +162,19 @@
 //! /// The output of `rustdoc -V`
 //! pub const RUSTDOC_VERSION: &str = "rustdoc 1.43.1 (8d69840ab 2020-05-04)";
 //! /// If the crate was compiled from within a git-repository, `GIT_VERSION` contains HEAD's tag. The short commit id is used if HEAD is not tagged.
-//! pub const GIT_VERSION: Option<&str> = Some("0.4.1-5-g1a2b22d");
+//! pub const GIT_VERSION: Option<&str> = Some("0.4.1-10-gca2af4f");
+//! /// If the repository had dirty/staged files.
+//! pub const GIT_DIRTY: Option<bool> = Some(true);
 //! /// If the crate was compiled from within a git-repository, `GIT_HEAD_REF` contains full name to the reference pointed to by HEAD (e.g.: `refs/heads/master`). If HEAD is detached or the branch name is not valid UTF-8 `None` will be stored.
 //! pub const GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
 //! /// If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
-//! pub const GIT_COMMIT_HASH: Option<&str> = Some("1a2b22d27d21200e1ab7a252db20df3a2e3591dc");
+//! pub const GIT_COMMIT_HASH: Option<&str> = Some("ca2af4f11bb8f4f6421c4cccf428bf4862573daf");
 //! /// An array of effective dependencies as documented by `Cargo.lock`.
 //! pub const DEPENDENCIES: [(&str, &str); 39] = [("autocfg", "1.0.0"), ("bitflags", "1.2.1"), ("built", "0.4.1"), ("cargo-lock", "4.0.1"), ("cc", "1.0.54"), ("cfg-if", "0.1.10"), ("chrono", "0.4.11"), ("example_project", "0.1.0"), ("git2", "0.13.6"), ("idna", "0.2.0"), ("jobserver", "0.1.21"), ("libc", "0.2.71"), ("libgit2-sys", "0.12.6+1.0.0"), ("libz-sys", "1.0.25"), ("log", "0.4.8"), ("matches", "0.1.8"), ("num-integer", "0.1.42"), ("num-traits", "0.2.11"), ("percent-encoding", "2.1.0"), ("pkg-config", "0.3.17"), ("proc-macro2", "1.0.17"), ("quote", "1.0.6"), ("semver", "0.10.0"), ("semver", "0.9.0"), ("semver-parser", "0.7.0"), ("serde", "1.0.110"), ("serde_derive", "1.0.110"), ("smallvec", "1.4.0"), ("syn", "1.0.25"), ("time", "0.1.43"), ("toml", "0.5.6"), ("unicode-bidi", "0.3.4"), ("unicode-normalization", "0.1.12"), ("unicode-xid", "0.2.0"), ("url", "2.1.1"), ("vcpkg", "0.2.8"), ("winapi", "0.3.8"), ("winapi-i686-pc-windows-gnu", "0.4.0"), ("winapi-x86_64-pc-windows-gnu", "0.4.0")];
 //! /// The effective dependencies as a comma-separated string.
 //! pub const DEPENDENCIES_STR: &str = "autocfg 1.0.0, bitflags 1.2.1, built 0.4.1, cargo-lock 4.0.1, cc 1.0.54, cfg-if 0.1.10, chrono 0.4.11, example_project 0.1.0, git2 0.13.6, idna 0.2.0, jobserver 0.1.21, libc 0.2.71, libgit2-sys 0.12.6+1.0.0, libz-sys 1.0.25, log 0.4.8, matches 0.1.8, num-integer 0.1.42, num-traits 0.2.11, percent-encoding 2.1.0, pkg-config 0.3.17, proc-macro2 1.0.17, quote 1.0.6, semver 0.10.0, semver 0.9.0, semver-parser 0.7.0, serde 1.0.110, serde_derive 1.0.110, smallvec 1.4.0, syn 1.0.25, time 0.1.43, toml 0.5.6, unicode-bidi 0.3.4, unicode-normalization 0.1.12, unicode-xid 0.2.0, url 2.1.1, vcpkg 0.2.8, winapi 0.3.8, winapi-i686-pc-windows-gnu 0.4.0, winapi-x86_64-pc-windows-gnu 0.4.0";
 //! /// The built-time in RFC2822, UTC
-//! pub const BUILT_TIME_UTC: &str = "Tue, 26 May 2020 17:52:24 +0000";
+//! pub const BUILT_TIME_UTC: &str = "Wed, 27 May 2020 18:12:39 +0000";
 //! /// The target architecture, given by `cfg!(target_arch)`.
 //! pub const CFG_TARGET_ARCH: &str = "x86_64";
 //! /// The endianness, given by `cfg!(target_endian)`.
@@ -390,9 +392,9 @@ fn write_git_version(manifest_location: &path::Path, w: &mut fs::File) -> io::Re
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
     // error.
-    let tag = match util::get_repo_description(&manifest_location) {
-        Ok(tag) => tag,
-        Err(_) => None,
+    let (tag, dirty) = match util::get_repo_description(&manifest_location) {
+        Ok(Some((tag, dirty))) => (Some(tag), Some(dirty)),
+        _ => (None, None),
     };
     w.write_all(
         b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
@@ -402,6 +404,16 @@ contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
         w,
         "pub const GIT_VERSION: Option<&str> = {};",
         &fmt_option_str(tag)
+    )?;
+    writeln!(
+        w,
+        "/// If the repository had dirty/staged files.
+pub const GIT_DIRTY: Option<bool> = {};",
+        match dirty {
+            Some(true) => "Some(true)",
+            Some(false) => "Some(false)",
+            None => "None",
+        }
     )?;
 
     let (branch, commit) = match util::get_repo_head(&manifest_location) {
@@ -675,7 +687,8 @@ impl Options {
         self
     }
 
-    /// Detecting and writing the tag or commit id of the crate's git repository (if any).
+    /// Detecting and writing the tag or commit-id and a flag to indicate
+    /// a dirty working directory of the crate's git repository (if any).
     ///
     /// This option is only available if `built` was compiled with the
     /// `git2` feature.
@@ -685,6 +698,7 @@ impl Options {
     ///
     /// ```rust,no_run
     /// pub const GIT_VERSION: Option<&str> = Some("0.1");
+    /// pub const GIT_DIRTY: Option<bool> = Some(false);
     /// pub const GIT_COMMIT_HASH: Option<&str> = Some("18b2eabfb47998c296f9d5183f617f1b1cc2d321");
     /// pub const GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
     /// ```
@@ -693,8 +707,8 @@ impl Options {
     ///
     /// Continuous Integration platforms like `Travis` and `AppVeyor` will
     /// do shallow clones, causing `libgit2` to be unable to get a meaningful
-    /// result. The `GIT_VERSION` will therefor always be `None` if a CI-platform
-    /// is detected.
+    /// result. `GIT_VERSION` and `GIT_DIRTY` will therefor always be `None` if
+    /// a CI-platform is detected.
     ///
     #[cfg(feature = "git2")]
     pub fn set_git(&mut self, enabled: bool) -> &mut Self {
@@ -933,7 +947,6 @@ mod tests {
     fn parse_git_repo() {
         use super::util;
         use std::fs;
-        use std::io::Write;
         use std::path;
 
         let repo_root = tempdir::TempDir::new("builttest").unwrap();
@@ -949,10 +962,8 @@ mod tests {
         )
         .unwrap();
 
-        let cruft_path = repo_root.path().join("cruftfile");
-        let mut cruft_file = fs::File::create(cruft_path).unwrap();
-        writeln!(cruft_file, "Who? Me?").unwrap();
-        drop(cruft_file);
+        let cruft_file = repo_root.path().join("cruftfile");
+        std::fs::write(&cruft_file, "Who? Me?").unwrap();
 
         let project_root = repo_root.path().join("project_root");
         fs::create_dir(&project_root).unwrap();
@@ -960,6 +971,7 @@ mod tests {
         let sig = git2::Signature::now("foo", "bar").unwrap();
         let mut idx = repo.index().unwrap();
         idx.add_path(path::Path::new("cruftfile")).unwrap();
+        idx.write().unwrap();
         let commit_oid = repo
             .commit(
                 Some("HEAD"),
@@ -973,11 +985,12 @@ mod tests {
 
         let commit_hash = format!("{}", commit_oid);
 
-        assert_ne!(
-            util::get_repo_description(&project_root).unwrap().unwrap(),
-            "".to_owned()
-        );
+        // The the commit, the commit-id is something and the repo is not dirty
+        let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
+        assert!(!tag.is_empty());
+        assert!(!dirty);
 
+        // Tag the commit, it should be retrieved
         repo.tag(
             "foobar",
             &repo
@@ -989,10 +1002,15 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(
-            util::get_repo_description(&project_root),
-            Ok(Some("foobar".to_owned()))
-        );
+        let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
+        assert_eq!(tag, "foobar");
+        assert!(!dirty);
+
+        // Make some dirt
+        std::fs::write(cruft_file, "now dirty").unwrap();
+        let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
+        assert_eq!(tag, "foobar");
+        assert!(dirty);
 
         let branch_short_name = "baz";
         let branch_name = "refs/heads/baz";
