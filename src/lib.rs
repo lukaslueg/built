@@ -1007,6 +1007,40 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "git2")]
+    fn detached_head_repo() {
+        let repo_root = tempdir::TempDir::new("builttest").unwrap();
+        let repo = git2::Repository::init_opts(
+            &repo_root,
+            git2::RepositoryInitOptions::new()
+                .external_template(false)
+                .mkdir(false)
+                .no_reinit(true)
+                .mkpath(false),
+        )
+        .unwrap();
+        let sig = git2::Signature::now("foo", "bar").unwrap();
+        let commit_oid = repo
+            .commit(
+                Some("HEAD"),
+                &sig,
+                &sig,
+                "Testing",
+                &repo
+                    .find_tree(repo.index().unwrap().write_tree().unwrap())
+                    .unwrap(),
+                &[],
+            )
+            .unwrap();
+        let commit_hash = format!("{}", commit_oid);
+        repo.set_head_detached(commit_oid).unwrap();
+        assert_eq!(
+            super::util::get_repo_head(repo_root.as_ref()),
+            Ok(Some((None, commit_hash)))
+        );
+    }
+
+    #[test]
     fn parse_deps() {
         let lock_toml_buf = r#"
             [root]
