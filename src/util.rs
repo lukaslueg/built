@@ -102,9 +102,19 @@ pub fn get_repo_head(
 ) -> Result<Option<(Option<String>, String)>, git2::Error> {
     match git2::Repository::discover(root) {
         Ok(repo) => {
-            let head = repo.head()?;
-            let branch = head.name();
-            let commit = head.peel_to_commit()?.id();
+            // Supposed to be the reference pointed to by HEAD, but it's HEAD
+            // itself, if detached
+            let head_ref = repo.head()?;
+            let branch = {
+                // Check whether `head` is realy the pointed to reference and
+                // not HEAD itself.
+                if !repo.head_detached()? {
+                    head_ref.name()
+                } else {
+                    None
+                }
+            };
+            let commit = head_ref.peel_to_commit()?.id();
             Ok(Some((
                 branch.map(ToString::to_string),
                 format!("{}", commit),
