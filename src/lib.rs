@@ -483,7 +483,7 @@ fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
 fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
     macro_rules! write_env_str {
         ($(($name:ident, $env_name:expr,$doc:expr)),*) => {$(
-            writeln!(w, "#[doc={}]\npub const {}: &str = \"{}\";",
+            writeln!(w, "#[doc={}]\npub const {}: &str = r\"{}\";",
                     stringify!($doc), stringify!($name), envmap.get($env_name).unwrap())?;
         )*}
     }
