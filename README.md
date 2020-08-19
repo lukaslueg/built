@@ -19,6 +19,8 @@ The information collected by `built` include:
 * The used compiler and it's version; the used documentation generator and
    it's version.
 
+See [the example](https://github.com/lukaslueg/built/tree/master/example_project) or the [docs](https://docs.rs/built) for more information.
+
 ---
 
 ```rust,ignore
