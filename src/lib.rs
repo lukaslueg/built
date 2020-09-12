@@ -495,7 +495,8 @@ fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
                     stringify!($doc),
                     stringify!($name),
                     envmap.get($env_name)
-                        .expect(stringify!(Missing expected environment variable$env_name)))?;
+                        .cloned()
+                        .unwrap_or_default())?;
         )*}
     }
 
