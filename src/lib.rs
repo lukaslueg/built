@@ -523,7 +523,11 @@ fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
         (PKG_DESCRIPTION, "CARGO_PKG_DESCRIPTION", "The description."),
         (PKG_HOMEPAGE, "CARGO_PKG_HOMEPAGE", "The homepage."),
         (PKG_LICENSE, "CARGO_PKG_LICENSE", "The license."),
-        (PKG_REPOSITORY, "CARGO_PKG_REPOSITORY", "The source repository as advertised in Cargo.toml."),
+        (
+            PKG_REPOSITORY,
+            "CARGO_PKG_REPOSITORY",
+            "The source repository as advertised in Cargo.toml."
+        ),
         (
             TARGET,
             "TARGET",
