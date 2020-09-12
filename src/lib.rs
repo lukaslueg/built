@@ -141,6 +141,10 @@
 //! pub const PKG_LICENSE: &str = "MIT";
 //! #[doc="The source repository as advertised in Cargo.toml."]
 //! pub const PKG_REPOSITORY: &str = "";
+//! #[doc="The name of the crate."]
+//! pub const CRATE_NAME: &str = "";
+//! #[doc="The name of the binary (if it exists, explucing extensions like .exe)."]
+//! pub const BIN_NAME: &str = "";
 //! #[doc="The target triple that was being compiled for."]
 //! pub const TARGET: &str = "x86_64-unknown-linux-gnu";
 //! #[doc="The host triple of the rust compiler."]
@@ -530,6 +534,12 @@ fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
             PKG_REPOSITORY,
             "CARGO_PKG_REPOSITORY",
             "The source repository as advertised in Cargo.toml."
+        ),
+        (CRATE_NAME, "CARGO_CRATE_NAME", "The name of the crate."),
+        (
+            BIN_NAME,
+            "CARGO_BIN_NAME",
+            "The name of the binary (if it exists, explucing extensions like .exe)."
         ),
         (
             TARGET,
