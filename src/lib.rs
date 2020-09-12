@@ -137,6 +137,10 @@
 //! pub const PKG_DESCRIPTION: &str = "";
 //! #[doc="The homepage."]
 //! pub const PKG_HOMEPAGE: &str = "";
+//! #[doc="The license."]
+//! pub const PKG_LICENSE: &str = "MIT";
+//! #[doc="The source repository as advertised in Cargo.toml."]
+//! pub const PKG_REPOSITORY: &str = "";
 //! #[doc="The target triple that was being compiled for."]
 //! pub const TARGET: &str = "x86_64-unknown-linux-gnu";
 //! #[doc="The host triple of the rust compiler."]
@@ -518,6 +522,8 @@ fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
         (PKG_NAME, "CARGO_PKG_NAME", "The name of the package."),
         (PKG_DESCRIPTION, "CARGO_PKG_DESCRIPTION", "The description."),
         (PKG_HOMEPAGE, "CARGO_PKG_HOMEPAGE", "The homepage."),
+        (PKG_LICENSE, "CARGO_PKG_LICENSE", "The license."),
+        (PKG_REPOSITORY, "CARGO_PKG_REPOSITORY", "The source repository as advertised in Cargo.toml."),
         (
             TARGET,
             "TARGET",
