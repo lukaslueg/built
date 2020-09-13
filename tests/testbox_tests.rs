@@ -139,6 +139,8 @@ authors = [\"Joe\", \"Bob\", \"Harry:Potter\"]
 build = \"build.rs\"
 description = \"xobtset\"
 homepage = \"localhost\"
+repository = \"https://dev.example.com/sources/testbox/\"
+license = \"MIT\"
 
 [dependencies]
 chrono = \"0.4\"
@@ -199,6 +201,8 @@ fn main() {
     assert_eq!(built_info::PKG_NAME, "testbox");
     assert_eq!(built_info::PKG_DESCRIPTION, "xobtset");
     assert_eq!(built_info::PKG_HOMEPAGE, "localhost");
+    assert_eq!(built_info::PKG_LICENSE, "MIT");
+    assert_eq!(built_info::PKG_REPOSITORY, "https://dev.example.com/sources/testbox/");
     assert!(built_info::NUM_JOBS > 0);
     assert!(built_info::OPT_LEVEL == "0");
     assert!(built_info::DEBUG);
