@@ -104,12 +104,19 @@
 //!     }
 //! }
 //!
+//! /// The time this crate was built
+//! #[cfg(feature = "chrono")]
+//! fn built_time() -> built::chrono::DateTime<built::chrono::Local> {
+//!     built::util::strptime(built_info::BUILT_TIME_UTC)
+//!         .with_timezone(&built::chrono::offset::Local)
+//! }
+//!
 //! /// If another crate pulls in a dependency we don't like, print a warning
 //! #[cfg(feature = "semver")]
 //! fn check_sane_dependencies() {
 //!     if built::util::parse_versions(&built_info::DEPENDENCIES)
 //!                     .any(|(name, ver)| name == "DeleteAllMyFiles"
-//!                                        && ver < semver::Version::parse("1.1.4").unwrap()) {
+//!                                        && ver < built::semver::Version::parse("1.1.4").unwrap()) {
 //!         eprintln!("DeleteAllMyFiles < 1.1.4 may not delete all your files. Beware!");
 //!     }
 //! }
@@ -203,6 +210,12 @@ use std::{
     io::{Read, Write},
     path, process,
 };
+
+#[cfg(feature = "semver")]
+pub use semver;
+
+#[cfg(feature = "chrono")]
+pub use chrono;
 
 #[cfg(feature = "nightly")]
 #[doc(include = "../README.md")]

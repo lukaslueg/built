@@ -59,14 +59,14 @@ fn main() {
         "I was built with profile \"{}\", features \"{}\" on {} ({} seconds ago) using {}",
         built_info::PROFILE,
         built_info::FEATURES_STR,
-        built_time.with_timezone(&chrono::offset::Local),
-        (chrono::offset::Utc::now() - built_time).num_seconds(),
+        built_time.with_timezone(&built::chrono::offset::Local),
+        (built::chrono::offset::Utc::now() - built_time).num_seconds(),
         built_info::DEPENDENCIES_STR
     );
 
     let bad_dep =
         built::util::parse_versions(built_info::DEPENDENCIES.iter()).any(|(name, ver)| {
-            name == "DeleteAllMyFiles" && ver < semver::Version::parse("1.1.4").unwrap()
+            name == "DeleteAllMyFiles" && ver < built::semver::Version::parse("1.1.4").unwrap()
         });
     if bad_dep {
         println!(

@@ -143,8 +143,6 @@ repository = \"https://dev.example.com/sources/testbox/\"
 license = \"MIT\"
 
 [dependencies]
-chrono = \"0.4\"
-semver = \"0.10\"
 built = {{ path = {:?}, features=[\"git2\", \"chrono\", \"semver\"] }}
 
 [build-dependencies]
@@ -226,9 +224,9 @@ fn main() {
     assert_ne!(built_info::CFG_POINTER_WIDTH, "");
 
     assert!(built::util::parse_versions(built_info::DEPENDENCIES.iter())
-        .any(|(name, ver)| name == "toml" && ver >= semver::Version::parse("0.1.0").unwrap()));
+        .any(|(name, ver)| name == "toml" && ver >= built::semver::Version::parse("0.1.0").unwrap()));
 
-    assert!((chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
+    assert!((built::chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
 }"#,
     );
     p.create_and_run();

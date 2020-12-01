@@ -7,8 +7,6 @@ edition = "2018"
 
 [dependencies]
 built = { version = "0.4", path="../", features = ["git2", "chrono", "semver"] }
-semver = "0.10"
-chrono = "0.4"
 
 [build-dependencies]
 built = { version = "0.4", path="../" }
