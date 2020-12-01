@@ -23,7 +23,7 @@ before_install:
 script:
   - if [ "$TRAVIS_RUST_VERSION" != "nightly" ]; then
     cargo fmt --all -- --check &&
-    cargo clippy --all --tests --examples;
+    cargo clippy --all --tests --examples --features git2,chrono,semver;
     fi
   - cargo test
   - cargo test --features git2,chrono,semver
