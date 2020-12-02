@@ -343,7 +343,14 @@ impl CIPlatform {
 
 fn get_build_deps(manifest_location: &path::Path) -> io::Result<Vec<(String, String)>> {
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
+    fs::File::open(manifest_location.join("Cargo.lock"))
+        .map_err(|i| {
+            std::io::Error::new(
+                i.kind(),
+                "No Cargo.lock file found, see set_dependencies documentation",
+            )
+        })?
+        .read_to_string(&mut lock_buf)?;
     Ok(parse_dependencies(&lock_buf))
 }
 
