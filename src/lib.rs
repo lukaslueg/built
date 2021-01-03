@@ -222,6 +222,22 @@ pub use chrono;
 #[allow(dead_code)]
 type _READMETEST = ();
 
+macro_rules! write_variable {
+    ($writer:expr, $name:expr, $datatype:expr, $value:expr, $doc:expr) => {
+        writeln!(
+            $writer,
+            "#[doc=\"{}\"]\npub const {}: {} = {};",
+            $doc, $name, $datatype, $value
+        )?;
+    };
+}
+
+macro_rules! write_str_variable {
+    ($writer:expr, $name:expr, $value:expr, $doc:expr) => {
+        write_variable!($writer, $name, "&str", format!("r\"{}\"", $value), $doc);
+    };
+}
+
 /// Various Continuous Integration platforms whose presence can be detected.
 pub enum CIPlatform {
     /// https://travis-ci.org
@@ -386,14 +402,11 @@ fn write_compiler_version(
     let rustc_version = get_version_from_cmd(&rustc)?;
     let rustdoc_version = get_version_from_cmd(&rustdoc)?;
 
-    writeln!(w, "/// The output of `{} -V`", rustc.to_string_lossy())?;
-    writeln!(w, "pub const RUSTC_VERSION: &str = \"{}\";", &rustc_version)?;
-    writeln!(w, "/// The output of `{} -V`", rustdoc.to_string_lossy())?;
-    writeln!(
-        w,
-        "pub const RUSTDOC_VERSION: &str = \"{}\";",
-        &rustdoc_version
-    )?;
+    let doc = format!("The output of `{} -V`", rustc.to_string_lossy());
+    write_str_variable!(w, "RUSTC_VERSION", rustc_version, doc);
+
+    let doc = format!("The output of `{} -V`", rustdoc.to_string_lossy());
+    write_str_variable!(w, "RUSTDOC_VERSION", rustdoc_version, doc);
     Ok(())
 }
 
@@ -413,63 +426,63 @@ fn write_git_version(manifest_location: &path::Path, w: &mut fs::File) -> io::Re
         Ok(Some((tag, dirty))) => (Some(tag), Some(dirty)),
         _ => (None, None),
     };
-    w.write_all(
-        b"/// If the crate was compiled from within a git-repository, `GIT_VERSION` \
-contains HEAD's tag. The short commit id is used if HEAD is not tagged.\n",
-    )?;
-    writeln!(
+    write_variable!(
         w,
-        "pub const GIT_VERSION: Option<&str> = {};",
-        &fmt_option_str(tag)
-    )?;
-    writeln!(
+        "GIT_VERSION",
+        "Option<&str>",
+        fmt_option_str(tag),
+        "If the crate was compiled from within a git-repository, \
+        `GIT_VERSION` contains HEAD's tag. The short commit id is used if HEAD is not tagged."
+    );
+    write_variable!(
         w,
-        "/// If the repository had dirty/staged files.
-pub const GIT_DIRTY: Option<bool> = {};",
+        "GIT_DIRTY",
+        "Option<bool>",
         match dirty {
             Some(true) => "Some(true)",
             Some(false) => "Some(false)",
             None => "None",
-        }
-    )?;
+        },
+        "If the repository had dirty/staged files."
+    );
 
     let (branch, commit) = match util::get_repo_head(&manifest_location) {
         Ok(Some((b, c))) => (b, Some(c)),
         _ => (None, None),
     };
 
-    w.write_all(
-        b"/// If the crate was compiled from within a git-repository, `GIT_HEAD_REF` \
-contains full name to the reference pointed to by HEAD \
-(e.g.: `refs/heads/master`). If HEAD is detached or the branch name is not \
-valid UTF-8 `None` will be stored.\n",
-    )?;
-    writeln!(
+    let doc = "If the crate was compiled from within a git-repository, `GIT_HEAD_REF` \
+        contains full name to the reference pointed to by HEAD \
+        (e.g.: `refs/heads/master`). If HEAD is detached or the branch name is not \
+        valid UTF-8 `None` will be stored.\n";
+    write_variable!(
         w,
-        "pub const GIT_HEAD_REF: Option<&str> = {};",
-        &fmt_option_str(branch)
-    )?;
+        "GIT_HEAD_REF",
+        "Option<&str>",
+        fmt_option_str(branch),
+        doc
+    );
 
-    w.write_all(
-        b"/// If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH` \
-contains HEAD's full commit SHA-1 hash.\n",
-    )?;
-    writeln!(
+    write_variable!(
         w,
-        "pub const GIT_COMMIT_HASH: Option<&str> = {};",
-        &fmt_option_str(commit)
-    )?;
+        "GIT_COMMIT_HASH",
+        "Option<&str>",
+        fmt_option_str(commit),
+        "If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH` \
+    contains HEAD's full commit SHA-1 hash."
+    );
 
     Ok(())
 }
 
 fn write_ci(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
-    w.write_all(b"/// The Continuous Integration platform detected during compilation.\n")?;
-    writeln!(
+    write_variable!(
         w,
-        "pub const CI_PLATFORM: Option<&str> = {};",
-        &fmt_option_str(CIPlatform::detect_from_envmap(envmap))
-    )?;
+        "CI_PLATFORM",
+        "Option<&str>",
+        fmt_option_str(CIPlatform::detect_from_envmap(envmap)),
+        "The Continuous Integration platform detected during compilation."
+    );
     Ok(())
 }
 
@@ -483,28 +496,34 @@ fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
     }
     features.sort();
 
-    w.write_all(b"/// The features that were enabled during compilation.\n")?;
-    writeln!(
+    write_variable!(
         w,
-        "pub const FEATURES: [&str; {}] = {:?};",
-        features.len(),
-        features
-    )?;
+        "FEATURES",
+        format!("[&str; {}]", features.len()),
+        format!("{:?}", features),
+        "The features that were enabled during compilation."
+    );
 
     let features_str = features.join(", ");
-    w.write_all(b"/// The features as a comma-separated string.\n")?;
-    writeln!(w, "pub const FEATURES_STR: &str = \"{}\";", features_str)?;
+    write_str_variable!(
+        w,
+        "FEATURES_STR",
+        features_str,
+        "The features as a comma-separated string."
+    );
     Ok(())
 }
 
 fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
     macro_rules! write_env_str {
         ($(($name:ident, $env_name:expr,$doc:expr)),*) => {$(
-            writeln!(w, "#[doc={}]\npub const {}: &str = r\"{}\";",
-                    stringify!($doc),
-                    stringify!($name),
-                    envmap.get($env_name)
-                        .expect(stringify!(Missing expected environment variable$env_name)))?;
+            write_str_variable!(
+                w,
+                stringify!($name),
+                envmap.get($env_name)
+                    .expect(stringify!(Missing expected environment variable $env_name)),
+                    $doc
+            );
         )*}
     }
 
@@ -562,57 +581,59 @@ fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
             "The documentation generator that cargo resolved to use."
         )
     );
-    writeln!(
+    write_str_variable!(
         w,
-        "#[doc=\"Value of OPT_LEVEL for the profile used during compilation.\"]\npub const \
-         OPT_LEVEL: &str = \"{}\";",
-        env::var("OPT_LEVEL").unwrap()
-    )?;
-    writeln!(
+        "OPT_LEVEL",
+        env::var("OPT_LEVEL").unwrap(),
+        "Value of OPT_LEVEL for the profile used during compilation."
+    );
+    write_variable!(
         w,
-        "#[doc=\"The parallelism that was specified during compilation.\"]\npub const \
-         NUM_JOBS: u32 = {};",
-        env::var("NUM_JOBS").unwrap()
-    )?;
-    writeln!(
+        "NUM_JOBS",
+        "u32",
+        env::var("NUM_JOBS").unwrap(),
+        "The parallelism that was specified during compilation."
+    );
+    write_variable!(
         w,
-        "#[doc=\"Value of DEBUG for the profile used during compilation.\"]\npub const \
-         DEBUG: bool = {};",
-        env::var("DEBUG").unwrap() == "true"
-    )?;
+        "DEBUG",
+        "bool",
+        env::var("DEBUG").unwrap() == "true",
+        "Value of DEBUG for the profile used during compilation."
+    );
     Ok(())
 }
 
 fn write_dependencies(manifest_location: &path::Path, w: &mut fs::File) -> io::Result<()> {
     let deps = get_build_deps(&manifest_location)?;
-    w.write_all(b"/// An array of effective dependencies as documented by `Cargo.lock`.\n")?;
-    writeln!(
+    write_variable!(
         w,
-        "pub const DEPENDENCIES: [(&str, &str); {}] = {:?};",
-        deps.len(),
-        deps
-    )?;
-    w.write_all(b"/// The effective dependencies as a comma-separated string.\n")?;
-    writeln!(
+        "DEPENDENCIES",
+        format!("[(&str, &str); {}]", deps.len()),
+        format!("{:?}", deps),
+        "An array of effective dependencies as documented by `Cargo.lock`."
+    );
+    write_str_variable!(
         w,
-        "pub const DEPENDENCIES_STR: &str = \"{}\";",
+        "DEPENDENCIES_STR",
         deps.iter()
             .map(|&(ref n, ref v)| format!("{} {}", n, v))
             .collect::<Vec<_>>()
-            .join(", ")
-    )?;
+            .join(", "),
+        "The effective dependencies as a comma-separated string."
+    );
     Ok(())
 }
 
 #[cfg(feature = "chrono")]
 fn write_time(w: &mut fs::File) -> io::Result<()> {
     let now = chrono::offset::Utc::now();
-    w.write_all(b"/// The built-time in RFC2822, UTC\n")?;
-    writeln!(
+    write_str_variable!(
         w,
-        "pub const BUILT_TIME_UTC: &str = \"{}\";",
-        now.to_rfc2822()
-    )?;
+        "BUILT_TIME_UTC",
+        now.to_rfc2822(),
+        "The build time in RFC2822, UTC."
+    );
     Ok(())
 }
 
@@ -631,31 +652,47 @@ fn write_cfg(w: &mut fs::File) -> io::Result<()> {
                         "bitrig", "openbsd", "netbsd");
     get_cfg!(target_pointer_width: "32", "64");
 
-    w.write_all(b"/// The target architecture, given by `cfg!(target_arch)`.\n")?;
-    writeln!(
+    write_str_variable!(
         w,
-        "pub const CFG_TARGET_ARCH: &str = \"{}\";",
-        target_arch()
-    )?;
+        "CFG_TARGET_ARCH",
+        target_arch(),
+        "The target architecture, given by `cfg!(target_arch)`."
+    );
 
-    w.write_all(b"/// The endianness, given by `cfg!(target_endian)`.\n")?;
-    writeln!(w, "pub const CFG_ENDIAN: &str = \"{}\";", target_endian())?;
-
-    w.write_all(b"/// The toolchain-environment, given by `cfg!(target_env)`.\n")?;
-    writeln!(w, "pub const CFG_ENV: &str = \"{}\";", target_env())?;
-
-    w.write_all(b"/// The OS-family, given by `cfg!(target_family)`.\n")?;
-    writeln!(w, "pub const CFG_FAMILY: &str = \"{}\";", target_family())?;
-
-    w.write_all(b"/// The operating system, given by `cfg!(target_os)`.\n")?;
-    writeln!(w, "pub const CFG_OS: &str = \"{}\";", target_os())?;
-
-    w.write_all(b"/// The pointer width, given by `cfg!(target_pointer_width)`.\n")?;
-    writeln!(
+    write_str_variable!(
         w,
-        "pub const CFG_POINTER_WIDTH: &str = \"{}\";",
-        target_pointer_width()
-    )?;
+        "CFG_ENDIAN",
+        target_endian(),
+        "The endianness, given by `cfg!(target_endian)`."
+    );
+
+    write_str_variable!(
+        w,
+        "CFG_ENV",
+        target_env(),
+        "The toolchain-environment, given by `cfg!(target_env)`."
+    );
+
+    write_str_variable!(
+        w,
+        "CFG_FAMILY",
+        target_family(),
+        "The OS-family, given by `cfg!(target_family)`."
+    );
+
+    write_str_variable!(
+        w,
+        "CFG_OS",
+        target_os(),
+        "The operating system, given by `cfg!(target_os)`."
+    );
+
+    write_str_variable!(
+        w,
+        "CFG_POINTER_WIDTH",
+        target_pointer_width(),
+        "The pointer width, given by `cfg!(target_pointer_width)`."
+    );
 
     Ok(())
 }
