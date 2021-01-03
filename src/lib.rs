@@ -226,7 +226,7 @@ macro_rules! write_variable {
     ($writer:expr, $name:expr, $datatype:expr, $value:expr, $doc:expr) => {
         writeln!(
             $writer,
-            "#[doc=\"{}\"]\npub const {}: {} = {};",
+            "#[doc=\"{}\"]\n#[allow(dead_code)]\npub const {}: {} = {};",
             $doc, $name, $datatype, $value
         )?;
     };
