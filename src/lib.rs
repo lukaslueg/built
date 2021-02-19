@@ -1012,7 +1012,7 @@ mod tests {
         use std::fs;
         use std::path;
 
-        let repo_root = tempdir::TempDir::new("builttest").unwrap();
+        let repo_root = tempfile::tempdir().unwrap();
         assert_eq!(util::get_repo_description(repo_root.as_ref()), Ok(None));
 
         let repo = git2::Repository::init_opts(
@@ -1090,7 +1090,7 @@ mod tests {
     #[test]
     #[cfg(feature = "git2")]
     fn detached_head_repo() {
-        let repo_root = tempdir::TempDir::new("builttest").unwrap();
+        let repo_root = tempfile::tempdir().unwrap();
         let repo = git2::Repository::init_opts(
             &repo_root,
             git2::RepositoryInitOptions::new()

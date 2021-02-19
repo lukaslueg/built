@@ -6,14 +6,14 @@ use std::path;
 use std::process;
 
 struct Project {
-    root: tempdir::TempDir,
+    root: tempfile::TempDir,
     files: Vec<(path::PathBuf, Vec<u8>)>,
 }
 
 impl Project {
     fn new() -> Project {
         Project {
-            root: tempdir::TempDir::new("built_integration").unwrap(),
+            root: tempfile::tempdir().unwrap(),
             files: Vec::new(),
         }
     }
@@ -61,7 +61,7 @@ fn main() {
     }
 
     /// Hold on to the tempdir, it will be removed when dropped!
-    fn create(self) -> io::Result<tempdir::TempDir> {
+    fn create(self) -> io::Result<tempfile::TempDir> {
         fs::DirBuilder::new()
             .create(&self.root.path().join("src"))
             .unwrap();
