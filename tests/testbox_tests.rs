@@ -27,7 +27,6 @@ impl Project {
         self
     }
 
-    #[cfg(feature = "git2")]
     fn bootstrap(&mut self) -> &mut Self {
         let built_root = get_built_root();
         let features = if cfg!(feature = "git2") {
@@ -308,4 +307,50 @@ fn main() {}
     );
     p.init_git();
     p.create_and_run();
+}
+
+#[cfg(target_os = "windows")]
+#[test]
+fn absolute_paths() {
+    // Issue #35. Usually binaries we refer to are simply executables names but sometimes they are
+    // absolute paths, containing backslashes, and everything gets sad on this devilish platform.
+
+    let mut p = Project::new();
+    p.bootstrap().add_file(
+        "src/main.rs",
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {}
+"#,
+    );
+
+    let rustc_exe_buf = String::from_utf8(
+        process::Command::new("where")
+            .arg("rustc")
+            .output()
+            .expect("Unable to locate absolute path to rustc using `where`")
+            .stdout,
+    )
+    .unwrap();
+    let rustc_exe = rustc_exe_buf.split("\r\n").next().unwrap();
+
+    // There should at least be `C:\`
+    assert!(rustc_exe.contains('\\'));
+
+    let root = p.create().expect("Creating the project failed");
+    let cargo_result = process::Command::new("cargo")
+        .current_dir(&root)
+        .arg("run")
+        .env("RUSTC", &rustc_exe)
+        .output()
+        .expect("cargo failed");
+    if !cargo_result.status.success() {
+        panic!(
+            "cargo failed with {}",
+            String::from_utf8_lossy(&cargo_result.stderr)
+        );
+    }
 }
