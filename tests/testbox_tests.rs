@@ -27,6 +27,7 @@ impl Project {
         self
     }
 
+    #[cfg(any(target_os = "windows", feature = "git2"))]
     fn bootstrap(&mut self) -> &mut Self {
         let built_root = get_built_root();
         let features = if cfg!(feature = "git2") {
