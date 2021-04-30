@@ -218,10 +218,11 @@ fn main() {
     assert_ne!(built_info::RUSTDOC, "");
     assert_ne!(built_info::CFG_TARGET_ARCH, "");
     assert_ne!(built_info::CFG_ENDIAN, "");
-    assert_ne!(built_info::CFG_ENV, "");
     assert_ne!(built_info::CFG_FAMILY, "");
     assert_ne!(built_info::CFG_OS, "");
     assert_ne!(built_info::CFG_POINTER_WIDTH, "");
+    // For CFG_ENV, empty string is a possible value.
+    let _: &'static str = built_info::CFG_ENV;
 
     assert!(built::util::parse_versions(built_info::DEPENDENCIES.iter())
         .any(|(name, ver)| name == "toml" && ver >= built::semver::Version::parse("0.1.0").unwrap()));
