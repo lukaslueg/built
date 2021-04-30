@@ -31,7 +31,8 @@
 //!
 //!  * Various metadata like version, authors, homepage etc. as set by `Cargo.toml`
 //!  * The tag or commit id if the crate was being compiled from within a git repo.
-//!  * The values of various `cfg!`, like `target_os` and `target_arch`.
+//!  * The values of `CARGO_CFG_*` build script env variables, like `CARGO_CFG_TARGET_OS` and
+//!    `CARGO_CFG_TARGET_ARCH`.
 //!  * The features the crate was compiled with.
 //!  * The various dependencies, dependencies of dependencies and their versions
 //!    cargo ultimately chose to compile.
@@ -186,17 +187,17 @@
 //! pub const DEPENDENCIES_STR: &str = "autocfg 1.0.0, bitflags 1.2.1, built 0.4.1, cargo-lock 4.0.1, cc 1.0.54, cfg-if 0.1.10, chrono 0.4.11, example_project 0.1.0, git2 0.13.6, idna 0.2.0, jobserver 0.1.21, libc 0.2.71, libgit2-sys 0.12.6+1.0.0, libz-sys 1.0.25, log 0.4.8, matches 0.1.8, num-integer 0.1.42, num-traits 0.2.11, percent-encoding 2.1.0, pkg-config 0.3.17, proc-macro2 1.0.17, quote 1.0.6, semver 0.10.0, semver 0.9.0, semver-parser 0.7.0, serde 1.0.110, serde_derive 1.0.110, smallvec 1.4.0, syn 1.0.25, time 0.1.43, toml 0.5.6, unicode-bidi 0.3.4, unicode-normalization 0.1.12, unicode-xid 0.2.0, url 2.1.1, vcpkg 0.2.8, winapi 0.3.8, winapi-i686-pc-windows-gnu 0.4.0, winapi-x86_64-pc-windows-gnu 0.4.0";
 //! /// The built-time in RFC2822, UTC
 //! pub const BUILT_TIME_UTC: &str = "Wed, 27 May 2020 18:12:39 +0000";
-//! /// The target architecture, given by `cfg!(target_arch)`.
+//! /// The target architecture, given by `CARGO_CFG_TARGET_ARCH`.
 //! pub const CFG_TARGET_ARCH: &str = "x86_64";
-//! /// The endianness, given by `cfg!(target_endian)`.
+//! /// The endianness, given by `CARGO_CFG_TARGET_ENDIAN`.
 //! pub const CFG_ENDIAN: &str = "little";
-//! /// The toolchain-environment, given by `cfg!(target_env)`.
+//! /// The toolchain-environment, given by `CARGO_CFG_TARGET_ENV`.
 //! pub const CFG_ENV: &str = "gnu";
-//! /// The OS-family, given by `cfg!(target_family)`.
+//! /// The OS-family, given by `CARGO_CFG_TARGET_FAMILY`.
 //! pub const CFG_FAMILY: &str = "unix";
-//! /// The operating system, given by `cfg!(target_os)`.
+//! /// The operating system, given by `CARGO_CFG_TARGET_OS`.
 //! pub const CFG_OS: &str = "linux";
-//! /// The pointer width, given by `cfg!(target_pointer_width)`.
+//! /// The pointer width, given by `CARGO_CFG_TARGET_POINTER_WIDTH`.
 //! pub const CFG_POINTER_WIDTH: &str = "64";
 //! ```
 //! [options]: struct.Options.html
@@ -638,60 +639,57 @@ fn write_time(w: &mut fs::File) -> io::Result<()> {
 }
 
 fn write_cfg(w: &mut fs::File) -> io::Result<()> {
-    macro_rules! get_cfg {
-        ($i:ident : $($s:expr),+) => (
-            let $i = || { $( if cfg!($i=$s) { return $s; } );+ "unknown"};
-        )
+    fn get_env(name: &str) -> String {
+        env::var(name).unwrap_or_default()
     }
 
-    get_cfg!(target_arch: "x86", "x86_64", "mips", "powerpc", "powerpc64", "arm", "aarch64");
-    get_cfg!(target_endian: "little", "big");
-    get_cfg!(target_env: "musl", "msvc", "gnu");
-    get_cfg!(target_family: "unix", "windows");
-    get_cfg!(target_os: "windows", "macos", "ios", "linux", "android", "freebsd", "dragonfly",
-                        "bitrig", "openbsd", "netbsd");
-    get_cfg!(target_pointer_width: "32", "64");
+    let target_arch = get_env("CARGO_CFG_TARGET_ARCH");
+    let target_endian = get_env("CARGO_CFG_TARGET_ENDIAN");
+    let target_env = get_env("CARGO_CFG_TARGET_ENV");
+    let target_family = get_env("CARGO_CFG_TARGET_FAMILY");
+    let target_os = get_env("CARGO_CFG_TARGET_OS");
+    let target_pointer_width = get_env("CARGO_CFG_TARGET_POINTER_WIDTH");
 
     write_str_variable!(
         w,
         "CFG_TARGET_ARCH",
-        target_arch(),
-        "The target architecture, given by `cfg!(target_arch)`."
+        target_arch,
+        "The target architecture, given by `CARGO_CFG_TARGET_ARCH`."
     );
 
     write_str_variable!(
         w,
         "CFG_ENDIAN",
-        target_endian(),
-        "The endianness, given by `cfg!(target_endian)`."
+        target_endian,
+        "The endianness, given by `CARGO_CFG_TARGET_ENDIAN`."
     );
 
     write_str_variable!(
         w,
         "CFG_ENV",
-        target_env(),
-        "The toolchain-environment, given by `cfg!(target_env)`."
+        target_env,
+        "The toolchain-environment, given by `CARGO_CFG_TARGET_ENV`."
     );
 
     write_str_variable!(
         w,
         "CFG_FAMILY",
-        target_family(),
-        "The OS-family, given by `cfg!(target_family)`."
+        target_family,
+        "The OS-family, given by `CARGO_CFG_TARGET_FAMILY`."
     );
 
     write_str_variable!(
         w,
         "CFG_OS",
-        target_os(),
-        "The operating system, given by `cfg!(target_os)`."
+        target_os,
+        "The operating system, given by `CARGO_CFG_TARGET_OS`."
     );
 
     write_str_variable!(
         w,
         "CFG_POINTER_WIDTH",
-        target_pointer_width(),
-        "The pointer width, given by `cfg!(target_pointer_width)`."
+        target_pointer_width,
+        "The pointer width, given by `CARGO_CFG_TARGET_POINTER_WIDTH`."
     );
 
     Ok(())
@@ -904,17 +902,17 @@ impl Options {
     /// `built` writes something like
     ///
     /// ```rust,no_run
-    /// /// The target architecture, given by `cfg!(target_arch)`.
+    /// /// The target architecture, given by `CARGO_CFG_TARGET_ARCH`.
     /// pub const CFG_TARGET_ARCH: &str = "x86_64";
-    /// /// The endianness, given by `cfg!(target_endian)`.
+    /// /// The endianness, given by `CARGO_CFG_TARGET_ENDIAN`.
     /// pub const CFG_ENDIAN: &str = "little";
-    /// /// The toolchain-environment, given by `cfg!(target_env)`.
+    /// /// The toolchain-environment, given by `CARGO_CFG_TARGET_ENV`.
     /// pub const CFG_ENV: &str = "gnu";
-    /// /// The OS-family, given by `cfg!(target_family)`.
+    /// /// The OS-family, given by `CARGO_CFG_TARGET_FAMILY`.
     /// pub const CFG_FAMILY: &str = "unix";
-    /// /// The operating system, given by `cfg!(target_os)`.
+    /// /// The operating system, given by `CARGO_CFG_TARGET_OS`.
     /// pub const CFG_OS: &str = "linux";
-    /// /// The pointer width, given by `cfg!(target_pointer_width)`.
+    /// /// The pointer width, given by `CARGO_CFG_TARGET_POINTER_WIDTH`.
     /// pub const CFG_POINTER_WIDTH: &str = "64";
     /// ```
     pub fn set_cfg(&mut self, enabled: bool) -> &mut Self {
