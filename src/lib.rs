@@ -638,59 +638,56 @@ fn write_time(w: &mut fs::File) -> io::Result<()> {
 }
 
 fn write_cfg(w: &mut fs::File) -> io::Result<()> {
-    macro_rules! get_cfg {
-        ($i:ident : $($s:expr),+) => (
-            let $i = || { $( if cfg!($i=$s) { return $s; } );+ "unknown"};
-        )
+    fn get_env(name: &str) -> String {
+        env::var(name).unwrap_or_else(|_| "unknown".to_owned())
     }
 
-    get_cfg!(target_arch: "x86", "x86_64", "mips", "powerpc", "powerpc64", "arm", "aarch64");
-    get_cfg!(target_endian: "little", "big");
-    get_cfg!(target_env: "musl", "msvc", "gnu");
-    get_cfg!(target_family: "unix", "windows");
-    get_cfg!(target_os: "windows", "macos", "ios", "linux", "android", "freebsd", "dragonfly",
-                        "bitrig", "openbsd", "netbsd");
-    get_cfg!(target_pointer_width: "32", "64");
+    let target_arch = get_env("CARGO_CFG_TARGET_ARCH");
+    let target_endian = get_env("CARGO_CFG_TARGET_ENDIAN");
+    let target_env = get_env("CARGO_CFG_TARGET_ENV");
+    let target_family = get_env("CARGO_CFG_TARGET_FAMILY");
+    let target_os = get_env("CARGO_CFG_TARGET_OS");
+    let target_pointer_width = get_env("CARGO_CFG_TARGET_POINTER_WIDTH");
 
     write_str_variable!(
         w,
         "CFG_TARGET_ARCH",
-        target_arch(),
+        target_arch,
         "The target architecture, given by `cfg!(target_arch)`."
     );
 
     write_str_variable!(
         w,
         "CFG_ENDIAN",
-        target_endian(),
+        target_endian,
         "The endianness, given by `cfg!(target_endian)`."
     );
 
     write_str_variable!(
         w,
         "CFG_ENV",
-        target_env(),
+        target_env,
         "The toolchain-environment, given by `cfg!(target_env)`."
     );
 
     write_str_variable!(
         w,
         "CFG_FAMILY",
-        target_family(),
+        target_family,
         "The OS-family, given by `cfg!(target_family)`."
     );
 
     write_str_variable!(
         w,
         "CFG_OS",
-        target_os(),
+        target_os,
         "The operating system, given by `cfg!(target_os)`."
     );
 
     write_str_variable!(
         w,
         "CFG_POINTER_WIDTH",
-        target_pointer_width(),
+        target_pointer_width,
         "The pointer width, given by `cfg!(target_pointer_width)`."
     );
 
