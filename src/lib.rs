@@ -639,7 +639,7 @@ fn write_time(w: &mut fs::File) -> io::Result<()> {
 
 fn write_cfg(w: &mut fs::File) -> io::Result<()> {
     fn get_env(name: &str) -> String {
-        env::var(name).unwrap_or_else(|_| "unknown".to_owned())
+        env::var(name).unwrap_or_default()
     }
 
     let target_arch = get_env("CARGO_CFG_TARGET_ARCH");
