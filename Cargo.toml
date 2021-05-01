@@ -1,6 +1,6 @@
 [package]
 name = "built"
-version = "0.4.4"
+version = "0.5.0"
 description = "Provides a crate with information from the time it was built."
 repository = "https://github.com/lukaslueg/built"
 documentation = "https://docs.rs/built"
