@@ -202,8 +202,6 @@
 //! ```
 //! [options]: struct.Options.html
 
-#![cfg_attr(feature = "nightly", feature(external_doc))]
-
 pub mod util;
 
 use std::{
@@ -400,8 +398,8 @@ fn write_compiler_version(
     rustdoc: &ffi::OsStr,
     w: &mut fs::File,
 ) -> io::Result<()> {
-    let rustc_version = get_version_from_cmd(&rustc)?;
-    let rustdoc_version = get_version_from_cmd(&rustdoc)?;
+    let rustc_version = get_version_from_cmd(rustc)?;
+    let rustdoc_version = get_version_from_cmd(rustdoc)?;
 
     let doc = format!("The output of `{} -V`", rustc.to_string_lossy());
     write_str_variable!(w, "RUSTC_VERSION", rustc_version, doc);
@@ -606,7 +604,7 @@ fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
 }
 
 fn write_dependencies(manifest_location: &path::Path, w: &mut fs::File) -> io::Result<()> {
-    let deps = get_build_deps(&manifest_location)?;
+    let deps = get_build_deps(manifest_location)?;
     write_variable!(
         w,
         "DEPENDENCIES",
@@ -956,8 +954,8 @@ pub fn write_built_file_with_opts(
         o!(
             compiler,
             write_compiler_version(
-                &envmap["RUSTC"].as_ref(),
-                &envmap["RUSTDOC"].as_ref(),
+                envmap["RUSTC"].as_ref(),
+                envmap["RUSTDOC"].as_ref(),
                 &mut built_file
             )?
         );
@@ -968,7 +966,7 @@ pub fn write_built_file_with_opts(
     }
     o!(
         deps,
-        write_dependencies(&manifest_location, &mut built_file)?
+        write_dependencies(manifest_location, &mut built_file)?
     );
     #[cfg(feature = "chrono")]
     {
@@ -1144,7 +1142,7 @@ mod tests {
             [[package]]
             name = "dep_of_dep"
             version = "7.8.9""#;
-        let deps = super::parse_dependencies(&lock_toml_buf);
+        let deps = super::parse_dependencies(lock_toml_buf);
         assert_eq!(
             deps,
             [
