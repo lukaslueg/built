@@ -273,6 +273,8 @@ pub enum CIPlatform {
     GoCD,
     /// https://bitbucket.org
     BitBucket,
+    /// https://github.com/features/actions
+    GitHubActions,
     /// Unspecific
     Generic,
 }
@@ -297,6 +299,7 @@ impl fmt::Display for CIPlatform {
             CIPlatform::TaskCluster => "TaskCluster",
             CIPlatform::GoCD => "GoCD",
             CIPlatform::BitBucket => "BitBucket",
+            CIPlatform::GitHubActions => "GitHub Actions",
             CIPlatform::Generic => "Generic CI",
         })
     }
@@ -351,7 +354,8 @@ impl CIPlatform {
             ("BUILDKITE", Buildkite),
             ("HUDSON_URL", Hudson),
             ("GO_PIPELINE_LABEL", GoCD),
-            ("BITBUCKET_COMMIT", BitBucket)
+            ("BITBUCKET_COMMIT", BitBucket),
+            ("GITHUB_ACTIONS", GitHubActions)
         );
 
         if envmap.contains_key("TASK_ID") && envmap.contains_key("RUN_ID") {
