@@ -26,4 +26,4 @@ git2 = { version = "0.13", optional = true, default-features = false, features =
 tempfile = "3"
 
 [package.metadata.docs.rs]
-features = [ "chrono", "git2", "semver" ]
+features = [ "chrono", "git2", "semver", "workspace" ]
