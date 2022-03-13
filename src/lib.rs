@@ -207,7 +207,7 @@ pub mod util;
 use std::{
     collections, env, ffi, fmt, fs, io,
     io::{Read, Write},
-    path, process,
+    path::{self, PathBuf}, process,
 };
 
 #[cfg(feature = "semver")]
@@ -375,7 +375,13 @@ impl CIPlatform {
 
 fn get_build_deps(manifest_location: &path::Path) -> io::Result<Vec<(String, String)>> {
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
+    let path: PathBuf;
+    if cfg!(feature = "workspace") {
+        path = manifest_location.join("../Cargo.lock")
+    } else {
+        path = manifest_location.join("Cargo.lock")
+    }
+    fs::File::open(path)?.read_to_string(&mut lock_buf)?;
     Ok(parse_dependencies(&lock_buf))
 }
 
