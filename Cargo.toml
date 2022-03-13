@@ -15,6 +15,7 @@ travis-ci = { repository = "lukaslueg/built" }
 
 [features]
 nightly = []
+workspace = []
 
 [dependencies]
 cargo-lock = { version = "7.0", default-features = false }
