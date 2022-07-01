@@ -216,8 +216,7 @@ pub use semver;
 #[cfg(feature = "chrono")]
 pub use chrono;
 
-#[cfg(feature = "nightly")]
-#[doc(include = "../README.md")]
+#[doc = include_str!("../README.md")]
 #[allow(dead_code)]
 type _READMETEST = ();
 
@@ -239,41 +238,41 @@ macro_rules! write_str_variable {
 
 /// Various Continuous Integration platforms whose presence can be detected.
 pub enum CIPlatform {
-    /// https://travis-ci.org
+    /// <https://travis-ci.org>
     Travis,
-    /// https://circleci.com
+    /// <https://circleci.com>
     Circle,
-    /// https://about.gitlab.com/gitlab-ci/
+    /// <https://about.gitlab.com/gitlab-ci>
     GitLab,
-    /// https://www.appveyor.com/
+    /// <https://www.appveyor.com>
     AppVeyor,
-    /// https://codeship.com/
+    /// <https://codeship.com>
     Codeship,
-    /// https://github.com/drone/drone
+    /// <https://github.com/drone/drone>
     Drone,
-    /// https://magnum-ci.com/
+    /// <https://magnum-ci.com>
     Magnum,
-    /// https://semaphoreci.com/
+    /// <https://semaphoreci.com>
     Semaphore,
-    /// https://jenkins.io/
+    /// <https://jenkins.io>
     Jenkins,
-    /// https://www.atlassian.com/software/bamboo
+    /// <https://www.atlassian.com/software/bamboo>
     Bamboo,
-    /// https://www.visualstudio.com/de/tfs/
+    /// <https://www.visualstudio.com/de/tfs>
     TFS,
-    /// https://www.jetbrains.com/teamcity/
+    /// <https://www.jetbrains.com/teamcity>
     TeamCity,
-    /// https://buildkite.com/
+    /// <https://buildkite.com>
     Buildkite,
-    /// http://hudson-ci.org/
+    /// <http://hudson-ci.org>
     Hudson,
-    /// https://github.com/taskcluster
+    /// <https://github.com/taskcluster>
     TaskCluster,
-    /// https://www.gocd.io/
+    /// <https://www.gocd.io>
     GoCD,
-    /// https://bitbucket.org
+    /// <https://bitbucket.org>
     BitBucket,
-    /// https://github.com/features/actions
+    /// <https://github.com/features/actions>
     GitHubActions,
     /// Unspecific
     Generic,
@@ -425,7 +424,7 @@ fn write_git_version(manifest_location: &path::Path, w: &mut fs::File) -> io::Re
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
     // error.
-    let (tag, dirty) = match util::get_repo_description(&manifest_location) {
+    let (tag, dirty) = match util::get_repo_description(manifest_location) {
         Ok(Some((tag, dirty))) => (Some(tag), Some(dirty)),
         _ => (None, None),
     };
@@ -449,7 +448,7 @@ fn write_git_version(manifest_location: &path::Path, w: &mut fs::File) -> io::Re
         "If the repository had dirty/staged files."
     );
 
-    let (branch, commit) = match util::get_repo_head(&manifest_location) {
+    let (branch, commit) = match util::get_repo_head(manifest_location) {
         Ok(Some((b, c))) => (b, Some(c)),
         _ => (None, None),
     };
@@ -965,7 +964,7 @@ pub fn write_built_file_with_opts(
         );
         #[cfg(feature = "git2")]
         {
-            o!(git, write_git_version(&manifest_location, &mut built_file)?);
+            o!(git, write_git_version(manifest_location, &mut built_file)?);
         }
     }
     o!(
@@ -1048,7 +1047,7 @@ mod tests {
 
         let commit_hash = format!("{}", commit_oid);
 
-        // The the commit, the commit-id is something and the repo is not dirty
+        // The commit, the commit-id is something and the repo is not dirty
         let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
         assert!(!tag.is_empty());
         assert!(!dirty);
