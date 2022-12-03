@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Removed unused transitive dependency on `time`
 - Bump `cargo-lock` to 8.0
-- Bump `git2` to 0.14
+- Bump `git2` to 0.15
 - Fix unescaped quotes in literals
 
 ### Added
