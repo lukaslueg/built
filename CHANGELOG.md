@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Removed unused transitive dependency on `time`
 - Bump `cargo-lock` to 8.0
 - Bump `git2` to 0.14
+- Fix unescaped quotes in literals
 
 ### Added
 - Added GitHub Actions to the list of detected CI platforms

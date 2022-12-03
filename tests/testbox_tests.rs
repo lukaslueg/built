@@ -80,7 +80,7 @@ fn main() {
 
     fn run(root: &std::path::Path) {
         let cargo_result = process::Command::new("cargo")
-            .current_dir(&root)
+            .current_dir(root)
             .arg("run")
             .output()
             .expect("cargo failed");

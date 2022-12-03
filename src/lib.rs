@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2017-2020 Lukas Lueg
+// Copyright (c) 2017-2022 Lukas Lueg
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -232,7 +232,13 @@ macro_rules! write_variable {
 
 macro_rules! write_str_variable {
     ($writer:expr, $name:expr, $value:expr, $doc:expr) => {
-        write_variable!($writer, $name, "&str", format!("r\"{}\"", $value), $doc);
+        write_variable!(
+            $writer,
+            $name,
+            "&str",
+            format!("r\"{}\"", $value.escape_default()),
+            $doc
+        );
     };
 }
 
@@ -489,11 +495,10 @@ fn write_ci(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
 }
 
 fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
-    let prefix = "CARGO_FEATURE_";
     let mut features = Vec::new();
     for name in envmap.keys() {
-        if name.starts_with(&prefix) {
-            features.push(name[prefix.len()..].to_owned());
+        if let Some(feat) = name.strip_prefix("CARGO_FEATURE_") {
+            features.push(feat.to_owned());
         }
     }
     features.sort();
@@ -933,7 +938,7 @@ pub fn write_built_file_with_opts(
     manifest_location: &path::Path,
     dst: &path::Path,
 ) -> io::Result<()> {
-    let mut built_file = fs::File::create(&dst)?;
+    let mut built_file = fs::File::create(dst)?;
     built_file.write_all(
         r#"//
 // EVERYTHING BELOW THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
