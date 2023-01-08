@@ -1064,6 +1064,7 @@ mod tests {
         
         let commit_oid_short = repo
             .find_commit(commit_oid)
+            .unwrap()
             .into_object().short_id()
             .unwrap();
 
@@ -1137,6 +1138,7 @@ mod tests {
             .unwrap();
         let commit_oid_short = repo
             .find_commit(commit_oid)
+            .unwrap()
             .into_object().short_id()
             .unwrap();
 
