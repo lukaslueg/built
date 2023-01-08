@@ -1061,8 +1061,17 @@ mod tests {
                 &[],
             )
             .unwrap();
+        
+        let commit_oid_short = repo
+            .find_commit(commit_oid)
+            .unwrap()
+            .into_object().short_id()
+            .unwrap()
+            .as_str()
+            .unwrap();
 
         let commit_hash = format!("{}", commit_oid);
+        let commit_hash_short = format!("{}", commit_oid_short);
 
         // The commit, the commit-id is something and the repo is not dirty
         let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
@@ -1099,7 +1108,7 @@ mod tests {
 
         assert_eq!(
             util::get_repo_head(&project_root),
-            Ok(Some((Some(branch_name.to_owned()), commit_hash)))
+            Ok(Some((Some(branch_name.to_owned()), commit_hash, commit_hash_short)))
         );
     }
 
@@ -1129,11 +1138,20 @@ mod tests {
                 &[],
             )
             .unwrap();
+        let commit_oid_short = repo
+            .find_commit(commit_oid)
+            .unwrap()
+            .into_object().short_id()
+            .unwrap()
+            .as_str()
+            .unwrap();
+
         let commit_hash = format!("{}", commit_oid);
+        let commit_hash_short = format!("{}", commit_oid_short);
         repo.set_head_detached(commit_oid).unwrap();
         assert_eq!(
             super::util::get_repo_head(repo_root.as_ref()),
-            Ok(Some((None, commit_hash)))
+            Ok(Some((None, commit_hash, commit_hash_short)))
         );
     }
 
