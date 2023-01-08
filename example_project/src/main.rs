@@ -13,15 +13,17 @@ fn main() {
         built_info::RUSTC_VERSION
     );
 
-    if let (Some(v), Some(dirty), Some(hash)) = (
+    if let (Some(v), Some(dirty), Some(hash), Some(short_hash), ) = (
         built_info::GIT_VERSION,
         built_info::GIT_DIRTY,
         built_info::GIT_COMMIT_HASH,
+        built_info::GIT_COMMIT_HASH_SHORT,
     ) {
         print!(
-            "I was built from git `{}`, commit {}; the working directory was \"{}\".",
+            "I was built from git `{}`, commit {}, short_commit {}; the working directory was \"{}\".",
             v,
             hash,
+            short_hash,
             if dirty { "dirty" } else { "clean" }
         );
     }
