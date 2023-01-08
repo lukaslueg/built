@@ -286,7 +286,7 @@ fn main() {
     assert_eq!(built_info::GIT_DIRTY, Some(true));
     assert!(built_info::GIT_COMMIT_HASH.is_some());
     assert!(built_info::GIT_COMMIT_HASH_SHORT.is_some());
-    assert!(built_info::GIT_COMMIT_HASH.starts_with(built_info::GIT_COMMIT_HASH_SHORT));
+    assert!(built_info::GIT_COMMIT_HASH.unwrap().starts_with(built_info::GIT_COMMIT_HASH_SHORT.unwrap()));
 }
 "#
         .as_bytes(),
