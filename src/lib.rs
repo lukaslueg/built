@@ -1073,6 +1073,8 @@ mod tests {
         let commit_hash = format!("{}", commit_oid);
         let commit_hash_short = format!("{}", commit_oid_short);
 
+        assert!(commit_hash.starts_with(&commit_hash_short));
+
         // The commit, the commit-id is something and the repo is not dirty
         let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
         assert!(!tag.is_empty());
@@ -1149,6 +1151,9 @@ mod tests {
 
         let commit_hash = format!("{}", commit_oid);
         let commit_hash_short = format!("{}", commit_oid_short);
+
+        assert!(commit_hash.starts_with(&commit_hash_short));
+
         repo.set_head_detached(commit_oid).unwrap();
         assert_eq!(
             super::util::get_repo_head(repo_root.as_ref()),
