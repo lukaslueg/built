@@ -1068,7 +1068,7 @@ mod tests {
             .into_object().short_id()
             .unwrap()
             .as_str()
-            .unwrap()
+            .unwrap();
 
         let commit_hash = format!("{}", commit_oid);
         let commit_hash_short = format!("{}", commit_oid_short);
