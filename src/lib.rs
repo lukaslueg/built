@@ -1062,13 +1062,13 @@ mod tests {
             )
             .unwrap();
         
-        let commit_oid_short = repo
+        let binding = repo
             .find_commit(commit_oid)
             .unwrap()
             .into_object().short_id()
-            .unwrap()
-            .as_str()
             .unwrap();
+        
+        let commit_oid_short = binding.as_str().unwrap();
 
         let commit_hash = format!("{}", commit_oid);
         let commit_hash_short = format!("{}", commit_oid_short);
@@ -1138,13 +1138,14 @@ mod tests {
                 &[],
             )
             .unwrap();
-        let commit_oid_short = repo
+
+        let binding = repo
             .find_commit(commit_oid)
             .unwrap()
             .into_object().short_id()
-            .unwrap()
-            .as_str()
             .unwrap();
+        
+        let commit_oid_short = binding.as_str().unwrap();
 
         let commit_hash = format!("{}", commit_oid);
         let commit_hash_short = format!("{}", commit_oid_short);
