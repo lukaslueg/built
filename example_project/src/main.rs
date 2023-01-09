@@ -13,7 +13,7 @@ fn main() {
         built_info::RUSTC_VERSION
     );
 
-    if let (Some(v), Some(dirty), Some(hash), Some(short_hash), ) = (
+    if let (Some(v), Some(dirty), Some(hash), Some(short_hash)) = (
         built_info::GIT_VERSION,
         built_info::GIT_DIRTY,
         built_info::GIT_COMMIT_HASH,

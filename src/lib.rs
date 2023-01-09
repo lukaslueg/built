@@ -1061,13 +1061,14 @@ mod tests {
                 &[],
             )
             .unwrap();
-        
+
         let binding = repo
             .find_commit(commit_oid)
             .unwrap()
-            .into_object().short_id()
+            .into_object()
+            .short_id()
             .unwrap();
-        
+
         let commit_oid_short = binding.as_str().unwrap();
 
         let commit_hash = format!("{}", commit_oid);
@@ -1110,7 +1111,11 @@ mod tests {
 
         assert_eq!(
             util::get_repo_head(&project_root),
-            Ok(Some((Some(branch_name.to_owned()), commit_hash, commit_hash_short)))
+            Ok(Some((
+                Some(branch_name.to_owned()),
+                commit_hash,
+                commit_hash_short
+            )))
         );
     }
 
@@ -1144,9 +1149,10 @@ mod tests {
         let binding = repo
             .find_commit(commit_oid)
             .unwrap()
-            .into_object().short_id()
+            .into_object()
+            .short_id()
             .unwrap();
-        
+
         let commit_oid_short = binding.as_str().unwrap();
 
         let commit_hash = format!("{}", commit_oid);
