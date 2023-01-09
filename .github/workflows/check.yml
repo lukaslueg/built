@@ -1,0 +1,68 @@
+name: Clippy, Format & Test
+
+on: [pull_request, push, workflow_dispatch]
+
+jobs:
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+      - name: Check formatting
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+      - name: Check formatting in example_project
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --manifest-path=example_project/Cargo.toml --all -- --check
+
+  clippy:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+      - name: Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+      - name: Clippy example_project
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --manifest-path=example_project/Cargo.toml -- -D warnings
+
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+      - name: Run example_project
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --manifest-path=example_project/Cargo.toml
