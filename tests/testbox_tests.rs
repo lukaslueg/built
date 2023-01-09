@@ -63,11 +63,11 @@ fn main() {
     /// Hold on to the tempdir, it will be removed when dropped!
     fn create(self) -> io::Result<tempfile::TempDir> {
         fs::DirBuilder::new()
-            .create(&self.root.path().join("src"))
+            .create(self.root.path().join("src"))
             .unwrap();
         for (name, content) in self.files {
             let fname = self.root.path().join(name);
-            let mut file = fs::File::create(&fname)?;
+            let mut file = fs::File::create(fname)?;
             file.write_all(&content)?;
         }
         Ok(self.root)
@@ -274,7 +274,7 @@ fn main() {
     let mut f = std::fs::OpenOptions::new()
         .write(true)
         .truncate(true)
-        .open(&root.path().join("src/main.rs"))
+        .open(root.path().join("src/main.rs"))
         .unwrap();
     f.write_all(
         r#"

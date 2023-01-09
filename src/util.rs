@@ -128,7 +128,7 @@ pub fn get_repo_head(
             Ok(Some((
                 branch.map(ToString::to_string),
                 format!("{}", commit),
-                format!("{}", commit_short.as_str().unwrap_or_default()),
+                commit_short.as_str().unwrap_or_default().to_string(),
             )))
         }
         Err(ref e)
