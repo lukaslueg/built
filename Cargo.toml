@@ -10,9 +10,6 @@ readme = "README.md"
 keywords = ["cargo", "build"]
 edition = "2021"
 
-[badges]
-travis-ci = { repository = "lukaslueg/built" }
-
 [features]
 nightly = []
 
