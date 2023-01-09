@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [unreleased]
 
+### Added
+- Add `GIT_COMMIT_HASH_SHORT`
+
 ## [0.5.2] - 2022-12-03
 ### Changed
 - Removed unused transitive dependency on `time`

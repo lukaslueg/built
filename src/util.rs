@@ -96,7 +96,7 @@ pub fn get_repo_description(root: &std::path::Path) -> Result<Option<(String, bo
 
 /// Retrieves the branch name and hash of HEAD.
 ///
-/// The returned value is a tuple of head's reference name and long hash. The
+/// The returned value is a tuple of head's reference-name, long-hash and short-hash. The
 /// branch name will be `None` if the head is detached, or it's not valid UTF-8.
 ///
 /// If a valid git-repo can't be discovered at or above the given path,
@@ -107,7 +107,7 @@ pub fn get_repo_description(root: &std::path::Path) -> Result<Option<(String, bo
 #[cfg(feature = "git2")]
 pub fn get_repo_head(
     root: &std::path::Path,
-) -> Result<Option<(Option<String>, String)>, git2::Error> {
+) -> Result<Option<(Option<String>, String, String)>, git2::Error> {
     match git2::Repository::discover(root) {
         Ok(repo) => {
             // Supposed to be the reference pointed to by HEAD, but it's HEAD
@@ -122,10 +122,13 @@ pub fn get_repo_head(
                     None
                 }
             };
-            let commit = head_ref.peel_to_commit()?.id();
+            let head = head_ref.peel_to_commit()?;
+            let commit = head.id();
+            let commit_short = head.into_object().short_id()?;
             Ok(Some((
                 branch.map(ToString::to_string),
                 format!("{}", commit),
+                format!("{}", commit_short.as_str().unwrap_or_default()),
             )))
         }
         Err(ref e)
