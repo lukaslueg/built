@@ -40,7 +40,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: --all --tests -- -D warnings
+      - name: Clippy with all features
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-features --all --tests -- -D warnings
       - name: Clippy example_project
         uses: actions-rs/cargo@v1
         with:
@@ -61,6 +66,11 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+      - name: Test with all features
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features
       - name: Run example_project
         uses: actions-rs/cargo@v1
         with:
