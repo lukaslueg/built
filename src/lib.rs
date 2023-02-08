@@ -1071,7 +1071,7 @@ mod tests {
 
         let commit_oid_short = binding.as_str().unwrap();
 
-        let commit_hash = format!("{}", commit_oid);
+        let commit_hash = format!("{commit_oid}");
         let commit_hash_short = commit_oid_short.to_string();
 
         assert!(commit_hash.starts_with(&commit_hash_short));
@@ -1155,7 +1155,7 @@ mod tests {
 
         let commit_oid_short = binding.as_str().unwrap();
 
-        let commit_hash = format!("{}", commit_oid);
+        let commit_hash = format!("{commit_oid}");
         let commit_hash_short = commit_oid_short.to_string();
 
         assert!(commit_hash.starts_with(&commit_hash_short));

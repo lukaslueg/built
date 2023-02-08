@@ -29,7 +29,7 @@ fn main() {
     }
 
     match built_info::GIT_HEAD_REF {
-        Some(r) => println!(" The branch was `{}`.\n", r),
+        Some(r) => println!(" The branch was `{r}`.\n"),
         None => println!("\n"),
     }
 
@@ -48,7 +48,7 @@ fn main() {
 
     match built_info::CI_PLATFORM {
         None => print!("It seems I've not been built on a continuous integration platform,"),
-        Some(ci) => print!("I've been built on CI-platform {},", ci),
+        Some(ci) => print!("I've been built on CI-platform {ci},"),
     }
     if built::util::detect_ci().is_some() {
         println!(" but I'm currently executing on one!\n");
