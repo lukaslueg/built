@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+### Changed
+- Bump `git2` to 0.16, mitigating GHSA-8643-3wh5-rmjq
 
 ### Added
 - Add `GIT_COMMIT_HASH_SHORT`
