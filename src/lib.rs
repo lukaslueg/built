@@ -422,7 +422,7 @@ fn write_compiler_version(
 
 fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
     match o {
-        Some(s) => format!("Some(\"{}\")", s),
+        Some(s) => format!("Some(\"{s}\")"),
         None => "None".to_owned(),
     }
 }
@@ -518,7 +518,7 @@ fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
         w,
         "FEATURES",
         format!("[&str; {}]", features.len()),
-        format!("{:?}", features),
+        format!("{features:?}"),
         "The features that were enabled during compilation."
     );
 
@@ -628,14 +628,14 @@ fn write_dependencies(manifest_location: &path::Path, w: &mut fs::File) -> io::R
         w,
         "DEPENDENCIES",
         format!("[(&str, &str); {}]", deps.len()),
-        format!("{:?}", deps),
+        format!("{deps:?}"),
         "An array of effective dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(
         w,
         "DEPENDENCIES_STR",
         deps.iter()
-            .map(|&(ref n, ref v)| format!("{} {}", n, v))
+            .map(|(n, v)| format!("{n} {v}"))
             .collect::<Vec<_>>()
             .join(", "),
         "The effective dependencies as a comma-separated string."

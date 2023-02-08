@@ -127,7 +127,7 @@ pub fn get_repo_head(
             let commit_short = head.into_object().short_id()?;
             Ok(Some((
                 branch.map(ToString::to_string),
-                format!("{}", commit),
+                format!("{commit}"),
                 commit_short.as_str().unwrap_or_default().to_string(),
             )))
         }
