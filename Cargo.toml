@@ -12,15 +12,17 @@ edition = "2021"
 
 [features]
 nightly = []
+gitoxide = ["git-repository", "git2"]
 
 [dependencies]
 cargo-lock = { version = "8.0", default-features = false }
 semver = { version = "1.0", optional = true }
 chrono = { version = "0.4", optional = true, default-features = false, features = ["clock"] }
 git2 = { version = "0.16", optional = true, default-features = false, features = [] }
+git-repository = { version = "0.34.0", optional = true, default-features = false, features = ["max-performance-safe"] }
 
 [dev-dependencies]
 tempfile = "3"
 
 [package.metadata.docs.rs]
-features = [ "chrono", "git2", "semver" ]
+features = [ "chrono", "git2", "gitoxide", "semver" ]

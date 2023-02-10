@@ -66,7 +66,7 @@ pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
 ///
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
-#[cfg(feature = "git2")]
+#[cfg(all(feature = "git2", not(feature = "gitoxide")))]
 pub fn get_repo_description(root: &std::path::Path) -> Result<Option<(String, bool)>, git2::Error> {
     match git2::Repository::discover(root) {
         Ok(repo) => {
@@ -104,7 +104,7 @@ pub fn get_repo_description(root: &std::path::Path) -> Result<Option<(String, bo
 ///
 /// # Errors
 /// Errors from `git2` are returned if the repository does exists at all.
-#[cfg(feature = "git2")]
+#[cfg(all(feature = "git2", not(feature = "gitoxide")))]
 pub fn get_repo_head(
     root: &std::path::Path,
 ) -> Result<Option<(Option<String>, String, String)>, git2::Error> {
