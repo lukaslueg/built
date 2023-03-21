@@ -906,7 +906,7 @@ impl Options {
     /// of `built::util::strptime()`.
     ///
     /// ```rust,no_run
-    /// /// The built-time in RFC822, UTC
+    /// /// The built-time in RFC2822, UTC
     /// pub const BUILT_TIME_UTC: &str = "Tue, 14 Feb 2017 01:12:35 GMT";
     /// ```
     #[cfg(feature = "chrono")]
