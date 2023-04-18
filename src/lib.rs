@@ -716,7 +716,7 @@ fn write_cfg(w: &mut fs::File) -> io::Result<()> {
 #[allow(dead_code, unused_imports, unused_variables)]
 mod gitoxide_impls {
     use crate::fmt_option_str;
-    use git_repository as git;
+    use gix;
     use std::{fs, io, io::Write, path};
 
     // NOTE: There are a few opportunities to make this code more maintainable by refactoring / deduplicating, but I wanted
@@ -732,7 +732,7 @@ mod gitoxide_impls {
     }
 
     fn get_repo_info(manifest_location: &path::Path) -> Option<RepoInfo> {
-        let repo = git::discover(manifest_location).ok()?;
+        let repo = gix::discover(manifest_location).ok()?;
 
         let branch = repo.head_name().ok()?.map(|n| n.to_string());
 
