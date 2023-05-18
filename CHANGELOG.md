@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 ## [unreleased]
+### Added
+- `FEATURES_LOWERCASE` and `FEATURES_LOWERCASE_STR`
 
 ## [0.6.0] - 2023-02-09
 ### Changed

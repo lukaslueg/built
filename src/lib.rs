@@ -169,6 +169,10 @@
 //! pub const FEATURES: [&str; 0] = [];
 //! /// The features as a comma-separated string.
 //! pub const FEATURES_STR: &str = "";
+//! /// The features as above, as lowercase strings.
+//! pub const FEATURES_LOWERCASE: [&str; 0] = [];
+//! /// The feature-string as above, from lowercase strings.
+//! pub const FEATURES_LOWERCASE_STR: &str = "";
 //! /// The output of `rustc -V`
 //! pub const RUSTC_VERSION: &str = "rustc 1.43.1 (8d69840ab 2020-05-04)";
 //! /// The output of `rustdoc -V`
@@ -521,7 +525,6 @@ fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
         format!("{features:?}"),
         "The features that were enabled during compilation."
     );
-
     let features_str = features.join(", ");
     write_str_variable!(
         w,
@@ -529,6 +532,28 @@ fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
         features_str,
         "The features as a comma-separated string."
     );
+
+    let mut lowercase_features = features
+        .iter()
+        .map(|name| name.to_lowercase())
+        .collect::<Vec<_>>();
+    lowercase_features.sort();
+
+    write_variable!(
+        w,
+        "FEATURES_LOWERCASE",
+        format!("[&str; {}]", lowercase_features.len()),
+        format!("{lowercase_features:?}"),
+        "The features as above, as lowercase strings."
+    );
+    let lowercase_features_str = lowercase_features.join(", ");
+    write_str_variable!(
+        w,
+        "FEATURES_LOWERCASE_STR",
+        lowercase_features_str,
+        "The feature-string as above, from lowercase strings."
+    );
+
     Ok(())
 }
 
@@ -890,6 +915,10 @@ impl Options {
     /// pub const FEATURES: [&str; 2] = ["DEFAULT", "WAYLAND"];
     /// /// The features as a comma-separated string.
     /// pub const FEATURES_STR: &str = "DEFAULT, WAYLAND";
+    /// /// The features as above, as lowercase strings.
+    /// pub const FEATURES_LOWERCASE: [&str; 2] = ["default", "wayland"];
+    /// /// The feature-string as above, from lowercase strings.
+    /// pub const FEATURES_LOWERCASE_STR: &str = "default, wayland";
     /// ```
     pub fn set_features(&mut self, enabled: bool) -> &mut Self {
         self.features = enabled;

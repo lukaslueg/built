@@ -210,6 +210,10 @@ fn main() {
                ["DEFAULT", "MEGAAWESOME", "SUPERAWESOME"]);
     assert_eq!(built_info::FEATURES_STR,
                "DEFAULT, MEGAAWESOME, SUPERAWESOME");
+    assert_eq!(built_info::FEATURES_LOWERCASE,
+               ["default", "megaawesome", "superawesome"]);
+    assert_eq!(built_info::FEATURES_LOWERCASE_STR,
+               "default, megaawesome, superawesome");
     assert_ne!(built_info::RUSTC_VERSION, "");
     assert_ne!(built_info::RUSTDOC_VERSION, "");
     assert_ne!(built_info::DEPENDENCIES_STR, "");
