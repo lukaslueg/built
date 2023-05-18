@@ -75,7 +75,7 @@ fn main() {
 
     fn create_and_run(self) {
         let root = self.create().expect("Creating the project failed");
-        Self::run(root.as_ref())
+        Self::run(root.as_ref());
     }
 
     fn run(root: &std::path::Path) {
@@ -84,12 +84,11 @@ fn main() {
             .arg("run")
             .output()
             .expect("cargo failed");
-        if !cargo_result.status.success() {
-            panic!(
-                "cargo failed with {}",
-                String::from_utf8_lossy(&cargo_result.stderr)
-            );
-        }
+        assert!(
+            cargo_result.status.success(),
+            "cargo failed with {}",
+            String::from_utf8_lossy(&cargo_result.stderr)
+        );
     }
 
     #[cfg(feature = "git2")]
