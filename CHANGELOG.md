@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 ## [unreleased]
+### Changed
+- Bump `git2` to 0.17
+- Bump `cargo-lock` to `9.0`
+
 ### Added
 - `FEATURES_LOWERCASE` and `FEATURES_LOWERCASE_STR`
 
