@@ -17,7 +17,7 @@ nightly = []
 cargo-lock = { version = "8.0", default-features = false }
 semver = { version = "1.0", optional = true }
 chrono = { version = "0.4", optional = true, default-features = false, features = ["clock"] }
-git2 = { version = "0.16", optional = true, default-features = false, features = [] }
+git2 = { version = "0.17", optional = true, default-features = false, features = [] }
 
 [dev-dependencies]
 tempfile = "3"
