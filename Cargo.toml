@@ -10,9 +10,6 @@ readme = "README.md"
 keywords = ["cargo", "build"]
 edition = "2021"
 
-[features]
-nightly = []
-
 [dependencies]
 cargo-lock = { version = "9.0", default-features = false }
 semver = { version = "1.0", optional = true }
