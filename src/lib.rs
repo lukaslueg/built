@@ -208,19 +208,23 @@
 //! ```
 //! [options]: struct.Options.html
 
+mod dependencies;
+mod environment;
+#[cfg(feature = "git2")]
+mod git;
+#[cfg(feature = "chrono")]
+mod krono;
 pub mod util;
 
-use std::{
-    collections, env, ffi, fmt, fs, io,
-    io::{Read, Write},
-    path, process,
-};
+use std::{env, fmt, fs, io, io::Write, path};
 
 #[cfg(feature = "semver")]
 pub use semver;
 
 #[cfg(feature = "chrono")]
 pub use chrono;
+
+pub use environment::CIPlatform;
 
 #[doc = include_str!("../README.md")]
 #[allow(dead_code)]
@@ -235,6 +239,7 @@ macro_rules! write_variable {
         )?;
     };
 }
+pub(crate) use write_variable;
 
 macro_rules! write_str_variable {
     ($writer:expr, $name:expr, $value:expr, $doc:expr) => {
@@ -247,494 +252,13 @@ macro_rules! write_str_variable {
         );
     };
 }
+pub(crate) use write_str_variable;
 
-/// Various Continuous Integration platforms whose presence can be detected.
-pub enum CIPlatform {
-    /// <https://travis-ci.org>
-    Travis,
-    /// <https://circleci.com>
-    Circle,
-    /// <https://about.gitlab.com/gitlab-ci>
-    GitLab,
-    /// <https://www.appveyor.com>
-    AppVeyor,
-    /// <https://codeship.com>
-    Codeship,
-    /// <https://github.com/drone/drone>
-    Drone,
-    /// <https://magnum-ci.com>
-    Magnum,
-    /// <https://semaphoreci.com>
-    Semaphore,
-    /// <https://jenkins.io>
-    Jenkins,
-    /// <https://www.atlassian.com/software/bamboo>
-    Bamboo,
-    /// <https://www.visualstudio.com/de/tfs>
-    TFS,
-    /// <https://www.jetbrains.com/teamcity>
-    TeamCity,
-    /// <https://buildkite.com>
-    Buildkite,
-    /// <http://hudson-ci.org>
-    Hudson,
-    /// <https://github.com/taskcluster>
-    TaskCluster,
-    /// <https://www.gocd.io>
-    GoCD,
-    /// <https://bitbucket.org>
-    BitBucket,
-    /// <https://github.com/features/actions>
-    GitHubActions,
-    /// Unspecific
-    Generic,
-}
-
-impl fmt::Display for CIPlatform {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match *self {
-            CIPlatform::Travis => "Travis CI",
-            CIPlatform::Circle => "CircleCI",
-            CIPlatform::GitLab => "GitLab",
-            CIPlatform::AppVeyor => "AppVeyor",
-            CIPlatform::Codeship => "CodeShip",
-            CIPlatform::Drone => "Drone",
-            CIPlatform::Magnum => "Magnum",
-            CIPlatform::Semaphore => "Semaphore",
-            CIPlatform::Jenkins => "Jenkins",
-            CIPlatform::Bamboo => "Bamboo",
-            CIPlatform::TFS => "Team Foundation Server",
-            CIPlatform::TeamCity => "TeamCity",
-            CIPlatform::Buildkite => "Buildkite",
-            CIPlatform::Hudson => "Hudson",
-            CIPlatform::TaskCluster => "TaskCluster",
-            CIPlatform::GoCD => "GoCD",
-            CIPlatform::BitBucket => "BitBucket",
-            CIPlatform::GitHubActions => "GitHub Actions",
-            CIPlatform::Generic => "Generic CI",
-        })
-    }
-}
-
-type EnvironmentMap = collections::HashMap<String, String>;
-
-fn get_environment() -> EnvironmentMap {
-    let mut envmap = EnvironmentMap::new();
-    for (k, v) in env::vars_os() {
-        let k = k.into_string();
-        let v = v.into_string();
-        if let (Ok(k), Ok(v)) = (k, v) {
-            envmap.insert(k, v);
-        }
-    }
-    envmap
-}
-
-impl CIPlatform {
-    fn detect_from_envmap(envmap: &EnvironmentMap) -> Option<CIPlatform> {
-        macro_rules! detect {
-            ($(($k:expr, $v:expr, $i:ident)),*) => {$(
-                    if envmap.get($k).map_or(false, |v| v == $v) {
-                        return Some(CIPlatform::$i);
-                    }
-                    )*};
-            ($(($k:expr, $i:ident)),*) => {$(
-                    if envmap.contains_key($k) {
-                        return Some(CIPlatform::$i);
-                    }
-                    )*};
-            ($($k:expr),*) => {$(
-                if envmap.contains_key($k) {
-                    return Some(CIPlatform::Generic);
-                }
-            )*};
-        }
-        // Variable names collected by watson/ci-info
-        detect!(
-            ("TRAVIS", Travis),
-            ("CIRCLECI", Circle),
-            ("GITLAB_CI", GitLab),
-            ("APPVEYOR", AppVeyor),
-            ("DRONE", Drone),
-            ("MAGNUM", Magnum),
-            ("SEMAPHORE", Semaphore),
-            ("JENKINS_URL", Jenkins),
-            ("bamboo_planKey", Bamboo),
-            ("TF_BUILD", TFS),
-            ("TEAMCITY_VERSION", TeamCity),
-            ("BUILDKITE", Buildkite),
-            ("HUDSON_URL", Hudson),
-            ("GO_PIPELINE_LABEL", GoCD),
-            ("BITBUCKET_COMMIT", BitBucket),
-            ("GITHUB_ACTIONS", GitHubActions)
-        );
-
-        if envmap.contains_key("TASK_ID") && envmap.contains_key("RUN_ID") {
-            return Some(CIPlatform::TaskCluster);
-        }
-
-        detect!(("CI_NAME", "codeship", Codeship));
-
-        detect!(
-            "CI",                     // Could be Travis, Circle, GitLab, AppVeyor or CodeShip
-            "CONTINUOUS_INTEGRATION", // Probably Travis
-            "BUILD_NUMBER"            // Jenkins, TeamCity
-        );
-        None
-    }
-}
-
-fn get_build_deps(manifest_location: &path::Path) -> io::Result<Vec<(String, String)>> {
-    let mut lock_buf = String::new();
-    fs::File::open(manifest_location.join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
-    Ok(parse_dependencies(&lock_buf))
-}
-
-fn parse_dependencies(lock_toml_buf: &str) -> Vec<(String, String)> {
-    let lockfile: cargo_lock::Lockfile = lock_toml_buf.parse().expect("Failed to parse lockfile");
-    let mut deps = Vec::new();
-
-    for package in lockfile.packages {
-        deps.push((package.name.to_string(), package.version.to_string()));
-    }
-    deps.sort_unstable();
-    deps
-}
-
-fn get_version_from_cmd(executable: &ffi::OsStr) -> io::Result<String> {
-    let output = process::Command::new(executable).arg("-V").output()?;
-    let mut v = String::from_utf8(output.stdout).unwrap();
-    v.pop(); // remove newline
-    Ok(v)
-}
-
-fn write_compiler_version(
-    rustc: &ffi::OsStr,
-    rustdoc: &ffi::OsStr,
-    w: &mut fs::File,
-) -> io::Result<()> {
-    let rustc_version = get_version_from_cmd(rustc)?;
-    let rustdoc_version = get_version_from_cmd(rustdoc)?;
-
-    let doc = format!("The output of `{} -V`", rustc.to_string_lossy());
-    write_str_variable!(w, "RUSTC_VERSION", rustc_version, doc);
-
-    let doc = format!("The output of `{} -V`", rustdoc.to_string_lossy());
-    write_str_variable!(w, "RUSTDOC_VERSION", rustdoc_version, doc);
-    Ok(())
-}
-
-fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
+pub(crate) fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
     match o {
         Some(s) => format!("Some(\"{s}\")"),
         None => "None".to_owned(),
     }
-}
-
-#[cfg(feature = "git2")]
-fn write_git_version(manifest_location: &path::Path, w: &mut fs::File) -> io::Result<()> {
-    // CIs will do shallow clones of repositories, causing libgit2 to error
-    // out. We try to detect if we are running on a CI and ignore the
-    // error.
-    let (tag, dirty) = match util::get_repo_description(manifest_location) {
-        Ok(Some((tag, dirty))) => (Some(tag), Some(dirty)),
-        _ => (None, None),
-    };
-    write_variable!(
-        w,
-        "GIT_VERSION",
-        "Option<&str>",
-        fmt_option_str(tag),
-        "If the crate was compiled from within a git-repository, \
-        `GIT_VERSION` contains HEAD's tag. The short commit id is used if HEAD is not tagged."
-    );
-    write_variable!(
-        w,
-        "GIT_DIRTY",
-        "Option<bool>",
-        match dirty {
-            Some(true) => "Some(true)",
-            Some(false) => "Some(false)",
-            None => "None",
-        },
-        "If the repository had dirty/staged files."
-    );
-
-    let (branch, commit, commit_short) = match util::get_repo_head(manifest_location) {
-        Ok(Some((b, c, cs))) => (b, Some(c), Some(cs)),
-        _ => (None, None, None),
-    };
-
-    let doc = "If the crate was compiled from within a git-repository, `GIT_HEAD_REF` \
-        contains full name to the reference pointed to by HEAD \
-        (e.g.: `refs/heads/master`). If HEAD is detached or the branch name is not \
-        valid UTF-8 `None` will be stored.\n";
-    write_variable!(
-        w,
-        "GIT_HEAD_REF",
-        "Option<&str>",
-        fmt_option_str(branch),
-        doc
-    );
-
-    write_variable!(
-        w,
-        "GIT_COMMIT_HASH",
-        "Option<&str>",
-        fmt_option_str(commit),
-        "If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH` \
-    contains HEAD's full commit SHA-1 hash."
-    );
-
-    write_variable!(
-        w,
-        "GIT_COMMIT_HASH_SHORT",
-        "Option<&str>",
-        fmt_option_str(commit_short),
-        "If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH_SHORT` \
-    contains HEAD's short commit SHA-1 hash."
-    );
-
-    Ok(())
-}
-
-fn write_ci(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
-    write_variable!(
-        w,
-        "CI_PLATFORM",
-        "Option<&str>",
-        fmt_option_str(CIPlatform::detect_from_envmap(envmap)),
-        "The Continuous Integration platform detected during compilation."
-    );
-    Ok(())
-}
-
-fn write_features(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
-    let mut features = Vec::new();
-    for name in envmap.keys() {
-        if let Some(feat) = name.strip_prefix("CARGO_FEATURE_") {
-            features.push(feat.to_owned());
-        }
-    }
-    features.sort();
-
-    write_variable!(
-        w,
-        "FEATURES",
-        format!("[&str; {}]", features.len()),
-        format!("{features:?}"),
-        "The features that were enabled during compilation."
-    );
-    let features_str = features.join(", ");
-    write_str_variable!(
-        w,
-        "FEATURES_STR",
-        features_str,
-        "The features as a comma-separated string."
-    );
-
-    let mut lowercase_features = features
-        .iter()
-        .map(|name| name.to_lowercase())
-        .collect::<Vec<_>>();
-    lowercase_features.sort();
-
-    write_variable!(
-        w,
-        "FEATURES_LOWERCASE",
-        format!("[&str; {}]", lowercase_features.len()),
-        format!("{lowercase_features:?}"),
-        "The features as above, as lowercase strings."
-    );
-    let lowercase_features_str = lowercase_features.join(", ");
-    write_str_variable!(
-        w,
-        "FEATURES_LOWERCASE_STR",
-        lowercase_features_str,
-        "The feature-string as above, from lowercase strings."
-    );
-
-    Ok(())
-}
-
-fn write_env(envmap: &EnvironmentMap, w: &mut fs::File) -> io::Result<()> {
-    macro_rules! write_env_str {
-        ($(($name:ident, $env_name:expr,$doc:expr)),*) => {$(
-            write_str_variable!(
-                w,
-                stringify!($name),
-                envmap.get($env_name)
-                    .expect(stringify!(Missing expected environment variable $env_name)),
-                    $doc
-            );
-        )*}
-    }
-
-    write_env_str!(
-        (PKG_VERSION, "CARGO_PKG_VERSION", "The full version."),
-        (
-            PKG_VERSION_MAJOR,
-            "CARGO_PKG_VERSION_MAJOR",
-            "The major version."
-        ),
-        (
-            PKG_VERSION_MINOR,
-            "CARGO_PKG_VERSION_MINOR",
-            "The minor version."
-        ),
-        (
-            PKG_VERSION_PATCH,
-            "CARGO_PKG_VERSION_PATCH",
-            "The patch version."
-        ),
-        (
-            PKG_VERSION_PRE,
-            "CARGO_PKG_VERSION_PRE",
-            "The pre-release version."
-        ),
-        (
-            PKG_AUTHORS,
-            "CARGO_PKG_AUTHORS",
-            "A colon-separated list of authors."
-        ),
-        (PKG_NAME, "CARGO_PKG_NAME", "The name of the package."),
-        (PKG_DESCRIPTION, "CARGO_PKG_DESCRIPTION", "The description."),
-        (PKG_HOMEPAGE, "CARGO_PKG_HOMEPAGE", "The homepage."),
-        (PKG_LICENSE, "CARGO_PKG_LICENSE", "The license."),
-        (
-            PKG_REPOSITORY,
-            "CARGO_PKG_REPOSITORY",
-            "The source repository as advertised in Cargo.toml."
-        ),
-        (
-            TARGET,
-            "TARGET",
-            "The target triple that was being compiled for."
-        ),
-        (HOST, "HOST", "The host triple of the rust compiler."),
-        (
-            PROFILE,
-            "PROFILE",
-            "`release` for release builds, `debug` for other builds."
-        ),
-        (RUSTC, "RUSTC", "The compiler that cargo resolved to use."),
-        (
-            RUSTDOC,
-            "RUSTDOC",
-            "The documentation generator that cargo resolved to use."
-        )
-    );
-    write_str_variable!(
-        w,
-        "OPT_LEVEL",
-        env::var("OPT_LEVEL").unwrap(),
-        "Value of OPT_LEVEL for the profile used during compilation."
-    );
-    write_variable!(
-        w,
-        "NUM_JOBS",
-        "u32",
-        env::var("NUM_JOBS").unwrap(),
-        "The parallelism that was specified during compilation."
-    );
-    write_variable!(
-        w,
-        "DEBUG",
-        "bool",
-        env::var("DEBUG").unwrap() == "true",
-        "Value of DEBUG for the profile used during compilation."
-    );
-    Ok(())
-}
-
-fn write_dependencies(manifest_location: &path::Path, w: &mut fs::File) -> io::Result<()> {
-    let deps = get_build_deps(manifest_location)?;
-    write_variable!(
-        w,
-        "DEPENDENCIES",
-        format!("[(&str, &str); {}]", deps.len()),
-        format!("{deps:?}"),
-        "An array of effective dependencies as documented by `Cargo.lock`."
-    );
-    write_str_variable!(
-        w,
-        "DEPENDENCIES_STR",
-        deps.iter()
-            .map(|(n, v)| format!("{n} {v}"))
-            .collect::<Vec<_>>()
-            .join(", "),
-        "The effective dependencies as a comma-separated string."
-    );
-    Ok(())
-}
-
-#[cfg(feature = "chrono")]
-fn write_time(w: &mut fs::File) -> io::Result<()> {
-    let now = chrono::offset::Utc::now();
-    write_str_variable!(
-        w,
-        "BUILT_TIME_UTC",
-        now.to_rfc2822(),
-        "The build time in RFC2822, UTC."
-    );
-    Ok(())
-}
-
-fn write_cfg(w: &mut fs::File) -> io::Result<()> {
-    fn get_env(name: &str) -> String {
-        env::var(name).unwrap_or_default()
-    }
-
-    let target_arch = get_env("CARGO_CFG_TARGET_ARCH");
-    let target_endian = get_env("CARGO_CFG_TARGET_ENDIAN");
-    let target_env = get_env("CARGO_CFG_TARGET_ENV");
-    let target_family = get_env("CARGO_CFG_TARGET_FAMILY");
-    let target_os = get_env("CARGO_CFG_TARGET_OS");
-    let target_pointer_width = get_env("CARGO_CFG_TARGET_POINTER_WIDTH");
-
-    write_str_variable!(
-        w,
-        "CFG_TARGET_ARCH",
-        target_arch,
-        "The target architecture, given by `CARGO_CFG_TARGET_ARCH`."
-    );
-
-    write_str_variable!(
-        w,
-        "CFG_ENDIAN",
-        target_endian,
-        "The endianness, given by `CARGO_CFG_TARGET_ENDIAN`."
-    );
-
-    write_str_variable!(
-        w,
-        "CFG_ENV",
-        target_env,
-        "The toolchain-environment, given by `CARGO_CFG_TARGET_ENV`."
-    );
-
-    write_str_variable!(
-        w,
-        "CFG_FAMILY",
-        target_family,
-        "The OS-family, given by `CARGO_CFG_TARGET_FAMILY`."
-    );
-
-    write_str_variable!(
-        w,
-        "CFG_OS",
-        target_os,
-        "The operating system, given by `CARGO_CFG_TARGET_OS`."
-    );
-
-    write_str_variable!(
-        w,
-        "CFG_POINTER_WIDTH",
-        target_pointer_width,
-        "The pointer width, given by `CARGO_CFG_TARGET_POINTER_WIDTH`."
-    );
-
-    Ok(())
 }
 
 /// Selects which information `built` should retrieve and write as Rust code.
@@ -996,32 +520,25 @@ pub fn write_built_file_with_opts(
         };
     }
     if options.ci || options.env || options.features || options.compiler {
-        let envmap = get_environment();
-        o!(ci, write_ci(&envmap, &mut built_file)?);
-        o!(env, write_env(&envmap, &mut built_file)?);
-        o!(features, write_features(&envmap, &mut built_file)?);
-        o!(
-            compiler,
-            write_compiler_version(
-                envmap["RUSTC"].as_ref(),
-                envmap["RUSTDOC"].as_ref(),
-                &mut built_file
-            )?
-        );
+        let envmap = environment::EnvironmentMap::new();
+        o!(ci, envmap.write_ci(&built_file)?);
+        o!(env, envmap.write_env(&built_file)?);
+        o!(features, envmap.write_features(&built_file)?);
+        o!(compiler, envmap.write_compiler_version(&built_file)?);
+        o!(cfg, envmap.write_cfg(&built_file)?);
         #[cfg(feature = "git2")]
         {
-            o!(git, write_git_version(manifest_location, &mut built_file)?);
+            o!(git, git::write_git_version(manifest_location, &built_file)?);
         }
     }
     o!(
         deps,
-        write_dependencies(manifest_location, &mut built_file)?
+        dependencies::write_dependencies(manifest_location, &built_file)?
     );
     #[cfg(feature = "chrono")]
     {
-        o!(time, write_time(&mut built_file)?);
+        o!(time, krono::write_time(&built_file)?);
     }
-    o!(cfg, write_cfg(&mut built_file)?);
     built_file.write_all(
         r#"//
 // EVERYTHING ABOVE THIS POINT WAS AUTO-GENERATED DURING COMPILATION. DO NOT MODIFY.
@@ -1045,190 +562,4 @@ pub fn write_built_file() -> io::Result<()> {
     let dst = path::Path::new(&env::var("OUT_DIR").unwrap()).join("built.rs");
     write_built_file_with_opts(&Options::default(), src.as_ref(), &dst)?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    #[cfg(feature = "git2")]
-    fn parse_git_repo() {
-        use super::util;
-        use std::fs;
-        use std::path;
-
-        let repo_root = tempfile::tempdir().unwrap();
-        assert_eq!(util::get_repo_description(repo_root.as_ref()), Ok(None));
-
-        let repo = git2::Repository::init_opts(
-            &repo_root,
-            git2::RepositoryInitOptions::new()
-                .external_template(false)
-                .mkdir(false)
-                .no_reinit(true)
-                .mkpath(false),
-        )
-        .unwrap();
-
-        let cruft_file = repo_root.path().join("cruftfile");
-        std::fs::write(&cruft_file, "Who? Me?").unwrap();
-
-        let project_root = repo_root.path().join("project_root");
-        fs::create_dir(&project_root).unwrap();
-
-        let sig = git2::Signature::now("foo", "bar").unwrap();
-        let mut idx = repo.index().unwrap();
-        idx.add_path(path::Path::new("cruftfile")).unwrap();
-        idx.write().unwrap();
-        let commit_oid = repo
-            .commit(
-                Some("HEAD"),
-                &sig,
-                &sig,
-                "Testing testing 1 2 3",
-                &repo.find_tree(idx.write_tree().unwrap()).unwrap(),
-                &[],
-            )
-            .unwrap();
-
-        let binding = repo
-            .find_commit(commit_oid)
-            .unwrap()
-            .into_object()
-            .short_id()
-            .unwrap();
-
-        let commit_oid_short = binding.as_str().unwrap();
-
-        let commit_hash = format!("{commit_oid}");
-        let commit_hash_short = commit_oid_short.to_string();
-
-        assert!(commit_hash.starts_with(&commit_hash_short));
-
-        // The commit, the commit-id is something and the repo is not dirty
-        let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
-        assert!(!tag.is_empty());
-        assert!(!dirty);
-
-        // Tag the commit, it should be retrieved
-        repo.tag(
-            "foobar",
-            &repo
-                .find_object(commit_oid, Some(git2::ObjectType::Commit))
-                .unwrap(),
-            &sig,
-            "Tagged foobar",
-            false,
-        )
-        .unwrap();
-
-        let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
-        assert_eq!(tag, "foobar");
-        assert!(!dirty);
-
-        // Make some dirt
-        std::fs::write(cruft_file, "now dirty").unwrap();
-        let (tag, dirty) = util::get_repo_description(&project_root).unwrap().unwrap();
-        assert_eq!(tag, "foobar");
-        assert!(dirty);
-
-        let branch_short_name = "baz";
-        let branch_name = "refs/heads/baz";
-        let commit = repo.find_commit(commit_oid).unwrap();
-        repo.branch(branch_short_name, &commit, true).unwrap();
-        repo.set_head(branch_name).unwrap();
-
-        assert_eq!(
-            util::get_repo_head(&project_root),
-            Ok(Some((
-                Some(branch_name.to_owned()),
-                commit_hash,
-                commit_hash_short
-            )))
-        );
-    }
-
-    #[test]
-    #[cfg(feature = "git2")]
-    fn detached_head_repo() {
-        let repo_root = tempfile::tempdir().unwrap();
-        let repo = git2::Repository::init_opts(
-            &repo_root,
-            git2::RepositoryInitOptions::new()
-                .external_template(false)
-                .mkdir(false)
-                .no_reinit(true)
-                .mkpath(false),
-        )
-        .unwrap();
-        let sig = git2::Signature::now("foo", "bar").unwrap();
-        let commit_oid = repo
-            .commit(
-                Some("HEAD"),
-                &sig,
-                &sig,
-                "Testing",
-                &repo
-                    .find_tree(repo.index().unwrap().write_tree().unwrap())
-                    .unwrap(),
-                &[],
-            )
-            .unwrap();
-
-        let binding = repo
-            .find_commit(commit_oid)
-            .unwrap()
-            .into_object()
-            .short_id()
-            .unwrap();
-
-        let commit_oid_short = binding.as_str().unwrap();
-
-        let commit_hash = format!("{commit_oid}");
-        let commit_hash_short = commit_oid_short.to_string();
-
-        assert!(commit_hash.starts_with(&commit_hash_short));
-
-        repo.set_head_detached(commit_oid).unwrap();
-        assert_eq!(
-            super::util::get_repo_head(repo_root.as_ref()),
-            Ok(Some((None, commit_hash, commit_hash_short)))
-        );
-    }
-
-    #[test]
-    fn parse_deps() {
-        let lock_toml_buf = r#"
-            [root]
-            name = "foobar"
-            version = "1.0.0"
-            dependencies = [
-                "normal_dep 1.2.3",
-                "local_dep 4.5.6",
-            ]
-
-            [[package]]
-            name = "normal_dep"
-            version = "1.2.3"
-            dependencies = [
-                "dep_of_dep 7.8.9",
-            ]
-
-            [[package]]
-            name = "local_dep"
-            version = "4.5.6"
-
-            [[package]]
-            name = "dep_of_dep"
-            version = "7.8.9""#;
-        let deps = super::parse_dependencies(lock_toml_buf);
-        assert_eq!(
-            deps,
-            [
-                ("dep_of_dep".to_owned(), "7.8.9".to_owned()),
-                ("local_dep".to_owned(), "4.5.6".to_owned()),
-                ("normal_dep".to_owned(), "1.2.3".to_owned()),
-            ]
-        );
-    }
 }
