@@ -25,6 +25,42 @@ jobs:
           command: fmt
           args: --manifest-path=example_project/Cargo.toml --all -- --check
 
+  check:
+    name: cargo check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --no-default-features
+      - name: Check cargo-lock
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --no-default-features --features cargo-lock
+      - name: Check git2
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --no-default-features --features git2
+      - name: Check semver
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --no-default-features --features semver
+      - name: Check chrono
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --no-default-features --features chrono
+
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
