@@ -208,6 +208,7 @@
 //! ```
 //! [options]: struct.Options.html
 
+#[cfg(feature = "cargo-lock")]
 mod dependencies;
 mod environment;
 #[cfg(feature = "git2")]
@@ -424,6 +425,7 @@ impl Options {
     /// /// The effective dependencies as a comma-separated string.
     /// pub const DEPENDENCIES_STR: &str = "built 0.1.0, time 0.1.36";
     /// ```
+    #[cfg(feature = "cargo-lock")]
     pub fn set_dependencies(&mut self, enabled: bool) -> &mut Self {
         self.deps = enabled;
         self
@@ -500,7 +502,7 @@ impl Options {
 /// `OUR_DIR`.
 pub fn write_built_file_with_opts(
     options: &Options,
-    manifest_location: &path::Path,
+    #[cfg(any(feature = "cargo-lock", feature = "git2"))] manifest_location: &path::Path,
     dst: &path::Path,
 ) -> io::Result<()> {
     let mut built_file = fs::File::create(dst)?;
@@ -531,6 +533,7 @@ pub fn write_built_file_with_opts(
             o!(git, git::write_git_version(manifest_location, &built_file)?);
         }
     }
+    #[cfg(feature = "cargo-lock")]
     o!(
         deps,
         dependencies::write_dependencies(manifest_location, &built_file)?
@@ -558,8 +561,12 @@ pub fn write_built_file_with_opts(
 /// # Panics
 /// If `CARGO_MANIFEST_DIR` or `OUT_DIR` are not set.
 pub fn write_built_file() -> io::Result<()> {
-    let src = env::var("CARGO_MANIFEST_DIR").unwrap();
     let dst = path::Path::new(&env::var("OUT_DIR").unwrap()).join("built.rs");
-    write_built_file_with_opts(&Options::default(), src.as_ref(), &dst)?;
+    write_built_file_with_opts(
+        &Options::default(),
+        #[cfg(any(feature = "cargo-lock", feature = "git2"))]
+        env::var("CARGO_MANIFEST_DIR").unwrap().as_ref(),
+        &dst,
+    )?;
     Ok(())
 }
