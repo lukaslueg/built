@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [unreleased]
 ### Changed
+- The `Options`-type has been removed in favor of controlling `built`'s behavior by means of feature-flags.
 - `cargo-lock` is now an optional dependency
 - Bump `git2` to 0.18
  

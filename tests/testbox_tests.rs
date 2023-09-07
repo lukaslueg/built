@@ -35,6 +35,7 @@ impl Project {
         } else {
             "[]"
         };
+
         self.add_file(
             "Cargo.toml",
             format!(
@@ -261,11 +262,7 @@ fn main() {
     // Teleport to a CI-platform, should get detected
     env::set_var("CONTINUOUS_INTEGRATION", "1");
 
-    let mut options = built::Options::default();
-    options.set_dependencies(true);
-    let src = env::var("CARGO_MANIFEST_DIR").unwrap();
-    let dst = path::Path::new(&env::var("OUT_DIR").unwrap()).join("built.rs");
-    built::write_built_file_with_opts(&options, src.as_ref(), &dst).unwrap();
+    built::write_built_file().unwrap();
 }"#,
     );
 
@@ -329,6 +326,27 @@ fn main() {
     assert!((built::chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
 }"#,
     );
+    p.create_and_run();
+}
+
+#[test]
+#[cfg(feature = "git2")]
+fn git_no_git() {
+    // `root` isn't even a git-repo
+    let mut p = Project::new();
+    p.bootstrap().add_file(
+        "src/main.rs",
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built_info::GIT_DIRTY, None);
+}
+"#,
+    );
+
     p.create_and_run();
 }
 

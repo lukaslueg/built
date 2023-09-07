@@ -5,18 +5,16 @@
 [![Clippy, Format & Test](https://github.com/lukaslueg/built/actions/workflows/check.yml/badge.svg)](https://github.com/lukaslueg/built/actions/workflows/check.yml)
 
 `built` is used as a build-time dependency to collect various information
-about the build environment and serialize it into the final crate.
-The information collected by `built` include:
+about the build-environment, serialize this information into Rust-code and
+provide that to the crate. The information collected by `built` include:
 
 * Various metadata like version, authors, homepage etc. as set by `Cargo.toml`
-* The tag or commit id if the crate was being compiled from within a git repo.
-* The values of `CARGO_CFG_*` build script env variables, like `CARGO_CFG_TARGET_OS` and `CARGO_CFG_TARGET_ARCH`.
+* The tag or commit id if the crate was being compiled from within a Git repository.
+* The values of `CARGO_CFG_*` build script environment variables, like `CARGO_CFG_TARGET_OS` and `CARGO_CFG_TARGET_ARCH`.
 * The features the crate was compiled with.
-* The various dependencies, dependencies of dependencies and their versions
-   cargo ultimately chose to compile.
-* The presence of a CI-platform like `Travis CI` and `AppVeyor`.
-* The used compiler and it's version; the used documentation generator and
-   it's version.
+* The various dependencies, dependencies of dependencies and their versions Cargo ultimately chose to compile.
+* The presence of a CI-platform like `Github Actions`, `Travis CI` and `AppVeyor`.
+* The compiler and it's version; the documentation-generator and it's version.
 
 See [the example](https://github.com/lukaslueg/built/tree/master/example_project) or the [docs](https://docs.rs/built) for more information.
 
@@ -33,6 +31,7 @@ fn main() {
 ```rust,ignore
 // In lib.rs or main.rs
 
+// Include the generated-file as a seperate module
 pub mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
