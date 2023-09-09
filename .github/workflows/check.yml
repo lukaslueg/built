@@ -8,90 +8,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
           components: rustfmt
-      - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-      - name: Check formatting in example_project
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --manifest-path=example_project/Cargo.toml --all -- --check
+      - run: cargo fmt --all -- --check
+      - run: cargo fmt --manifest-path=example_project/Cargo.toml --all -- --check
 
   check:
     name: cargo check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - name: Check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features
-      - name: Check cargo-lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features --features cargo-lock
-      - name: Check dependency-tree
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features --features dependency-tree
-      - name: Check git2
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features --features git2
-      - name: Check semver
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features --features semver
-      - name: Check chrono
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features --features chrono
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo check --no-default-features
+      - run: cargo check --no-default-features --features cargo-lock
+      - run: cargo check --no-default-features --features dependency-tree
+      - run: cargo check --no-default-features --features git2
+      - run: cargo check --no-default-features --features semver
+      - run: cargo check --no-default-features --features chrono
+      - run: cargo check --all-features
+      - run: cargo check --manifest-path=example_project/Cargo.toml
 
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
           components: clippy
-      - name: Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all --tests -- -D warnings
-      - name: Clippy with all features
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --all-features --all --tests -- -D warnings
-      - name: Clippy example_project
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --manifest-path=example_project/Cargo.toml -- -D warnings
+      - run: cargo clippy --all --tests -- -D warnings
+      - run: cargo clippy --all-features --all --tests -- -D warnings
+      - run: cargo clippy --manifest-path=example_project/Cargo.toml --all --tests -- -D warnings
 
   test:
     name: cargo test
@@ -101,25 +49,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - name: Test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-      - name: Test with all features
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features
-      - name: Run example_project
-        uses: actions-rs/cargo@v1
-        with:
-          command: run
-          args: --manifest-path=example_project/Cargo.toml
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --no-default-features
+      - run: cargo test --all-features
+      - run: cargo run --manifest-path=example_project/Cargo.toml
 
   semver:
     name: Semver check
