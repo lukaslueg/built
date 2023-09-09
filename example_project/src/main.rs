@@ -58,12 +58,13 @@ fn main() {
 
     let built_time = built::util::strptime(built_info::BUILT_TIME_UTC);
     println!(
-        "I was built with profile \"{}\", features \"{}\" on {} ({} seconds ago) using {}",
+        "I was built with profile \"{}\", features \"{}\" on {} ({} seconds ago) using `{}` (with help from `{}`).",
         built_info::PROFILE,
         built_info::FEATURES_STR,
         built_time.with_timezone(&built::chrono::offset::Local),
         (built::chrono::offset::Utc::now() - built_time).num_seconds(),
-        built_info::DEPENDENCIES_STR
+        built_info::DIRECT_DEPENDENCIES_STR,
+        built_info::INDIRECT_DEPENDENCIES_STR
     );
 
     let bad_dep =

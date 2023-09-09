@@ -226,27 +226,27 @@ fn full_testbox() {
     p.add_file(
         "Cargo.toml",
         format!(
-            "
+            r#"
 [package]
-name = \"testbox\"
-version = \"1.2.3-rc1\"
-authors = [\"Joe\", \"Bob\", \"Harry:Potter\"]
-build = \"build.rs\"
-description = \"xobtset\"
-homepage = \"localhost\"
-repository = \"https://dev.example.com/sources/testbox/\"
-license = \"MIT\"
+name = "testbox"
+version = "1.2.3-rc1"
+authors = ["Joe", "Bob", "Harry:Potter"]
+build = "build.rs"
+description = "xobtset"
+homepage = "localhost"
+repository = "https://dev.example.com/sources/testbox/"
+license = "MIT"
 
 [dependencies]
-built = {{ path = {:?}, features=[\"cargo-lock\", \"git2\", \"chrono\", \"semver\"] }}
+built = {{ path = {:?}, features=["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }}
 
 [build-dependencies]
-built = {{ path = {:?}, features=[\"cargo-lock\", \"git2\", \"chrono\", \"semver\"] }}
+built = {{ path = {:?}, features=["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }}
 
 [features]
-default = [\"SuperAwesome\", \"MegaAwesome\"]
+default = ["SuperAwesome", "MegaAwesome"]
 SuperAwesome = []
-MegaAwesome = []",
+MegaAwesome = []"#,
             &built_root, &built_root
         ),
     );
@@ -308,6 +308,8 @@ fn main() {
     assert_ne!(built_info::RUSTC_VERSION, "");
     assert_ne!(built_info::RUSTDOC_VERSION, "");
     assert_ne!(built_info::DEPENDENCIES_STR, "");
+    assert_ne!(built_info::DIRECT_DEPENDENCIES_STR, "");
+    assert_ne!(built_info::INDIRECT_DEPENDENCIES_STR, "");
     assert_ne!(built_info::HOST, "");
     assert_ne!(built_info::TARGET, "");
     assert_ne!(built_info::RUSTC, "");
@@ -322,6 +324,9 @@ fn main() {
 
     assert!(built::util::parse_versions(built_info::DEPENDENCIES.iter())
         .any(|(name, ver)| name == "toml" && ver >= built::semver::Version::parse("0.1.0").unwrap()));
+
+    assert_eq!(built_info::DIRECT_DEPENDENCIES.len(), 1);
+    assert_eq!(built_info::DIRECT_DEPENDENCIES[0].0, "built");
 
     assert!((built::chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
 }"#,

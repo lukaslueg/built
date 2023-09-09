@@ -41,9 +41,8 @@
 //! is serialized as types from `stdlib`. One can include `built` as a
 //! runtime-dependency and use it's convenience functions.
 //!
-//! To add `built` to a crate, add it as a build-time dependency, use a build
-//! script that collects and serializes the build-time information and `include!`
-//! that as code.
+//! To add `built` to a crate, add it as a build-time dependency, use a build-script
+//! to collect and serialize the build-time information, and `include!` the generated code.
 //!
 //! Add this to `Cargo.toml`:
 //!
@@ -55,7 +54,7 @@
 //! built = "0.6"
 //! ```
 //!
-//! Add or modify a build script. In `build.rs`:
+//! Add or modify a build-script. In `build.rs`:
 //!
 //! ```rust,no_run
 //! fn main() {
@@ -64,7 +63,7 @@
 //! ```
 //!
 //! The build-script will by default write a file named `built.rs` into Cargo's output
-//! directory. It can be picked up in  `main.rs` (or anywhere else) like this:
+//! directory. It can be picked up in `main.rs` (or anywhere else) like this:
 //!
 //! ```rust,ignore
 //! // Use of a mod or pub mod is not actually necessary.
@@ -74,7 +73,7 @@
 //! }
 //! ```
 //!
-//! And then used somewhere in the crate's code:
+//! ...and then used somewhere in the crate's code:
 //!
 //! ```rust
 //! # mod built_info {
@@ -120,53 +119,65 @@
 //!
 //! ---
 //!
+//! ## Feature flags
 //! The information that `built` collects and makes available in `built.rs` depends
-//! on the features that were enabled on the build-time dependency:
+//! on the features that were enabled on the build-time dependency.
 //!
 //! ### Always available
-//! One should not rely on this besides convenient debug output. If the runtime
-//! depends on enabled features, use `#[cfg(feature = "foo")]` instead.
+//! The following information is available regardless of feature-flags.
+//!
 //! ```
 //! /// The Continuous Integration platform detected during compilation.
 //! pub const CI_PLATFORM: Option<&str> = None;
-//! #[doc="The full version."]
+//!
+//! /// The full version.
 //! pub const PKG_VERSION: &str = "0.1.0";
-//! #[doc="The major version."]
+//! /// The major version.
 //! pub const PKG_VERSION_MAJOR: &str = "0";
-//! #[doc="The minor version."]
+//! /// The minor version.
 //! pub const PKG_VERSION_MINOR: &str = "1";
-//! #[doc="The patch version."]
+//! /// "The patch version.
 //! pub const PKG_VERSION_PATCH: &str = "0";
-//! #[doc="The pre-release version."]
+//! /// "The pre-release version.
 //! pub const PKG_VERSION_PRE: &str = "";
-//! #[doc="A colon-separated list of authors."]
+//!
+//! /// "A colon-separated list of authors.
 //! pub const PKG_AUTHORS: &str = "Lukas Lueg <lukas.lueg@gmail.com>";
-//! #[doc="The name of the package."]
+//!
+//! /// The name of the package.
 //! pub const PKG_NAME: &str = "example_project";
-//! #[doc="The description."]
+//! /// "The description.
 //! pub const PKG_DESCRIPTION: &str = "";
-//! #[doc="The homepage."]
+//! /// "The homepage.
 //! pub const PKG_HOMEPAGE: &str = "";
-//! #[doc="The license."]
+//! /// "The license.
 //! pub const PKG_LICENSE: &str = "MIT";
-//! #[doc="The source repository as advertised in Cargo.toml."]
+//! /// The source repository as advertised in Cargo.toml.
 //! pub const PKG_REPOSITORY: &str = "";
-//! #[doc="The target triple that was being compiled for."]
+//!
+//! /// The target triple that was being compiled for.
 //! pub const TARGET: &str = "x86_64-unknown-linux-gnu";
-//! #[doc="The host triple of the rust compiler."]
+//! /// The host triple of the rust compiler.
 //! pub const HOST: &str = "x86_64-unknown-linux-gnu";
-//! #[doc="`release` for release builds, `debug` for other builds."]
+//! /// `release` for release builds, `debug` for other builds.
 //! pub const PROFILE: &str = "debug";
-//! #[doc="The compiler that cargo resolved to use."]
+//!
+//! /// The compiler that cargo resolved to use.
 //! pub const RUSTC: &str = "rustc";
-//! #[doc="The documentation generator that cargo resolved to use."]
+//! /// The documentation-generator that cargo resolved to use.
 //! pub const RUSTDOC: &str = "rustdoc";
-//! #[doc="Value of OPT_LEVEL for the profile used during compilation."]
+//! /// The output of `rustc -V`
+//! pub const RUSTC_VERSION: &str = "rustc 1.43.1 (8d69840ab 2020-05-04)";
+//! /// The output of `rustdoc -V`
+//! pub const RUSTDOC_VERSION: &str = "rustdoc 1.43.1 (8d69840ab 2020-05-04)";
+//!
+//! /// Value of OPT_LEVEL for the profile used during compilation.
 //! pub const OPT_LEVEL: &str = "0";
-//! #[doc="The parallelism that was specified during compilation."]
+//! /// The parallelism that was specified during compilation.
 //! pub const NUM_JOBS: u32 = 8;
-//! #[doc="Value of DEBUG for the profile used during compilation."]
+//! /// "Value of DEBUG for the profile used during compilation.
 //! pub const DEBUG: bool = true;
+//!
 //! /// The features that were enabled during compilation.
 //! pub const FEATURES: [&str; 0] = [];
 //! /// The features as a comma-separated string.
@@ -175,10 +186,7 @@
 //! pub const FEATURES_LOWERCASE: [&str; 0] = [];
 //! /// The feature-string as above, from lowercase strings.
 //! pub const FEATURES_LOWERCASE_STR: &str = "";
-//! /// The output of `rustc -V`
-//! pub const RUSTC_VERSION: &str = "rustc 1.43.1 (8d69840ab 2020-05-04)";
-//! /// The output of `rustdoc -V`
-//! pub const RUSTDOC_VERSION: &str = "rustdoc 1.43.1 (8d69840ab 2020-05-04)";
+//!
 //! /// The target architecture, given by `CARGO_CFG_TARGET_ARCH`.
 //! pub const CFG_TARGET_ARCH: &str = "x86_64";
 //! /// The endianness, given by `CARGO_CFG_TARGET_ENDIAN`.
@@ -194,7 +202,7 @@
 //! ```
 //!
 //! ### `cargo-lock`
-//! Parsing `Cargo.lock`and writing lists of dependencies and their versions.
+//! Parses `Cargo.lock`and generates representations of  dependencies and their versions.
 //!
 //! For this to work, `Cargo.lock` needs to actually be there; this is (usually)
 //! only true for executables and not for libraries. Cargo will only create a
@@ -203,17 +211,40 @@
 //! combination to compile and there will be no `Cargo.lock` while the library
 //! gets compiled as a dependency.
 //!
-//! Parsing `Cargo.lock` instead of `Cargo.toml` allows us to serialize the
+//! Parsing `Cargo.lock` instead of `Cargo.toml` allows to serialize the
 //! precise versions Cargo chose to compile. One can't, however, distinguish
 //! `build-dependencies`, `dev-dependencies` and `dependencies`. Furthermore,
 //! some dependencies never show up if Cargo had not been forced to
 //! actually use them (e.g. `dev-dependencies` with `cargo test` never
 //! having been executed).
+//!
+//! Note that if the `dependency-tree`-feature is not active, the list of dependencies
+//! contains the root-package(s) as well.
+//!
 //! ```
 //! /// An array of effective dependencies as documented by `Cargo.lock`.
 //! pub const DEPENDENCIES: [(&str, &str); 37] = [("autocfg", "1.0.0"), ("bitflags", "1.2.1"), ("built", "0.4.1"), ("cargo-lock", "4.0.1"), ("cc", "1.0.54"), ("cfg-if", "0.1.10"), ("chrono", "0.4.11"), ("example_project", "0.1.0"), ("git2", "0.13.6"), ("idna", "0.2.0"), ("jobserver", "0.1.21"), ("libc", "0.2.71"), ("libgit2-sys", "0.12.6+1.0.0"), ("libz-sys", "1.0.25"), ("log", "0.4.8"), ("matches", "0.1.8"), ("num-integer", "0.1.42"), ("num-traits", "0.2.11"), ("percent-encoding", "2.1.0"), ("pkg-config", "0.3.17"), ("proc-macro2", "1.0.17"), ("quote", "1.0.6"), ("semver", "1.0.0"), ("serde", "1.0.110"), ("serde_derive", "1.0.110"), ("smallvec", "1.4.0"), ("syn", "1.0.25"), ("time", "0.1.43"), ("toml", "0.5.6"), ("unicode-bidi", "0.3.4"), ("unicode-normalization", "0.1.12"), ("unicode-xid", "0.2.0"), ("url", "2.1.1"), ("vcpkg", "0.2.8"), ("winapi", "0.3.8"), ("winapi-i686-pc-windows-gnu", "0.4.0"), ("winapi-x86_64-pc-windows-gnu", "0.4.0")];
 //! /// The effective dependencies as a comma-separated string.
 //! pub const DEPENDENCIES_STR: &str = "autocfg 1.0.0, bitflags 1.2.1, built 0.4.1, cargo-lock 4.0.1, cc 1.0.54, cfg-if 0.1.10, chrono 0.4.11, example_project 0.1.0, git2 0.13.6, idna 0.2.0, jobserver 0.1.21, libc 0.2.71, libgit2-sys 0.12.6+1.0.0, libz-sys 1.0.25, log 0.4.8, matches 0.1.8, num-integer 0.1.42, num-traits 0.2.11, percent-encoding 2.1.0, pkg-config 0.3.17, proc-macro2 1.0.17, quote 1.0.6, semver 1.0.0, serde 1.0.110, serde_derive 1.0.110, smallvec 1.4.0, syn 1.0.25, time 0.1.43, toml 0.5.6, unicode-bidi 0.3.4, unicode-normalization 0.1.12, unicode-xid 0.2.0, url 2.1.1, vcpkg 0.2.8, winapi 0.3.8, winapi-i686-pc-windows-gnu 0.4.0, winapi-x86_64-pc-windows-gnu 0.4.0";
+//! ```
+//!
+//! ### `dependency-tree` (implies `cargo-lock`)
+//! Solve the dependency-graph in `Cargo.lock` to discern direct and indirect
+//! dependencies.
+//!
+//! "Direct" dependencies are those which the root-package(s) depends on.
+//! "Indirect" dependencies are those which are not direct dependencies.
+//!
+//! ```
+//! /// An array of direct dependencies as documented by `Cargo.lock`.
+//! pub const DIRECT_DEPENDENCIES: [(&str, &str); 1] = [("built", "0.6.1")];
+//! /// The direct dependencies as a comma-separated string.
+//! pub const DIRECT_DEPENDENCIES_STR: &str = r"built 0.6.1";
+//!
+//! /// An array of indirect dependencies as documented by `Cargo.lock`.
+//! pub const INDIRECT_DEPENDENCIES: [(&str, &str); 64] = [("android-tzdata", "0.1.1"), ("android_system_properties", "0.1.5"), ("autocfg", "1.1.0"), ("bitflags", "2.4.0"), ("bumpalo", "3.13.0"), ("cargo-lock", "9.0.0"), ("cc", "1.0.83"), ("cfg-if", "1.0.0"), ("chrono", "0.4.29"), ("core-foundation-sys", "0.8.4"), ("equivalent", "1.0.1"), ("example_project", "0.1.0"), ("fixedbitset", "0.4.2"), ("form_urlencoded", "1.2.0"), ("git2", "0.18.0"), ("hashbrown", "0.14.0"), ("iana-time-zone", "0.1.57"), ("iana-time-zone-haiku", "0.1.2"), ("idna", "0.4.0"), ("indexmap", "2.0.0"), ("jobserver", "0.1.26"), ("js-sys", "0.3.64"), ("libc", "0.2.147"), ("libgit2-sys", "0.16.1+1.7.1"), ("libz-sys", "1.1.12"), ("log", "0.4.20"), ("memchr", "2.6.3"), ("num-traits", "0.2.16"), ("once_cell", "1.18.0"), ("percent-encoding", "2.3.0"), ("petgraph", "0.6.4"), ("pkg-config", "0.3.27"), ("proc-macro2", "1.0.66"), ("quote", "1.0.33"), ("semver", "1.0.18"), ("serde", "1.0.188"), ("serde_derive", "1.0.188"), ("serde_spanned", "0.6.3"), ("syn", "2.0.31"), ("tinyvec", "1.6.0"), ("tinyvec_macros", "0.1.1"), ("toml", "0.7.6"), ("toml_datetime", "0.6.3"), ("toml_edit", "0.19.14"), ("unicode-bidi", "0.3.13"), ("unicode-ident", "1.0.11"), ("unicode-normalization", "0.1.22"), ("url", "2.4.1"), ("vcpkg", "0.2.15"), ("wasm-bindgen", "0.2.87"), ("wasm-bindgen-backend", "0.2.87"), ("wasm-bindgen-macro", "0.2.87"), ("wasm-bindgen-macro-support", "0.2.87"), ("wasm-bindgen-shared", "0.2.87"), ("windows", "0.48.0"), ("windows-targets", "0.48.5"), ("windows_aarch64_gnullvm", "0.48.5"), ("windows_aarch64_msvc", "0.48.5"), ("windows_i686_gnu", "0.48.5"), ("windows_i686_msvc", "0.48.5"), ("windows_x86_64_gnu", "0.48.5"), ("windows_x86_64_gnullvm", "0.48.5"), ("windows_x86_64_msvc", "0.48.5"), ("winnow", "0.5.15")];
+//! /// The indirect dependencies as a comma-separated string.
+//! pub const INDIRECT_DEPENDENCIES_STR: &str = r"android-tzdata 0.1.1, android_system_properties 0.1.5, autocfg 1.1.0, bitflags 2.4.0, bumpalo 3.13.0, cargo-lock 9.0.0, cc 1.0.83, cfg-if 1.0.0, chrono 0.4.29, core-foundation-sys 0.8.4, equivalent 1.0.1, example_project 0.1.0, fixedbitset 0.4.2, form_urlencoded 1.2.0, git2 0.18.0, hashbrown 0.14.0, iana-time-zone 0.1.57, iana-time-zone-haiku 0.1.2, idna 0.4.0, indexmap 2.0.0, jobserver 0.1.26, js-sys 0.3.64, libc 0.2.147, libgit2-sys 0.16.1+1.7.1, libz-sys 1.1.12, log 0.4.20, memchr 2.6.3, num-traits 0.2.16, once_cell 1.18.0, percent-encoding 2.3.0, petgraph 0.6.4, pkg-config 0.3.27, proc-macro2 1.0.66, quote 1.0.33, semver 1.0.18, serde 1.0.188, serde_derive 1.0.188, serde_spanned 0.6.3, syn 2.0.31, tinyvec 1.6.0, tinyvec_macros 0.1.1, toml 0.7.6, toml_datetime 0.6.3, toml_edit 0.19.14, unicode-bidi 0.3.13, unicode-ident 1.0.11, unicode-normalization 0.1.22, url 2.4.1, vcpkg 0.2.15, wasm-bindgen 0.2.87, wasm-bindgen-backend 0.2.87, wasm-bindgen-macro 0.2.87, wasm-bindgen-macro-support 0.2.87, wasm-bindgen-shared 0.2.87, windows 0.48.0, windows-targets 0.48.5, windows_aarch64_gnullvm 0.48.5, windows_aarch64_msvc 0.48.5, windows_i686_gnu 0.48.5, windows_i686_msvc 0.48.5, windows_x86_64_gnu 0.48.5, windows_x86_64_gnullvm 0.48.5, windows_x86_64_msvc 0.48.5, winnow 0.5.15";
 //! ```
 //!
 //! ### `git2`
@@ -227,27 +258,34 @@
 //! result. `GIT_VERSION` and `GIT_DIRTY` will therefor always be `None` if
 //! a CI-platform is detected.
 //! ```
-//! /// If the crate was compiled from within a git-repository, `GIT_VERSION` contains HEAD's tag. The short commit id is used if HEAD is not tagged.
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_VERSION` contains HEAD's tag. The short commit id is used
+//! /// if HEAD is not tagged.
 //! pub const GIT_VERSION: Option<&str> = Some("0.4.1-10-gca2af4f");
+//!
 //! /// If the repository had dirty/staged files.
 //! pub const GIT_DIRTY: Option<bool> = Some(true);
-//! /// If the crate was compiled from within a git-repository, `GIT_HEAD_REF` contains full name to the reference pointed to by HEAD (e.g.: `refs/heads/master`). If HEAD is detached or the branch name is not valid UTF-8 `None` will be stored.
+//!
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_HEAD_REF` contains full name to the reference pointed to by
+//! /// HEAD (e.g.: `refs/heads/master`). If HEAD is detached or the branch
+//! /// name is not valid UTF-8 `None` will be stored.
 //! pub const GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
-//! /// If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
+//!
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
 //! pub const GIT_COMMIT_HASH: Option<&str> = Some("ca2af4f11bb8f4f6421c4cccf428bf4862573daf");
-//! /// If the crate was compiled from within a git-repository, `GIT_COMMIT_HASH_SHORT` contains HEAD's short commit SHA-1 hash.
+//!
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_COMMIT_HASH_SHORT` contains HEAD's short commit SHA-1 hash.
 //! pub const GIT_COMMIT_HASH_SHORT: Option<&str> = Some("ca2af4f");
 //! ```
 //!
 //! ### `chrono`
-//! Writing the current timestamp.
 //!
-//! This option is only available if `built` is compiled with the
-//! `chrono` feature.
-//!
-//! If `built` is included as a runtime-dependency, it can parse the
-//! string-representation into a `time:Tm` with the help
-//! of `built::util::strptime()`.
+//! The build-time is recorded as `BUILT_TIME_UTC`. If `built` is included as a runtime-dependency,
+//! it can parse the string-representation into a `time:Tm` with the help of
+//! `built::util::strptime()`.
 //! ```
 //! /// The built-time in RFC2822, UTC
 //! pub const BUILT_TIME_UTC: &str = "Wed, 27 May 2020 18:12:39 +0000";

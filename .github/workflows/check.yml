@@ -45,6 +45,11 @@ jobs:
         with:
           command: check
           args: --no-default-features --features cargo-lock
+      - name: Check dependency-tree
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --no-default-features --features dependency-tree
       - name: Check git2
         uses: actions-rs/cargo@v1
         with:
