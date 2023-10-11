@@ -74,15 +74,35 @@ fn main() {
         Ok(self.root)
     }
 
-    fn create_and_run(self) {
+    fn create_and_run(self, extra_args: &[&str]) {
         let root = self.create().expect("Creating the project failed");
-        Self::run(root.as_ref());
+        Self::run(root.as_ref(), extra_args);
     }
 
-    fn run(root: &std::path::Path) {
+    fn create_and_build(self, extra_args: &[&str]) {
+        let root = self.create().expect("Creating the project failed");
+        Self::build(root.as_ref(), extra_args);
+    }
+
+    fn run(root: &std::path::Path, extra_args: &[&str]) {
         let cargo_result = process::Command::new("cargo")
             .current_dir(root)
             .arg("run")
+            .args(extra_args)
+            .output()
+            .expect("cargo failed");
+        assert!(
+            cargo_result.status.success(),
+            "cargo failed with {}",
+            String::from_utf8_lossy(&cargo_result.stderr)
+        );
+    }
+
+    fn build(root: &std::path::Path, extra_args: &[&str]) {
+        let cargo_result = process::Command::new("cargo")
+            .current_dir(root)
+            .arg("build")
+            .args(extra_args)
             .output()
             .expect("cargo failed");
         assert!(
@@ -120,6 +140,77 @@ fn get_built_root() -> path::PathBuf {
             path
         })
         .unwrap()
+}
+
+#[test]
+#[ignore = "requires target x86_64-unknown-none"]
+fn nostd_testbox() {
+    let mut p = Project::new();
+
+    let built_root = get_built_root();
+
+    p.add_file(
+        "Cargo.toml",
+        format!(
+            r#"
+[package]
+name = "nostd_testbox"
+version = "1.2.3-rc1"
+authors = ["Joe", "Bob"]
+build = "build.rs"
+description = "xobtset"
+homepage = "localhost"
+repository = "https://dev.example.com/sources/testbox/"
+license = "MIT"
+
+[build-dependencies]
+built = {{ path = {:?}, default_features=false }}
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[features]
+default = ["SuperAwesome", "MegaAwesome"]
+SuperAwesome = []
+MegaAwesome = []"#,
+            &built_root,
+        ),
+    )
+    .add_file(
+        "build.rs",
+        r#"
+fn main() {
+    built::write_built_file().unwrap();
+}"#,
+    )
+    .add_file(
+        "src/main.rs",
+        r#"
+#![no_main]
+#![no_std]
+
+use core::panic::PanicInfo;
+
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+#[panic_handler]
+fn panic(_panic: &PanicInfo<'_>) -> ! {
+    loop {}
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn main() -> ! {
+    loop {}
+}
+"#,
+    );
+
+    p.create_and_build(&["--target", "x86_64-unknown-none"]);
 }
 
 #[test]
@@ -214,7 +305,7 @@ fn main() {
 }"#,
     );
 
-    p.create_and_run();
+    p.create_and_run(&[]);
 }
 
 #[test]
@@ -331,7 +422,7 @@ fn main() {
     assert!((built::chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
 }"#,
     );
-    p.create_and_run();
+    p.create_and_run(&[]);
 }
 
 #[test]
@@ -352,7 +443,7 @@ fn main() {
 "#,
     );
 
-    p.create_and_run();
+    p.create_and_run(&[]);
 }
 
 #[test]
@@ -390,7 +481,7 @@ fn main() {
         &[],
     )
     .unwrap();
-    Project::run(root.as_ref());
+    Project::run(root.as_ref(), &[]);
 
     let mut f = std::fs::OpenOptions::new()
         .write(true)
@@ -414,7 +505,7 @@ fn main() {
     )
     .unwrap();
 
-    Project::run(root.as_ref());
+    Project::run(root.as_ref(), &[]);
 }
 
 #[test]
@@ -433,7 +524,7 @@ fn main() {}
 "#,
     );
     p.init_git();
-    p.create_and_run();
+    p.create_and_run(&[]);
 }
 
 #[cfg(target_os = "windows")]

@@ -50,8 +50,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-none
       - run: cargo test --no-default-features
       - run: cargo test --all-features
+      - run: cargo test -- --ignored nostd_testbox
       - run: cargo run --manifest-path=example_project/Cargo.toml
 
   semver:
@@ -59,4 +62,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: apt update && apt install -y cmake
       - uses: obi1kenobi/cargo-semver-checks-action@v2

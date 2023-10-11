@@ -204,7 +204,10 @@ impl EnvironmentMap {
         write_str_variable!(
             w,
             "CFG_FAMILY",
-            self.0["CARGO_CFG_TARGET_FAMILY"],
+            self.0
+                .get("CARGO_CFG_TARGET_FAMILY")
+                .map(|s| s.as_str())
+                .unwrap_or_default(),
             "The OS-family, given by `CARGO_CFG_TARGET_FAMILY`."
         );
 
