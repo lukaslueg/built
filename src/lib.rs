@@ -410,7 +410,7 @@ pub fn write_built_file() -> io::Result<()> {
         #[cfg(any(feature = "cargo-lock", feature = "git2"))]
         Some(
             env::var("CARGO_MANIFEST_DIR")
-                .expect("CARGO_MANIFEST_PATH")
+                .expect("CARGO_MANIFEST_DIR")
                 .as_ref(),
         ),
         &dst,
