@@ -23,4 +23,4 @@ tempfile = "3"
 dependency-tree = [ "cargo-lock/dependency-tree" ]
 
 [package.metadata.docs.rs]
-features = [ "cargo-lock", "chrono", "dependency-tree", "git2", "semver" ]
+features = [ "cargo-lock", "chrono", "dependency-tree", "git2", "semver", "skip-environment" ]
