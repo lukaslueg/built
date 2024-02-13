@@ -10,7 +10,7 @@ provide that to the crate. The information collected by `built` include:
 
 * Various metadata like version, authors, homepage etc. as set by `Cargo.toml`
 * The tag or commit id if the crate was being compiled from within a Git repository.
-* The values of `CARGO_CFG_*` build script environment variables, like `CARGO_CFG_TARGET_OS` and `CARGO_CFG_TARGET_ARCH`.
+* The values of `CARGO_CFG_*` build script environment variables, like `CARGO_CFG_TARGET_OS` and `CARGO_CFG_TARGET_ARCH` (unless feature `skip-environment` is specified).
 * The features the crate was compiled with.
 * The various dependencies, dependencies of dependencies and their versions Cargo ultimately chose to compile.
 * The presence of a CI-platform like `Github Actions`, `Travis CI` and `AppVeyor`.
