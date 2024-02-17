@@ -366,10 +366,7 @@ pub fn write_built_file_with_opts(
 
     let envmap = environment::EnvironmentMap::new();
     envmap.write_ci(&built_file)?;
-
-    #[cfg(not (feature = "skip-environment"))]
     envmap.write_env(&built_file)?;
-
     envmap.write_features(&built_file)?;
     envmap.write_compiler_version(&built_file)?;
     envmap.write_cfg(&built_file)?;

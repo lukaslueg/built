@@ -40,13 +40,14 @@ impl EnvironmentMap {
         use io::Write;
         macro_rules! write_env_str {
             ($(($name:ident, $env_name:expr,$doc:expr)),*) => {$(
-                write_str_variable!(
-                    w,
-                    stringify!($name),
-                    self.0.get($env_name)
-                        .expect(stringify!(Missing expected environment variable $env_name)),
-                        $doc
-                );
+                if let Some(value) = self.0.get($env_name) {
+                    write_str_variable!(
+                        w,
+                        stringify!($name),
+                        value,
+                            $doc
+                    );
+                }
             )*}
         }
 
