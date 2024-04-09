@@ -235,7 +235,7 @@ impl EnvironmentMap {
         let rustdoc = &self.0["RUSTDOC"];
 
         let rustc_version = get_version_from_cmd(rustc.as_ref())?;
-        let rustdoc_version = get_version_from_cmd(rustdoc.as_ref()).unwrap_or("NOT FOUND".to_string());
+        let rustdoc_version = get_version_from_cmd(rustdoc.as_ref()).unwrap_or_default();
 
         let doc = format!("The output of `{rustc} -V`");
         write_str_variable!(w, "RUSTC_VERSION", rustc_version, doc);
