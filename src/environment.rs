@@ -240,7 +240,9 @@ impl EnvironmentMap {
         let doc = format!("The output of `{rustc} -V`");
         write_str_variable!(w, "RUSTC_VERSION", rustc_version, doc);
 
-        let doc = format!("The output of `{rustdoc} -V`");
+        let doc = format!(
+            "The output of `{rustdoc} -V`; empty string if `{rustdoc} -V` failed to execute"
+        );
         write_str_variable!(w, "RUSTDOC_VERSION", rustdoc_version, doc);
         Ok(())
     }
