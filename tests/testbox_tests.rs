@@ -98,6 +98,7 @@ fn main() {
             "cargo failed with {}",
             String::from_utf8_lossy(&cargo_result.stderr)
         );
+        assert!(String::from_utf8_lossy(&cargo_result.stdout).contains("builttestsuccess"));
     }
 
     fn build(root: &std::path::Path, extra_args: &[&str]) {
@@ -304,6 +305,7 @@ fn main() {
     assert_ne!(built_info::CFG_POINTER_WIDTH, "");
     // For CFG_ENV, empty string is a possible value.
     let _: &'static str = built_info::CFG_ENV;
+    println!("builttestsuccess");
 }"#,
     );
 
@@ -341,6 +343,7 @@ mod built_info {
 }
 fn main() {
     assert_eq!(built_info::PKG_VERSION, "5.6.7");
+    println!("builttestsuccess");
 }
 "#,
     );
@@ -459,6 +462,7 @@ fn main() {
     assert_eq!(built_info::DIRECT_DEPENDENCIES[0].0, "built");
 
     assert!((built::chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
+    println!("builttestsuccess");
 }"#,
     );
     p.create_and_run(&[]);
@@ -478,6 +482,7 @@ mod built_info {
 
 fn main() {
     assert_eq!(built_info::GIT_DIRTY, None);
+    println!("builttestsuccess");
 }
 "#,
     );
@@ -498,6 +503,7 @@ mod built_info {
 
 fn main() {
     assert_eq!(built_info::GIT_DIRTY, Some(false));
+    println!("builttestsuccess");
 }
 "#,
     );
@@ -538,6 +544,7 @@ fn main() {
     assert!(built_info::GIT_COMMIT_HASH.is_some());
     assert!(built_info::GIT_COMMIT_HASH_SHORT.is_some());
     assert!(built_info::GIT_COMMIT_HASH.unwrap().starts_with(built_info::GIT_COMMIT_HASH_SHORT.unwrap()));
+    println!("builttestsuccess");
 }
 "#
         .as_bytes(),
@@ -559,7 +566,9 @@ mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
 
-fn main() {}
+fn main() {
+    println!("builttestsuccess");
+}
 "#,
     );
     p.init_git();
@@ -580,7 +589,9 @@ mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
 }
 
-fn main() {}
+fn main() {
+    println!("builttestsuccess");
+}
 "#,
     );
 
