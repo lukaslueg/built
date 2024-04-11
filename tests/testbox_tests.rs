@@ -68,6 +68,8 @@ fn main() {
             .unwrap();
         for (name, content) in self.files {
             let fname = self.root.path().join(name);
+            assert!(fname.is_absolute());
+            fs::create_dir_all(fname.parent().unwrap()).unwrap();
             let mut file = fs::File::create(fname)?;
             file.write_all(&content)?;
         }
@@ -305,6 +307,43 @@ fn main() {
 }"#,
     );
 
+    p.create_and_run(&[]);
+}
+
+#[test]
+fn simple_workspace() {
+    let mut p = Project::new();
+    let built_root = get_built_root();
+
+    p.add_file("Cargo.toml", "[workspace]\nmembers = ['foobar']");
+    p.add_file(
+        "foobar/Cargo.toml",
+        format!(
+            r#"[package]
+name = "foobar"
+version = "5.6.7"
+build = "build.rs"
+
+[build-dependencies]
+built = {{ path = {:?} }}"#,
+            &built_root
+        ),
+    );
+    p.add_file(
+        "foobar/build.rs",
+        "fn main() { built::write_built_file().unwrap(); }",
+    );
+    p.add_file(
+        "foobar/src/main.rs",
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+fn main() {
+    assert_eq!(built_info::PKG_VERSION, "5.6.7");
+}
+"#,
+    );
     p.create_and_run(&[]);
 }
 

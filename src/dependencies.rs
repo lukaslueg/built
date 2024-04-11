@@ -15,6 +15,15 @@ where
     res
 }
 
+fn find_lockfile(base: &path::Path) -> io::Result<path::PathBuf> {
+    base.ancestors()
+        .find_map(|p| {
+            let lockfile = p.join("Cargo.lock");
+            lockfile.exists().then(|| lockfile.to_owned())
+        })
+        .ok_or(io::Error::other("Cargo.lock not found"))
+}
+
 #[cfg(feature = "dependency-tree")]
 struct Dependencies {
     deps: Vec<(String, String)>,
@@ -68,7 +77,7 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
     use io::{Read, Write};
 
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
+    fs::File::open(find_lockfile(manifest_location)?)?.read_to_string(&mut lock_buf)?;
     let lockfile = lock_buf.parse().expect("Failed to parse lockfile");
 
     let dependencies = Dependencies::new(&lockfile);
@@ -138,7 +147,7 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
     use io::{Read, Write};
 
     let mut lock_buf = String::new();
-    fs::File::open(manifest_location.join("Cargo.lock"))?.read_to_string(&mut lock_buf)?;
+    fs::File::open(find_lockfile(manifest_location)?)?.read_to_string(&mut lock_buf)?;
     let lockfile: cargo_lock::Lockfile = lock_buf.parse().expect("Failed to parse lockfile");
 
     let deps = package_names(&lockfile.packages);
