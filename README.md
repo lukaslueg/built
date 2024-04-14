@@ -57,12 +57,12 @@ if built::util::detect_ci().is_some() {
 //....
 ```
 
-> This is version 0.1.0, built for x86_64-unknown-linux-gnu by rustc 1.43.1 (8d69840ab 2020-05-04).
+> This is version 0.1.0, built for x86_64-unknown-linux-gnu by rustc 1.77.2 (25ef9e3d8 2024-04-09).
 >
-> I was built from git `0.4.1-10-gca2af4f`, commit ca2af4f11bb8f4f6421c4cccf428bf4862573daf; the working directory was "dirty". The branch was `refs/heads/master`.
+> I was built from git `0.7.2-3-g4014a2e`, commit 4014a2eb4e8575bec9a1f17ae7b92d8956ecd1fd, short_commit 4014a2e; the working directory was "clean". The branch was `refs/heads/master`.
 >
 > I was built for a x86_64-CPU, which is a little-endian architecture. I was compiled to run on linux (a unix-breed) and my runtime should be gnu.
 >
 > It seems I've not been built on a continuous integration platform, and I'm currently not executing on one!
 >
-> I was built with profile "debug", features "" on 2020-05-27 20:14:38 +02:00 (1 seconds ago) using autocfg 1.0.0, bitflags 1.2.1, built 0.4.1, cargo-lock 4.0.1, cc 1.0.54, cfg-if 0.1.10, chrono 0.4.11, example_project 0.1.0, git2 0.13.6, idna 0.2.0, jobserver 0.1.21, libc 0.2.71, libgit2-sys 0.12.6+1.0.0, libz-sys 1.0.25, log 0.4.8, matches 0.1.8, num-integer 0.1.42, num-traits 0.2.11, percent-encoding 2.1.0, pkg-config 0.3.17, proc-macro2 1.0.17, quote 1.0.6, semver 0.10.0, semver 0.9.0, semver-parser 0.7.0, serde 1.0.110, serde_derive 1.0.110, smallvec 1.4.0, syn 1.0.25, time 0.1.43, toml 0.5.6, unicode-bidi 0.3.4, unicode-normalization 0.1.12, unicode-xid 0.2.0, url 2.1.1, vcpkg 0.2.8, winapi 0.3.8, winapi-i686-pc-windows-gnu 0.4.0, winapi-x86_64-pc-windows-gnu 0.4.0
+> I was built with profile "debug", features "" on 2024-04-14 14:28:31 +00:00 (38 seconds ago) using `built 0.7.2` (with help from `android-tzdata 0.1.1, android_system_properties 0.1.5, autocfg 1.2.0, bitflags 2.5.0, bumpalo 3.16.0, cargo-lock 9.0.0, cc 1.0.94, cfg-if 1.0.0, chrono 0.4.37, core-foundation-sys 0.8.6, equivalent 1.0.1, fixedbitset 0.4.2, form_urlencoded 1.2.1, git2 0.18.3, hashbrown 0.14.3, iana-time-zone 0.1.60, iana-time-zone-haiku 0.1.2, idna 0.5.0, indexmap 2.2.6, jobserver 0.1.30, js-sys 0.3.69, libc 0.2.153, libgit2-sys 0.16.2+1.7.2, libz-sys 1.1.16, log 0.4.21, memchr 2.7.2, num-traits 0.2.18, once_cell 1.19.0, percent-encoding 2.3.1, petgraph 0.6.4, pkg-config 0.3.30, proc-macro2 1.0.79, quote 1.0.36, semver 1.0.22, serde 1.0.197, serde_derive 1.0.197, serde_spanned 0.6.5, syn 2.0.58, tinyvec 1.6.0, tinyvec_macros 0.1.1, toml 0.7.8, toml_datetime 0.6.5, toml_edit 0.19.15, unicode-bidi 0.3.15, unicode-ident 1.0.12, unicode-normalization 0.1.23, url 2.5.0, vcpkg 0.2.15, wasm-bindgen 0.2.92, wasm-bindgen-backend 0.2.92, wasm-bindgen-macro 0.2.92, wasm-bindgen-macro-support 0.2.92, wasm-bindgen-shared 0.2.92, windows-core 0.52.0, windows-targets 0.52.5, windows_aarch64_gnullvm 0.52.5, windows_aarch64_msvc 0.52.5, windows_i686_gnu 0.52.5, windows_i686_gnullvm 0.52.5, windows_i686_msvc 0.52.5, windows_x86_64_gnu 0.52.5, windows_x86_64_gnullvm 0.52.5, windows_x86_64_msvc 0.52.5, winnow 0.5.40`).
