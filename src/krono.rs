@@ -23,10 +23,32 @@ pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
         .with_timezone(&chrono::offset::Utc)
 }
 
+fn get_source_date_epoch_from_env() -> Option<chrono::DateTime<chrono::offset::Utc>> {
+    match std::env::var("SOURCE_DATE_EPOCH") {
+        Ok(val) => {
+            let ts = match val.parse::<i64>() {
+                Ok(ts) => ts,
+                Err(_) => {
+                    eprintln!("SOURCE_DATE_EPOCH defined, but not a i64");
+                    return None;
+                }
+            };
+            match chrono::DateTime::from_timestamp(ts, 0) {
+                Some(now) => Some(now),
+                None => {
+                    eprintln!("SOURCE_DATE_EPOCH can't be represented as a UTC-time");
+                    None
+                }
+            }
+        }
+        Err(_) => None,
+    }
+}
+
 pub fn write_time(mut w: &fs::File) -> io::Result<()> {
     use io::Write;
 
-    let now = chrono::offset::Utc::now();
+    let now = get_source_date_epoch_from_env().unwrap_or_else(chrono::offset::Utc::now);
     write_str_variable!(
         w,
         "BUILT_TIME_UTC",

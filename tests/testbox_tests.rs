@@ -469,6 +469,60 @@ fn main() {
 }
 
 #[test]
+fn source_date_epoch() {
+    let mut p = Project::new();
+    let built_root = get_built_root();
+
+    p.add_file(
+        "Cargo.toml",
+        format!(
+            r#"
+[package]
+name = "testbox"
+version = "1.2.3-rc1"
+authors = ["Joe", "Bob", "Harry:Potter"]
+build = "build.rs"
+description = "xobtset"
+
+[dependencies]
+built = {{ path = {:?}, features=["chrono"] }}
+
+[build-dependencies]
+built = {{ path = {:?}, features=["chrono"] }}"#,
+            &built_root, &built_root
+        ),
+    );
+
+    p.add_file(
+        "build.rs",
+        r#"
+use std::env;
+
+fn main() {
+    // Set timestamp
+    env::set_var("SOURCE_DATE_EPOCH", "1716639359");
+
+    built::write_built_file().unwrap();
+}"#,
+    );
+
+    p.add_file(
+        "src/main.rs",
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built::util::strptime(built_info::BUILT_TIME_UTC).to_rfc2822(),
+              "Sat, 25 May 2024 12:15:59 +0000");
+    println!("builttestsuccess");
+}"#,
+    );
+    p.create_and_run(&[]);
+}
+
+#[test]
 #[cfg(feature = "git2")]
 fn git_no_git() {
     // `root` isn't even a git-repo

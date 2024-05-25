@@ -286,6 +286,11 @@
 //! The build-time is recorded as `BUILT_TIME_UTC`. If `built` is included as a runtime-dependency,
 //! it can parse the string-representation into a `time:Tm` with the help of
 //! `built::util::strptime()`.
+//!
+//! `built` honors the environment variable `SOURCE_DATE_EPOCH`. If the variable is defined and
+//! parses to a valid UTC timestamp, that build-time is used instead of the current local time.
+//! The variable is silently ignored if defined but but does not parse to a valid UTC timestamp.
+//!
 //! ```
 //! /// The built-time in RFC2822, UTC
 //! pub const BUILT_TIME_UTC: &str = "Wed, 27 May 2020 18:12:39 +0000";
