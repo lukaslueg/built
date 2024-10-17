@@ -6,9 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [unreleased]
 
+## [0.7.5] - 2024-10-17
+### Changed
+- Bump `cargo-lock` to 10.0
+
 ## [0.7.4] - 2024-07-07
 ### Added
 - Honor `SOURCE_DATE_EPOCH` in `BUILT_TIME_UTC`
+
+### Changed
 - Bump `git2` to 0.19
 
 ## [0.7.3] - 2024-05-21
@@ -91,7 +97,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Bump `semver` to 0.10
 
-[unreleased]: https://github.com/lukaslueg/built/compare/0.7.4...master
+[unreleased]: https://github.com/lukaslueg/built/compare/0.7.5...master
+[0.7.5]: https://github.com/lukaslueg/built/compare/0.7.4...0.7.5
 [0.7.4]: https://github.com/lukaslueg/built/compare/0.7.3...0.7.4
 [0.7.3]: https://github.com/lukaslueg/built/compare/0.7.2...0.7.3
 [0.7.2]: https://github.com/lukaslueg/built/compare/0.7.1...0.7.2
