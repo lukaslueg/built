@@ -401,7 +401,7 @@ pub fn write_built_file_with_opts(
     Ok(())
 }
 
-/// A shorthand for calling `write_built_file()` with `CARGO_MANIFEST_DIR` and
+/// A shorthand for calling `write_built_file_with_opts()` with `CARGO_MANIFEST_DIR` and
 /// `[OUT_DIR]/built.rs`.
 ///
 /// # Errors
