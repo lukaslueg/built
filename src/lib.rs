@@ -255,7 +255,7 @@
 //!
 //! Continuous Integration platforms like `Travis` and `AppVeyor` will
 //! do shallow clones, causing `libgit2` to be unable to get a meaningful
-//! result. `GIT_VERSION` and `GIT_DIRTY` will therefor always be `None` if
+//! result. `GIT_VERSION` and `GIT_DIRTY` will therefore always be `None` if
 //! a CI-platform is detected.
 //! ```
 //! /// If the crate was compiled from within a git-repository,
@@ -401,7 +401,7 @@ pub fn write_built_file_with_opts(
     Ok(())
 }
 
-/// A shorthand for calling `write_built_file()` with `CARGO_MANIFEST_DIR` and
+/// A shorthand for calling `write_built_file_with_opts()` with `CARGO_MANIFEST_DIR` and
 /// `[OUT_DIR]/built.rs`.
 ///
 /// # Errors

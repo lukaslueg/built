@@ -42,7 +42,7 @@ where
     name_and_versions.into_iter().map(parse_version)
 }
 
-/// Detect execution on various Continiuous Integration platforms.
+/// Detect execution on various Continuous Integration platforms.
 ///
 /// CI-platforms are detected by the presence of known environment variables.
 /// This allows to detect specific CI-platform (like `GitLab`); various
