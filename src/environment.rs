@@ -1,3 +1,4 @@
+use crate::util::ArrayDisplay;
 use crate::{fmt_option_str, write_str_variable, write_variable};
 use std::{collections, env, ffi, fmt, fs, io, process};
 
@@ -142,7 +143,7 @@ impl EnvironmentMap {
             w,
             "FEATURES",
             format_args!("[&str; {}]", features.len()),
-            format_args!("{features:?}"),
+            ArrayDisplay(&features, |t, f| write!(f, "\"{}\"", t.escape_default())),
             "The features that were enabled during compilation."
         );
         let features_str = features.join(", ");
@@ -163,7 +164,11 @@ impl EnvironmentMap {
             w,
             "FEATURES_LOWERCASE",
             format_args!("[&str; {}]", lowercase_features.len()),
-            format_args!("{lowercase_features:?}"),
+            ArrayDisplay(&lowercase_features, |val, fmt| write!(
+                fmt,
+                "\"{}\"",
+                val.escape_default()
+            )),
             "The features as above, as lowercase strings."
         );
         let lowercase_features_str = lowercase_features.join(", ");

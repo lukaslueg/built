@@ -1,3 +1,4 @@
+use crate::util::TupleArrayDisplay;
 use crate::{write_str_variable, write_variable};
 use std::{collections, fs, io, path};
 
@@ -86,7 +87,7 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
         w,
         "DEPENDENCIES",
         format_args!("[(&str, &str); {}]", dependencies.deps.len()),
-        format_args!("{0:?}", dependencies.deps),
+        TupleArrayDisplay(&dependencies.deps),
         "An array of effective dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(
@@ -105,7 +106,7 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
         w,
         "DIRECT_DEPENDENCIES",
         format_args!("[(&str, &str); {}]", dependencies.direct_deps.len()),
-        format_args!("{0:?}", dependencies.direct_deps),
+        TupleArrayDisplay(&dependencies.direct_deps),
         "An array of direct dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(
@@ -124,7 +125,7 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
         w,
         "INDIRECT_DEPENDENCIES",
         format_args!("[(&str, &str); {}]", dependencies.indirect_deps.len()),
-        format_args!("{0:?}", dependencies.indirect_deps),
+        TupleArrayDisplay(&dependencies.indirect_deps),
         "An array of indirect dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(
@@ -156,7 +157,7 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
         w,
         "DEPENDENCIES",
         format_args!("[(&str, &str); {}]", deps.len()),
-        format_args!("{deps:?}"),
+        TupleArrayDisplay(&deps),
         "An array of effective dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(

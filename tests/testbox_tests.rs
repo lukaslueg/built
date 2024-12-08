@@ -46,8 +46,9 @@ version = "0.0.1"
 build = "build.rs"
 
 [build-dependencies]
-built = {{ path = {:?}, features = {} }}"#,
-                &built_root, &features,
+built = {{ path = "{}", features = {} }}"#,
+                built_root.display().to_string().escape_default(),
+                &features,
             ),
         )
         .add_file(
@@ -167,7 +168,7 @@ repository = "https://dev.example.com/sources/testbox/"
 license = "MIT"
 
 [build-dependencies]
-built = {{ path = {:?}, default_features=false }}
+built = {{ path = "{}", default_features=false }}
 
 [profile.dev]
 panic = "abort"
@@ -179,7 +180,7 @@ panic = "abort"
 default = ["SuperAwesome", "MegaAwesome"]
 SuperAwesome = []
 MegaAwesome = []"#,
-            &built_root,
+            built_root.display().to_string().escape_default(),
         ),
     )
     .add_file(
@@ -237,16 +238,16 @@ repository = "https://dev.example.com/sources/testbox/"
 license = "MIT"
 
 [dependencies]
-built = {{ path = {:?}, default_features=false }}
+built = {{ path = "{built_root}", default_features=false }}
 
 [build-dependencies]
-built = {{ path = {:?}, default_features=false }}
+built = {{ path = "{built_root}", default_features=false }}
 
 [features]
 default = ["SuperAwesome", "MegaAwesome"]
 SuperAwesome = []
 MegaAwesome = []"#,
-            &built_root, &built_root
+            built_root = built_root.display().to_string().escape_default()
         ),
     );
 
@@ -327,8 +328,8 @@ version = "5.6.7"
 build = "build.rs"
 
 [build-dependencies]
-built = {{ path = {:?} }}"#,
-            &built_root
+built = {{ path = "{}" }}"#,
+            built_root.display().to_string().escape_default()
         ),
     );
     p.add_file(
@@ -371,16 +372,16 @@ repository = "https://dev.example.com/sources/testbox/"
 license = "MIT"
 
 [dependencies]
-built = {{ path = {:?}, features=["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }}
 
 [build-dependencies]
-built = {{ path = {:?}, features=["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }}
 
 [features]
 default = ["SuperAwesome", "MegaAwesome"]
 SuperAwesome = []
 MegaAwesome = []"#,
-            &built_root, &built_root
+            built_root = built_root.display().to_string().escape_default()
         ),
     );
 
@@ -485,11 +486,11 @@ build = "build.rs"
 description = "xobtset"
 
 [dependencies]
-built = {{ path = {:?}, features=["chrono"] }}
+built = {{ path = "{built_root}", features=["chrono"] }}
 
 [build-dependencies]
-built = {{ path = {:?}, features=["chrono"] }}"#,
-            &built_root, &built_root
+built = {{ path = "{built_root}", features=["chrono"] }}"#,
+            built_root = built_root.display().to_string().escape_default()
         ),
     );
 
