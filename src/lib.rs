@@ -336,7 +336,7 @@ macro_rules! write_str_variable {
             $writer,
             $name,
             "&str",
-            format_args!("r\"{}\"", $value.escape_default()),
+            format_args!("\"{}\"", $value.escape_default()),
             $doc
         );
     };
