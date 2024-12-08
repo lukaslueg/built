@@ -85,8 +85,8 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
     write_variable!(
         w,
         "DEPENDENCIES",
-        format!("[(&str, &str); {}]", dependencies.deps.len()),
-        format!("{0:?}", dependencies.deps),
+        format_args!("[(&str, &str); {}]", dependencies.deps.len()),
+        format_args!("{0:?}", dependencies.deps),
         "An array of effective dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(
@@ -104,8 +104,8 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
     write_variable!(
         w,
         "DIRECT_DEPENDENCIES",
-        format!("[(&str, &str); {}]", dependencies.direct_deps.len()),
-        format!("{0:?}", dependencies.direct_deps),
+        format_args!("[(&str, &str); {}]", dependencies.direct_deps.len()),
+        format_args!("{0:?}", dependencies.direct_deps),
         "An array of direct dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(
@@ -123,8 +123,8 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
     write_variable!(
         w,
         "INDIRECT_DEPENDENCIES",
-        format!("[(&str, &str); {}]", dependencies.indirect_deps.len()),
-        format!("{0:?}", dependencies.indirect_deps),
+        format_args!("[(&str, &str); {}]", dependencies.indirect_deps.len()),
+        format_args!("{0:?}", dependencies.indirect_deps),
         "An array of indirect dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(
@@ -155,8 +155,8 @@ pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> i
     write_variable!(
         w,
         "DEPENDENCIES",
-        format!("[(&str, &str); {}]", deps.len()),
-        format!("{deps:?}"),
+        format_args!("[(&str, &str); {}]", deps.len()),
+        format_args!("{deps:?}"),
         "An array of effective dependencies as documented by `Cargo.lock`."
     );
     write_str_variable!(

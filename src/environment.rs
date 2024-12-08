@@ -141,8 +141,8 @@ impl EnvironmentMap {
         write_variable!(
             w,
             "FEATURES",
-            format!("[&str; {}]", features.len()),
-            format!("{features:?}"),
+            format_args!("[&str; {}]", features.len()),
+            format_args!("{features:?}"),
             "The features that were enabled during compilation."
         );
         let features_str = features.join(", ");
@@ -162,8 +162,8 @@ impl EnvironmentMap {
         write_variable!(
             w,
             "FEATURES_LOWERCASE",
-            format!("[&str; {}]", lowercase_features.len()),
-            format!("{lowercase_features:?}"),
+            format_args!("[&str; {}]", lowercase_features.len()),
+            format_args!("{lowercase_features:?}"),
             "The features as above, as lowercase strings."
         );
         let lowercase_features_str = lowercase_features.join(", ");
@@ -237,13 +237,21 @@ impl EnvironmentMap {
         let rustc_version = get_version_from_cmd(rustc.as_ref())?;
         let rustdoc_version = get_version_from_cmd(rustdoc.as_ref()).unwrap_or_default();
 
-        let doc = format!("The output of `{rustc} -V`");
-        write_str_variable!(w, "RUSTC_VERSION", rustc_version, doc);
-
-        let doc = format!(
-            "The output of `{rustdoc} -V`; empty string if `{rustdoc} -V` failed to execute"
+        write_str_variable!(
+            w,
+            "RUSTC_VERSION",
+            rustc_version,
+            format_args!("The output of `{rustc} -V`")
         );
-        write_str_variable!(w, "RUSTDOC_VERSION", rustdoc_version, doc);
+
+        write_str_variable!(
+            w,
+            "RUSTDOC_VERSION",
+            rustdoc_version,
+            format_args!(
+                "The output of `{rustdoc} -V`; empty string if `{rustdoc} -V` failed to execute"
+            )
+        );
         Ok(())
     }
 
