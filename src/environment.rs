@@ -1,3 +1,4 @@
+use crate::util::ArrayDisplay;
 use crate::{fmt_option_str, write_str_variable, write_variable};
 use std::{collections, env, ffi, fmt, fs, io, process};
 
@@ -141,8 +142,8 @@ impl EnvironmentMap {
         write_variable!(
             w,
             "FEATURES",
-            format!("[&str; {}]", features.len()),
-            format!("{features:?}"),
+            format_args!("[&str; {}]", features.len()),
+            ArrayDisplay(&features, |t, f| write!(f, "\"{}\"", t.escape_default())),
             "The features that were enabled during compilation."
         );
         let features_str = features.join(", ");
@@ -162,8 +163,12 @@ impl EnvironmentMap {
         write_variable!(
             w,
             "FEATURES_LOWERCASE",
-            format!("[&str; {}]", lowercase_features.len()),
-            format!("{lowercase_features:?}"),
+            format_args!("[&str; {}]", lowercase_features.len()),
+            ArrayDisplay(&lowercase_features, |val, fmt| write!(
+                fmt,
+                "\"{}\"",
+                val.escape_default()
+            )),
             "The features as above, as lowercase strings."
         );
         let lowercase_features_str = lowercase_features.join(", ");
@@ -237,13 +242,21 @@ impl EnvironmentMap {
         let rustc_version = get_version_from_cmd(rustc.as_ref())?;
         let rustdoc_version = get_version_from_cmd(rustdoc.as_ref()).unwrap_or_default();
 
-        let doc = format!("The output of `{rustc} -V`");
-        write_str_variable!(w, "RUSTC_VERSION", rustc_version, doc);
-
-        let doc = format!(
-            "The output of `{rustdoc} -V`; empty string if `{rustdoc} -V` failed to execute"
+        write_str_variable!(
+            w,
+            "RUSTC_VERSION",
+            rustc_version,
+            format_args!("The output of `{rustc} -V`")
         );
-        write_str_variable!(w, "RUSTDOC_VERSION", rustdoc_version, doc);
+
+        write_str_variable!(
+            w,
+            "RUSTDOC_VERSION",
+            rustdoc_version,
+            format_args!(
+                "The output of `{rustdoc} -V`; empty string if `{rustdoc} -V` failed to execute"
+            )
+        );
         Ok(())
     }
 

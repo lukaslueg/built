@@ -1,5 +1,8 @@
 //! Various convenience functions for `built` at runtime.
 
+use std::fmt;
+use std::fmt::Write;
+
 #[cfg(feature = "git2")]
 pub use crate::git::{get_repo_description, get_repo_head};
 
@@ -54,4 +57,46 @@ where
 #[must_use]
 pub fn detect_ci() -> Option<super::CIPlatform> {
     crate::environment::EnvironmentMap::new().detect_ci()
+}
+
+pub(crate) struct ArrayDisplay<'a, T, F>(pub &'a [T], pub F)
+where
+    F: Fn(&T, &mut fmt::Formatter<'_>) -> fmt::Result;
+
+impl<T, F> fmt::Display for ArrayDisplay<'_, T, F>
+where
+    F: Fn(&T, &mut fmt::Formatter<'_>) -> fmt::Result,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_char('[')?;
+        for (i, v) in self.0.iter().enumerate() {
+            if i != 0 {
+                f.write_str(", ")?;
+            }
+            (self.1)(v, f)?;
+        }
+        f.write_char(']')
+    }
+}
+
+#[cfg(feature = "cargo-lock")]
+pub(crate) struct TupleArrayDisplay<'a, T>(pub &'a [(T, T)]);
+
+#[cfg(feature = "cargo-lock")]
+impl<T> fmt::Display for TupleArrayDisplay<'_, T>
+where
+    T: AsRef<str>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            ArrayDisplay(self.0, |(a, b), fmt| write!(
+                fmt,
+                r#"("{}", "{}")"#,
+                a.as_ref().escape_default(),
+                b.as_ref().escape_default()
+            ))
+        )
+    }
 }
