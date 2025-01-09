@@ -46,14 +46,16 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        toolchain: [stable, nightly]
     runs-on: ${{ matrix.os }}
-    env:
-      RUSTFLAGS: -Zfmt-debug=none
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
+      - uses: dtolnay/rust-toolchain@master
         with:
           targets: x86_64-unknown-none
+          toolchain: ${{ matrix.toolchain }}
+      - if: matrix.toolchain == 'nightly'
+        run: echo "RUSTFLAGS=-Zfmt-debug=none" >> $GITHUB_ENV
       - run: cargo test --no-default-features
       - run: cargo test --all-features
       - run: cargo test -- --ignored nostd_testbox
