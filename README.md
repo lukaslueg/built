@@ -3,6 +3,7 @@
 [![Crates.io Version](https://img.shields.io/crates/v/built.svg)](https://crates.io/crates/built)
 [![Docs](https://docs.rs/built/badge.svg)](https://docs.rs/built)
 [![Clippy, Format & Test](https://github.com/lukaslueg/built/actions/workflows/check.yml/badge.svg)](https://github.com/lukaslueg/built/actions/workflows/check.yml)
+[![Downloads](https://img.shields.io/crates/d/built)](https://crates.io/crates/built)
 
 `built` is used as a build-time dependency to collect various information
 about the build-environment, serialize this information into Rust-code and
