@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [unreleased]
 - Do not depend on `fmt::Debug`-output (`fmt-debug=none`)
 - Bump `git2` to 0.20
+- Use `static`- instead of `const`-items throughout
 
 ## [0.7.5] - 2024-10-17
 ### Changed

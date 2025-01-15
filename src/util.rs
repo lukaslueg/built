@@ -20,7 +20,7 @@ pub use crate::krono::strptime;
 ///
 /// ```
 /// pub mod build_info {
-///     pub const DEPENDENCIES: [(&'static str, &'static str); 1] = [("built", "0.1.0")];
+///     pub static DEPENDENCIES: [(&'static str, &'static str); 1] = [("built", "0.1.0")];
 /// }
 ///
 /// let deps = build_info::DEPENDENCIES;

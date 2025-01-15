@@ -7,7 +7,7 @@ use std::{fs, io};
 /// use chrono::Datelike;
 ///
 /// pub mod build_info {
-///     pub const BUILT_TIME_UTC: &'static str = "Tue, 14 Feb 2017 05:21:41 GMT";
+///     pub static BUILT_TIME_UTC: &'static str = "Tue, 14 Feb 2017 05:21:41 GMT";
 /// }
 ///
 /// assert_eq!(built::util::strptime(&build_info::BUILT_TIME_UTC).year(), 2017);
