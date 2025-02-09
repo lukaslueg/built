@@ -1,13 +1,10 @@
 [package]
-name = "example_project"
+name = "semver_check"
 version = "0.1.0"
 authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 build = "build.rs"
 edition = "2021"
 publish = false
-
-[dependencies]
-built = { version = "0.7", path="../", features = ["chrono", "semver"] }
 
 [build-dependencies]
 built = { version = "0.7", path="../", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }

@@ -29,6 +29,14 @@ jobs:
       - run: cargo check --all-features
       - run: cargo check --manifest-path=example_project/Cargo.toml
 
+  semver_crate:
+    name: cargo check of internal crate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo check --manifest-path=semver_check/Cargo.toml
+
   clippy:
     name: cargo clippy
     runs-on: ubuntu-latest
