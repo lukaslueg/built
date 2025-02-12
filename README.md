@@ -19,6 +19,10 @@ provide that to the crate. The information collected by `built` include:
 
 See [the example](https://github.com/lukaslueg/built/tree/master/example_project) or the [docs](https://docs.rs/built) for more information.
 
+### MSRV
+
+`built-0.7` itself currently requires Rust 1.74 with all features enabled.
+
 ---
 
 ```rust,ignore

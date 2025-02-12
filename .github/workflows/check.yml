@@ -17,9 +17,14 @@ jobs:
   check:
     name: cargo check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [stable, "1.74"]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
       - run: cargo check --no-default-features
       - run: cargo check --no-default-features --features cargo-lock
       - run: cargo check --no-default-features --features dependency-tree
@@ -32,9 +37,14 @@ jobs:
   semver_crate:
     name: cargo check of internal crate
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [stable, "1.83"]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
       - run: cargo check --manifest-path=semver_check/Cargo.toml
 
   clippy:
