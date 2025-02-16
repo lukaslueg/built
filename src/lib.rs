@@ -319,6 +319,13 @@ pub use environment::CIPlatform;
 #[allow(dead_code)]
 type _READMETEST = ();
 
+/// If `SOURCE_DATE_EPOCH` is defined, it's value is used instead of
+/// `chrono::..::now()` as `BUILT_TIME_UTC`.
+/// The presence of `SOURCE_DATE_EPOCH` also soft-indicates that a
+/// reproducible build is desired, which we may or may not be able
+/// to honor.
+const SOURCE_DATE_EPOCH: &str = "SOURCE_DATE_EPOCH";
+
 macro_rules! write_variable {
     ($writer:expr, $name:expr, $datatype:expr, $value:expr, $doc:expr) => {
         writeln!(

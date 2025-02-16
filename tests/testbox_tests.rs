@@ -517,6 +517,7 @@ mod built_info {
 fn main() {
     assert_eq!(built::util::strptime(built_info::BUILT_TIME_UTC).to_rfc2822(),
               "Sat, 25 May 2024 12:15:59 +0000");
+    assert_eq!(built_info::NUM_JOBS, 1);
     println!("builttestsuccess");
 }"#,
     );

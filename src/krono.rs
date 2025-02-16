@@ -24,7 +24,7 @@ pub fn strptime(s: &str) -> chrono::DateTime<chrono::offset::Utc> {
 }
 
 fn get_source_date_epoch_from_env() -> Option<chrono::DateTime<chrono::offset::Utc>> {
-    match std::env::var("SOURCE_DATE_EPOCH") {
+    match std::env::var(crate::SOURCE_DATE_EPOCH) {
         Ok(val) => {
             let ts = match val.parse::<i64>() {
                 Ok(ts) => ts,

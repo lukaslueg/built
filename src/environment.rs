@@ -1,6 +1,6 @@
 use crate::util::ArrayDisplay;
 use crate::{fmt_option_str, write_str_variable, write_variable};
-use std::{collections, env, ffi, fmt, fs, io, process};
+use std::{borrow, collections, env, ffi, fmt, fs, io, process};
 
 pub struct EnvironmentMap(collections::HashMap<String, String>);
 
@@ -115,7 +115,11 @@ impl EnvironmentMap {
             w,
             "NUM_JOBS",
             "u32",
-            env::var("NUM_JOBS").unwrap(),
+            if env::var(crate::SOURCE_DATE_EPOCH).is_ok() {
+                borrow::Cow::Borrowed("1")
+            } else {
+                borrow::Cow::Owned(env::var("NUM_JOBS").unwrap())
+            },
             "The parallelism that was specified during compilation."
         );
         write_variable!(
