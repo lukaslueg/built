@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.7]
+- Fix `NUM_JOB` to 1 if `SOURCE_DATE_EPOCH` is set, in order to better support reproducible builds
+- Set MSRV to 1.74 (due to dependencies)
+
 ## [0.7.6]
 - Do not depend on `fmt::Debug`-output (`fmt-debug=none`)
 - Bump `git2` to 0.20
@@ -100,7 +104,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Bump `semver` to 0.10
 
-[unreleased]: https://github.com/lukaslueg/built/compare/0.7.6...master
+[unreleased]: https://github.com/lukaslueg/built/compare/0.7.7...master
+[0.7.7]: https://github.com/lukaslueg/built/compare/0.7.6...0.7.7
 [0.7.6]: https://github.com/lukaslueg/built/compare/0.7.5...0.7.6
 [0.7.5]: https://github.com/lukaslueg/built/compare/0.7.4...0.7.5
 [0.7.4]: https://github.com/lukaslueg/built/compare/0.7.3...0.7.4
