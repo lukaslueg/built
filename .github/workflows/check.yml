@@ -57,7 +57,7 @@ jobs:
           components: clippy
       - run: cargo clippy --all --tests -- -D warnings
       - run: cargo clippy --all-features --all --tests -- -D warnings
-      - run: cargo clippy --manifest-path=example_project/Cargo.toml --all --tests -- -D warnings
+      - run: cargo clippy --manifest-path=example_project/Cargo.toml --all --tests -- --warn clippy::pedantic -D warnings
 
   test:
     name: cargo test

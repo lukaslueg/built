@@ -330,7 +330,7 @@ macro_rules! write_variable {
     ($writer:expr, $name:expr, $datatype:expr, $value:expr, $doc:expr) => {
         writeln!(
             $writer,
-            "#[doc=r#\"{}\"#]\n#[allow(dead_code)]\npub static {}: {} = {};",
+            "#[allow(clippy::needless_raw_string_hashes)]\n#[doc=r#\"{}\"#]\n#[allow(dead_code)]\npub static {}: {} = {};",
             $doc, $name, $datatype, $value
         )?;
     };
