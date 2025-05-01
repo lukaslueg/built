@@ -51,7 +51,7 @@
 //! build = "build.rs"
 //!
 //! [build-dependencies]
-//! built = "0.7"
+//! built = "0.8"
 //! ```
 //!
 //! Add or modify a build-script. In `build.rs`:
