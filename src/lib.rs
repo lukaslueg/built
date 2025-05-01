@@ -117,68 +117,127 @@
 //! }
 //! ```
 //!
-//! ---
+//!
+//! ## Overrides
+//!
+//! Most values otherwise detected by `built` can be manually set using environment variables. The
+//! primary use-case for this is to allow automated build-systems and package-managers to enforce
+//! certain values, e.g. to hide the presence of a CI-platform and/or allow for reproducible
+//! builds.
+//!
+//! The values set via the environment take precedence over what `built` would otherwise detect.
+//! There is no mechanism to ensure that values derived from override-variables are sensible,
+//! besides enforcing the correct type.
+//!
+//! Override-variables are prefixed by `BUILT_OVERRIDE_{PKG_NAME}_`, where `{PKG_NAME}` is the name
+//! of the package as reported by `cargo`. For example, if the package is named "mypkg", and the value
+//! to be overridden is named "CI_PLATFORM", then the override variable is named
+//! "BUILT_OVERRIDE_mypkg_CI_PLATFORM". Remember that more than one package in a dependency-graph
+//! might use `built` internally, so you might have to override multiple instances of the same
+//! value.
+//! Unused override variables result in a warning at compile time, albeit cargo only reports those
+//! for path-specific (e.g. local) packages.
+//!
+//! An override-variable's text-presentation must parse to the value's respective type:
+//! * Strings are used as-is.
+//! * Integers and `bool` must parse via their `std::str::FromStr`-implementation.
+//! * `std::option::Option<T>` parses the string `BUILT_OVERRIDE_NONE` as `Option::None`; every other value
+//!   must parse as `T`. For example, `BUILT_OVERRIDE_mypkg_CI_PLATFORM=BUILT_OVERRIDE_NONE` forces
+//!   `CI_PLATFORM.is_none()`.
+//! * List-like values are parsed as comma-separated values.
+//!
+//! If an override-variable can't be parsed, the build-process will abort with a `panic!()`.
+//!
+//! Notice that values that were overridden are recorded in `OVERRIDE_VARIABLES_USED`.
+//!
+//! Please refer to the respective item's documentation for more information on overrides.
 //!
 //! ## Feature flags
 //! The information that `built` collects and makes available in `built.rs` depends
 //! on the features that were enabled on the build-time dependency.
 //!
-//! ### Always available
+//! ### _Always available_
 //! The following information is available regardless of feature-flags.
 //!
 //! ```
 //! /// The Continuous Integration platform detected during compilation.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_CI_PLATFORM`.
 //! pub static CI_PLATFORM: Option<&str> = None;
 //!
 //! /// The full version.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_VERSION`.
 //! pub static PKG_VERSION: &str = "0.1.0";
 //! /// The major version.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_MAJOR`.
 //! pub static PKG_VERSION_MAJOR: &str = "0";
 //! /// The minor version.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_MINOR`.
 //! pub static PKG_VERSION_MINOR: &str = "1";
 //! /// "The patch version.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_PATCH`.
 //! pub static PKG_VERSION_PATCH: &str = "0";
 //! /// "The pre-release version.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_PRE`.
 //! pub static PKG_VERSION_PRE: &str = "";
 //!
 //! /// "A colon-separated list of authors.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_AUTHORS`.
 //! pub static PKG_AUTHORS: &str = "Lukas Lueg <lukas.lueg@gmail.com>";
 //!
 //! /// The name of the package.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_NAME`.
 //! pub static PKG_NAME: &str = "example_project";
 //! /// "The description.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_DESCRIPTION`.
 //! pub static PKG_DESCRIPTION: &str = "";
 //! /// "The homepage.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_HOMEPAGE`.
 //! pub static PKG_HOMEPAGE: &str = "";
 //! /// "The license.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_LICENSE`.
 //! pub static PKG_LICENSE: &str = "MIT";
 //! /// The source repository as advertised in Cargo.toml.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_REPOSITORY`.
 //! pub static PKG_REPOSITORY: &str = "";
 //!
 //! /// The target triple that was being compiled for.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_TARGET`.
 //! pub static TARGET: &str = "x86_64-unknown-linux-gnu";
 //! /// The host triple of the rust compiler.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_HOST`.
 //! pub static HOST: &str = "x86_64-unknown-linux-gnu";
 //! /// `release` for release builds, `debug` for other builds.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PROFILE`.
 //! pub static PROFILE: &str = "debug";
 //!
 //! /// The compiler that cargo resolved to use.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTC`; notice that
+//! /// if `RUSTC` is overridden, `RUSTC_VERSION` *must* also be overridden.
 //! pub static RUSTC: &str = "rustc";
 //! /// The documentation-generator that cargo resolved to use.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTDOC`; notice that if `RUSTDOC`
+//! /// is overridden, `RUSTDOC_VERSION` *must* also be overridden.
 //! pub static RUSTDOC: &str = "rustdoc";
 //! /// The output of `rustc -V`
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTC_VERSION`.
 //! pub static RUSTC_VERSION: &str = "rustc 1.43.1 (8d69840ab 2020-05-04)";
 //! /// The output of `rustdoc -V`
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTDOC_VERSION`.
 //! pub static RUSTDOC_VERSION: &str = "rustdoc 1.43.1 (8d69840ab 2020-05-04)";
 //!
 //! /// Value of OPT_LEVEL for the profile used during compilation.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_OPT_LEVEL`.
 //! pub static OPT_LEVEL: &str = "0";
 //! /// The parallelism that was specified during compilation.
+//! /// If `SOURCE_DATE_EPOCH` is set, `NUM_JOBS` is forced to `1`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_NUM_JOBS`.
 //! pub static NUM_JOBS: u32 = 8;
 //! /// "Value of DEBUG for the profile used during compilation.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_NUM_DEBUG`.
 //! pub static DEBUG: bool = true;
 //!
 //! /// The features that were enabled during compilation.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_FEATURES`.
 //! pub static FEATURES: [&str; 0] = [];
 //! /// The features as a comma-separated string.
 //! pub static FEATURES_STR: &str = "";
@@ -188,17 +247,26 @@
 //! pub static FEATURES_LOWERCASE_STR: &str = "";
 //!
 //! /// The target architecture, given by `CARGO_CFG_TARGET_ARCH`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_CFG_TARGET_ARCH`.
 //! pub static CFG_TARGET_ARCH: &str = "x86_64";
 //! /// The endianness, given by `CARGO_CFG_TARGET_ENDIAN`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_CFG_ENDIAN`.
 //! pub static CFG_ENDIAN: &str = "little";
 //! /// The toolchain-environment, given by `CARGO_CFG_TARGET_ENV`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_CFG_ENV`.
 //! pub static CFG_ENV: &str = "gnu";
 //! /// The OS-family, given by `CARGO_CFG_TARGET_FAMILY`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_CFG_FAMILY`.
 //! pub static CFG_FAMILY: &str = "unix";
 //! /// The operating system, given by `CARGO_CFG_TARGET_OS`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_CFG_OS`.
 //! pub static CFG_OS: &str = "linux";
 //! /// The pointer width, given by `CARGO_CFG_TARGET_POINTER_WIDTH`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_CFG_POINTER_WIDTH`.
 //! pub static CFG_POINTER_WIDTH: &str = "64";
+//!
+//! /// The override-variables that were used during compilation.
+//! pub static OVERRIDE_VARIABLES_USED: [&str; 0] = [];
 //! ```
 //!
 //! ### `cargo-lock`
@@ -261,23 +329,28 @@
 //! /// If the crate was compiled from within a git-repository,
 //! /// `GIT_VERSION` contains HEAD's tag. The short commit id is used
 //! /// if HEAD is not tagged.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_VERSION`.
 //! pub static GIT_VERSION: Option<&str> = Some("0.4.1-10-gca2af4f");
 //!
 //! /// If the repository had dirty/staged files.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_DIRTY`.
 //! pub static GIT_DIRTY: Option<bool> = Some(true);
 //!
 //! /// If the crate was compiled from within a git-repository,
 //! /// `GIT_HEAD_REF` contains full name to the reference pointed to by
 //! /// HEAD (e.g.: `refs/heads/master`). If HEAD is detached or the branch
 //! /// name is not valid UTF-8 `None` will be stored.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_HEAD_REF`.
 //! pub static GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
 //!
 //! /// If the crate was compiled from within a git-repository,
 //! /// `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_GIT_COMMIT_HASH`.
 //! pub static GIT_COMMIT_HASH: Option<&str> = Some("ca2af4f11bb8f4f6421c4cccf428bf4862573daf");
 //!
 //! /// If the crate was compiled from within a git-repository,
 //! /// `GIT_COMMIT_HASH_SHORT` contains HEAD's short commit SHA-1 hash.
+//! /// Can be overriden using `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH_SHORT`.
 //! pub static GIT_COMMIT_HASH_SHORT: Option<&str> = Some("ca2af4f");
 //! ```
 //!
@@ -293,6 +366,8 @@
 //!
 //! ```
 //! /// The built-time in RFC2822, UTC
+//! /// Can be overridden with`BUILT_OVERRIDE_BUILT_TIME_UTC`; the override takes precedence
+//! /// over `SOURCE_DATE_EPOCH`; it *must* parse via `chrono::DateTime::parse_from_rfc2822()`.
 //! pub static BUILT_TIME_UTC: &str = "Wed, 27 May 2020 18:12:39 +0000";
 //! ```
 
@@ -386,7 +461,7 @@ pub fn write_built_file_with_opts(
     #[cfg(feature = "git2")]
     {
         if let Some(manifest_location) = manifest_location {
-            git::write_git_version(manifest_location, &built_file)?;
+            git::write_git_version(manifest_location, &envmap, &built_file)?;
         }
     }
 
@@ -396,7 +471,21 @@ pub fn write_built_file_with_opts(
     }
 
     #[cfg(feature = "chrono")]
-    krono::write_time(&built_file)?;
+    krono::write_time(&built_file, &envmap)?;
+
+    let mut used_override_vars = envmap.used_override_vars().collect::<Vec<_>>();
+    used_override_vars.sort_unstable();
+    write_variable!(
+        built_file,
+        "OVERRIDE_VARIABLES_USED",
+        format_args!("[&str; {}]", used_override_vars.len()),
+        util::ArrayDisplay(&used_override_vars, |t, f| write!(
+            f,
+            "\"{}\"",
+            t.escape_default()
+        )),
+        "The override-variables that were used during compilation."
+    );
 
     built_file.write_all(
         r#"//
@@ -405,6 +494,12 @@ pub fn write_built_file_with_opts(
 "#
         .as_ref(),
     )?;
+
+    let unused_override_vars = envmap.unused_override_vars().collect::<Vec<_>>().join(", ");
+    if !unused_override_vars.is_empty() {
+        println!("cargo::warning=At least one environment variable looks like an override-variable but was ignored by built: `{unused_override_vars}`. Typo?");
+    }
+
     Ok(())
 }
 

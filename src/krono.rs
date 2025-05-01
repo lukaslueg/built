@@ -1,5 +1,13 @@
-use crate::{write_str_variable, write_variable};
+use crate::{environment, util, write_str_variable, write_variable};
 use std::{fs, io};
+
+impl<'a> util::ParseFromEnv<'a> for chrono::DateTime<chrono::offset::Utc> {
+    type Err = chrono::ParseError;
+
+    fn parse_from_env(s: &'a str) -> Result<Self, Self::Err> {
+        Ok(chrono::DateTime::parse_from_rfc2822(s)?.with_timezone(&chrono::offset::Utc))
+    }
+}
 
 /// Parse a time-string as formatted by `built`.
 ///
@@ -45,10 +53,13 @@ fn get_source_date_epoch_from_env() -> Option<chrono::DateTime<chrono::offset::U
     }
 }
 
-pub fn write_time(mut w: &fs::File) -> io::Result<()> {
+pub fn write_time(mut w: &fs::File, envmap: &environment::EnvironmentMap) -> io::Result<()> {
     use io::Write;
 
-    let now = get_source_date_epoch_from_env().unwrap_or_else(chrono::offset::Utc::now);
+    let now = match envmap.get_override_var("BUILT_TIME_UTC") {
+        Some(v) => v,
+        None => get_source_date_epoch_from_env().unwrap_or_else(chrono::offset::Utc::now),
+    };
     write_str_variable!(
         w,
         "BUILT_TIME_UTC",

@@ -7,4 +7,4 @@ edition = "2021"
 publish = false
 
 [build-dependencies]
-built = { version = "0.7", path="../", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }
+built = { version = "0.8", path="../", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }

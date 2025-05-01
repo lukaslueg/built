@@ -59,6 +59,69 @@ pub fn detect_ci() -> Option<super::CIPlatform> {
     crate::environment::EnvironmentMap::new().detect_ci()
 }
 
+pub(crate) trait ParseFromEnv<'a>
+where
+    Self: Sized,
+{
+    type Err: std::fmt::Debug;
+
+    fn parse_from_env(s: &'a str) -> Result<Self, Self::Err>;
+}
+
+impl<'a> ParseFromEnv<'a> for &'a str {
+    type Err = std::convert::Infallible;
+
+    fn parse_from_env(s: &'a str) -> Result<Self, Self::Err> {
+        Ok(s)
+    }
+}
+
+macro_rules! parsefromenv_impl {
+    ($tie:ty) => {
+        impl ParseFromEnv<'_> for $tie {
+            type Err = <Self as std::str::FromStr>::Err;
+
+            fn parse_from_env(s: &str) -> Result<Self, Self::Err> {
+                s.parse()
+            }
+        }
+    };
+    ($($tie:ty),+) => {
+        $(
+            parsefromenv_impl!($tie);
+        )+
+    };
+}
+parsefromenv_impl!(i64, i32, i16, i8, u64, u32, u16, u8, bool, String);
+
+impl<'a, T> ParseFromEnv<'a> for Vec<T>
+where
+    T: ParseFromEnv<'a>,
+{
+    type Err = <T as ParseFromEnv<'a>>::Err;
+
+    fn parse_from_env(s: &'a str) -> Result<Self, Self::Err> {
+        s.split(',')
+            .map(|chunk| T::parse_from_env(chunk.trim()))
+            .collect()
+    }
+}
+
+impl<'a, T> ParseFromEnv<'a> for Option<T>
+where
+    T: ParseFromEnv<'a>,
+{
+    type Err = <T as ParseFromEnv<'a>>::Err;
+
+    fn parse_from_env(s: &'a str) -> Result<Self, Self::Err> {
+        if s == "BUILT_OVERRIDE_NONE" {
+            Ok(None)
+        } else {
+            Ok(Some(T::parse_from_env(s)?))
+        }
+    }
+}
+
 pub(crate) struct ArrayDisplay<'a, T, F>(pub &'a [T], pub F)
 where
     F: Fn(&T, &mut fmt::Formatter<'_>) -> fmt::Result;
@@ -98,5 +161,59 @@ where
                 b.as_ref().escape_default()
             ))
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_env() {
+        assert_eq!(String::parse_from_env("foo"), Ok("foo".to_owned()));
+        assert_eq!(<&str>::parse_from_env("foo"), Ok("foo"));
+
+        assert_eq!(i64::parse_from_env("123"), Ok(123));
+        assert_eq!(i32::parse_from_env("123"), Ok(123));
+        assert_eq!(i16::parse_from_env("123"), Ok(123));
+        assert_eq!(i8::parse_from_env("123"), Ok(123));
+        assert_eq!(u64::parse_from_env("123"), Ok(123));
+        assert_eq!(u32::parse_from_env("123"), Ok(123));
+        assert_eq!(u16::parse_from_env("123"), Ok(123));
+        assert_eq!(u8::parse_from_env("123"), Ok(123));
+
+        assert_eq!(i8::parse_from_env("-123"), Ok(-123));
+        assert!(u8::parse_from_env("-123").is_err());
+        assert!(i32::parse_from_env("foo").is_err());
+        assert!(i32::parse_from_env("").is_err());
+
+        assert_eq!(bool::parse_from_env("true"), Ok(true));
+        assert_eq!(bool::parse_from_env("false"), Ok(false));
+        assert!(bool::parse_from_env("").is_err());
+        assert!(bool::parse_from_env("foo").is_err());
+
+        assert!(Option::<i32>::parse_from_env("").is_err());
+        assert_eq!(Option::<&str>::parse_from_env(""), Ok(Some("")));
+        assert_eq!(
+            Option::parse_from_env("BUILT_OVERRIDE_NONE"),
+            Ok(Option::<i32>::None)
+        );
+        assert_eq!(Option::parse_from_env("123"), Ok(Some(123u8)));
+        assert_eq!(Option::<bool>::parse_from_env("true"), Ok(Some(true)));
+        assert!(Option::<bool>::parse_from_env("123").is_err());
+
+        assert_eq!(
+            Vec::<&str>::parse_from_env("foo, b a r , foo"),
+            Ok(vec!["foo", "b a r", "foo"])
+        );
+        assert_eq!(
+            Vec::<i32>::parse_from_env("123,456,789"),
+            Ok(vec![123, 456, 789])
+        );
+
+        assert_eq!(
+            Option::parse_from_env("123,456"),
+            Ok(Some(vec![123u32, 456u32]))
+        );
     }
 }

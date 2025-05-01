@@ -1,16 +1,30 @@
-use crate::{fmt_option_str, write_variable};
+use crate::{environment, fmt_option_str, write_variable};
 use std::{fs, io, path};
 
-pub fn write_git_version(manifest_location: &path::Path, mut w: &fs::File) -> io::Result<()> {
+pub fn write_git_version(
+    manifest_location: &path::Path,
+    envmap: &environment::EnvironmentMap,
+    mut w: &fs::File,
+) -> io::Result<()> {
     use io::Write;
 
     // CIs will do shallow clones of repositories, causing libgit2 to error
     // out. We try to detect if we are running on a CI and ignore the
     // error.
-    let (tag, dirty) = match get_repo_description(manifest_location) {
-        Ok(Some((tag, dirty))) => (Some(tag), Some(dirty)),
-        _ => (None, None),
-    };
+    let (mut tag, mut dirty) = (
+        envmap.get_override_var("GIT_VERSION"),
+        envmap.get_override_var("GIT_DIRTY"),
+    );
+    if tag.is_none() || dirty.is_none() {
+        if let Some((git_tag, git_dirty)) = get_repo_description(manifest_location).ok().flatten() {
+            if tag.is_none() {
+                tag = Some(git_tag);
+            }
+            if dirty.is_none() {
+                dirty = Some(git_dirty);
+            }
+        };
+    }
     write_variable!(
         w,
         "GIT_VERSION",
@@ -31,10 +45,29 @@ pub fn write_git_version(manifest_location: &path::Path, mut w: &fs::File) -> io
         "If the repository had dirty/staged files."
     );
 
-    let (branch, commit, commit_short) = match get_repo_head(manifest_location) {
-        Ok(Some((b, c, cs))) => (b, Some(c), Some(cs)),
-        _ => (None, None, None),
-    };
+    let (mut branch, mut commit, mut commit_short) = (
+        envmap.get_override_var("GIT_HEAD_REF"),
+        envmap.get_override_var::<String>("GIT_COMMIT_HASH"),
+        envmap.get_override_var("GIT_COMMIT_HASH_SHORT"),
+    );
+    if branch.is_none() || commit.is_none() || commit_short.is_none() {
+        if let Some((git_branch, git_commit, git_commit_short)) =
+            get_repo_head(manifest_location).ok().flatten()
+        {
+            if branch.is_none() {
+                branch = git_branch;
+            }
+            if commit.is_none() {
+                commit = Some(git_commit);
+            }
+            if commit_short.is_none() {
+                commit_short = Some(git_commit_short);
+            }
+        }
+    }
+    if let (Some(h), None) = (&commit, &commit_short) {
+        commit_short = Some(h.chars().take(8).collect())
+    }
 
     let doc = "If the crate was compiled from within a git-repository, `GIT_HEAD_REF` \
         contains full name to the reference pointed to by HEAD \
