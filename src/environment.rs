@@ -221,7 +221,7 @@ impl EnvironmentMap {
             "OPT_LEVEL",
             self.get_override_var("OPT_LEVEL")
                 .unwrap_or_else(|| env::var("OPT_LEVEL").unwrap()),
-            "Value of OPT_LEVEL for the profile used during compilation."
+            "Value of `OPT_LEVEL` for the profile used during compilation."
         );
 
         write_variable!(
