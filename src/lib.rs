@@ -225,7 +225,7 @@
 //! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTDOC_VERSION`.
 //! pub static RUSTDOC_VERSION: &str = "rustdoc 1.43.1 (8d69840ab 2020-05-04)";
 //!
-//! /// Value of OPT_LEVEL for the profile used during compilation.
+//! /// Value of `OPT_LEVEL` for the profile used during compilation.
 //! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_OPT_LEVEL`.
 //! pub static OPT_LEVEL: &str = "0";
 //! /// The parallelism that was specified during compilation.
