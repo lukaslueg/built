@@ -76,6 +76,24 @@ impl EnvironmentMap {
         self.get(key).is_some()
     }
 
+    pub fn get_var<'a, T>(&'a self, key: &str) -> Option<T>
+    where
+        T: util::ParseFromEnv<'a>,
+    {
+        self.map.get(key).map(|v| {
+            v.1.borrow_mut().upgrade_to_queried();
+            match T::parse_from_env(v.0.as_str()) {
+                Ok(t) => {
+                    v.1.borrow_mut().upgrade_to_used();
+                    t
+                }
+                Err(e) => {
+                    panic!("Failed to parse `{key}`=`{0}`: {e:?}", v.0);
+                }
+            }
+        })
+    }
+
     pub fn filter_map_keys<F>(&self, mut f: F) -> impl Iterator<Item = &str>
     where
         F: FnMut(&str) -> Option<&str>,
@@ -119,7 +137,7 @@ impl EnvironmentMap {
 
     pub fn used_override_vars(&self) -> impl Iterator<Item = &str> {
         self.map.iter().filter_map(|(k, v)| {
-            if v.1.borrow().is_used() {
+            if v.1.borrow().is_used() && k != "CARGO_CFG_FEATURE" {
                 Some(k.strip_prefix(&self.override_prefix).unwrap())
             } else {
                 None
@@ -252,11 +270,17 @@ impl EnvironmentMap {
     pub fn write_features(&self, mut w: &fs::File) -> io::Result<()> {
         use io::Write;
 
-        let mut features = self.get_override_var("FEATURES").unwrap_or_else(|| {
-            self.filter_map_keys(|k| k.strip_prefix("CARGO_FEATURE_"))
-                .map(|f| f.to_owned())
-                .collect::<Vec<_>>()
-        });
+        let mut features: Vec<String> = self
+            .get_override_var("FEATURES")
+            .unwrap_or_else(|| {
+                self.get_var::<Vec<String>>("CARGO_CFG_FEATURE")
+                    .map(|v| v.iter().cloned().map(|s| s.to_uppercase()).collect())
+            })
+            .unwrap_or_else(|| {
+                self.filter_map_keys(|k| k.strip_prefix("CARGO_FEATURE_"))
+                    .map(|f| f.to_owned())
+                    .collect::<Vec<_>>()
+            });
         features.sort_unstable();
 
         write_variable!(
