@@ -22,6 +22,11 @@ jobs:
         toolchain: [stable, "1.81"]
     steps:
       - uses: actions/checkout@v4
+      - if: matrix.toolchain == '1.81'
+        env:
+          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
+        # Note that this uses the runner's pre-installed stable cargo
+        run: cargo update && cargo update --manifest-path=example_project/Cargo.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
@@ -42,6 +47,11 @@ jobs:
         toolchain: [stable, "1.83"]
     steps:
       - uses: actions/checkout@v4
+      - if: matrix.toolchain == '1.83'
+        env:
+          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
+        # Note that this uses the runner's pre-installed stable cargo
+        run: cargo update --manifest-path=semver_check/Cargo.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
