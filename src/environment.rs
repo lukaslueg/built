@@ -252,11 +252,22 @@ impl EnvironmentMap {
     pub fn write_features(&self, mut w: &fs::File) -> io::Result<()> {
         use io::Write;
 
-        let mut features = self.get_override_var("FEATURES").unwrap_or_else(|| {
-            self.filter_map_keys(|k| k.strip_prefix("CARGO_FEATURE_"))
-                .map(|f| f.to_owned())
-                .collect::<Vec<_>>()
-        });
+        let mut features: Vec<String> = self
+            .get_override_var("FEATURES")
+            .unwrap_or_else(|| {
+                Some(
+                    std::env::var("CARGO_CFG_FEATURE")
+                        .ok()?
+                        .split(',')
+                        .map(|s| s.to_uppercase())
+                        .collect(),
+                )
+            })
+            .unwrap_or_else(|| {
+                self.filter_map_keys(|k| k.strip_prefix("CARGO_FEATURE_"))
+                    .map(|f| f.to_owned())
+                    .collect::<Vec<_>>()
+            });
         features.sort_unstable();
 
         write_variable!(
