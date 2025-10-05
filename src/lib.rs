@@ -237,6 +237,7 @@
 //! pub static DEBUG: bool = true;
 //!
 //! /// The features that were enabled during compilation.
+//! /// The feature-names will be normalized when using cargo < 1.85.
 //! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_FEATURES`.
 //! pub static FEATURES: [&str; 0] = [];
 //! /// The features as a comma-separated string.

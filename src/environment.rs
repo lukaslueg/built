@@ -259,7 +259,7 @@ impl EnvironmentMap {
                     std::env::var("CARGO_CFG_FEATURE")
                         .ok()?
                         .split(',')
-                        .map(|s| s.to_uppercase())
+                        .map(|s| s.to_owned())
                         .collect(),
                 )
             })

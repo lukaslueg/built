@@ -301,16 +301,27 @@ fn main() {
 }"#,
     );
 
+    #[rustversion::before(1.85)]
+    const FEATURES: &str = r#"["DEFAULT", "MEGAAWESOME", "SUPERAWESOME"]"#;
+    #[rustversion::before(1.85)]
+    const FEATURES_STR: &str = r#""DEFAULT, MEGAAWESOME, SUPERAWESOME""#;
+
+    #[rustversion::since(1.85)]
+    const FEATURES: &str = r#"["MegaAwesome", "SuperAwesome", "default"]"#;
+    #[rustversion::since(1.85)]
+    const FEATURES_STR: &str = r#""MegaAwesome, SuperAwesome, default""#;
+
     p.add_file(
         "src/main.rs",
-        r#"
+        format!(
+            r#"
 //! The minimal testbox.
 
-mod built_info {
+mod built_info {{
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
-}
+}}
 
-fn main() {
+fn main() {{
     assert_eq!(built_info::PKG_VERSION, "1.2.3-rc1");
     assert_eq!(built_info::PKG_VERSION_MAJOR, "1");
     assert_eq!(built_info::PKG_VERSION_MINOR, "2");
@@ -326,10 +337,8 @@ fn main() {
     assert!(built_info::OPT_LEVEL == "0");
     assert!(built_info::DEBUG);
     assert_eq!(built_info::PROFILE, "debug");
-    assert_eq!(built_info::FEATURES,
-               ["DEFAULT", "MEGAAWESOME", "SUPERAWESOME"]);
-    assert_eq!(built_info::FEATURES_STR,
-               "DEFAULT, MEGAAWESOME, SUPERAWESOME");
+    assert_eq!(built_info::FEATURES, {features});
+    assert_eq!(built_info::FEATURES_STR, {features_str});
     assert_eq!(built_info::FEATURES_LOWERCASE,
                ["default", "megaawesome", "superawesome"]);
     assert_eq!(built_info::FEATURES_LOWERCASE_STR,
@@ -347,6 +356,69 @@ fn main() {
     assert_ne!(built_info::CFG_POINTER_WIDTH, "");
     // For CFG_ENV, empty string is a possible value.
     let _: &'static str = built_info::CFG_ENV;
+    println!("builttestsuccess");
+}}"#,
+            features = FEATURES,
+            features_str = FEATURES_STR
+        ),
+    );
+
+    p.create_and_run(&[]);
+}
+
+#[rustversion::since(1.85)]
+#[test]
+fn cargo_cfg_feature() {
+    let mut p = Project::new();
+
+    let built_root = get_built_root();
+
+    p.add_file(
+        "Cargo.toml",
+        format!(
+            r#"
+[package]
+name = "cargo_cfg_feature_testbox"
+version = "1.2.3-rc1"
+build = "build.rs"
+
+[build-dependencies]
+built = {{ path = "{built_root}", default_features=false }}
+
+[features]
+default = ["This-Feature", "Other-Feature"]
+This-Feature = []
+Other-Feature = []
+"#,
+            built_root = built_root.display().to_string().escape_default()
+        ),
+    );
+
+    p.add_file(
+        "build.rs",
+        r#"
+
+fn main() {
+    built::write_built_file().unwrap();
+}"#,
+    );
+
+    p.add_file(
+        "src/main.rs",
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built_info::FEATURES,
+               ["Other-Feature", "This-Feature", "default"]);
+    assert_eq!(built_info::FEATURES_STR,
+               "Other-Feature, This-Feature, default");
+    assert_eq!(built_info::FEATURES_LOWERCASE,
+               ["default", "other-feature", "this-feature"]);
+    assert_eq!(built_info::FEATURES_LOWERCASE_STR,
+               "default, other-feature, this-feature");
     println!("builttestsuccess");
 }"#,
     );
@@ -405,6 +477,16 @@ fn full_testbox() {
 
     let built_root = get_built_root();
 
+    #[rustversion::before(1.85)]
+    const FEATURES: &str = r#"["DEFAULT", "MEGAAWESOME", "SUPERAWESOME"]"#;
+    #[rustversion::before(1.85)]
+    const FEATURES_STR: &str = r#""DEFAULT, MEGAAWESOME, SUPERAWESOME""#;
+
+    #[rustversion::since(1.85)]
+    const FEATURES: &str = r#"["MegaAwesome", "SuperAwesome", "default"]"#;
+    #[rustversion::since(1.85)]
+    const FEATURES_STR: &str = r#""MegaAwesome, SuperAwesome, default""#;
+
     p.add_file(
         "Cargo.toml",
         format!(
@@ -442,14 +524,14 @@ fn main() {
     .set_env("CONTINUOUS_INTEGRATION", "1")
     .add_file(
         "src/main.rs",
-        r#"
+        format!(r#"
 //! The testbox.
 
-mod built_info {
+mod built_info {{
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
-}
+}}
 
-fn main() {
+fn main() {{
     assert_eq!(built_info::GIT_VERSION, None);
     assert_eq!(built_info::GIT_DIRTY, None);
     assert_eq!(built_info::GIT_COMMIT_HASH, None);
@@ -471,10 +553,8 @@ fn main() {
     assert!(built_info::OPT_LEVEL == "0");
     assert!(built_info::DEBUG);
     assert_eq!(built_info::PROFILE, "debug");
-    assert_eq!(built_info::FEATURES,
-               ["DEFAULT", "MEGAAWESOME", "SUPERAWESOME"]);
-    assert_eq!(built_info::FEATURES_STR,
-               "DEFAULT, MEGAAWESOME, SUPERAWESOME");
+    assert_eq!(built_info::FEATURES, {features});
+    assert_eq!(built_info::FEATURES_STR, {features_str});
     assert_eq!(built_info::FEATURES_LOWERCASE,
                ["default", "megaawesome", "superawesome"]);
     assert_eq!(built_info::FEATURES_LOWERCASE_STR,
@@ -507,7 +587,7 @@ fn main() {
     assert!(built_info::OVERRIDE_VARIABLES_USED.is_empty());
 
     println!("builttestsuccess");
-}"#,
+}}"#, features=FEATURES, features_str=FEATURES_STR),
     );
     p.create_and_run(&[]);
 }
