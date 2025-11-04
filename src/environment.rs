@@ -52,7 +52,8 @@ impl EnvironmentMap {
                 _ => None,
             })
             .collect::<collections::HashMap<_, _>>();
-        let override_prefix = format!("{}{}_", BUILT_OVERRIDE_PREFIX, map["CARGO_PKG_NAME"].0);
+        let cargo_pkg_name = map["CARGO_PKG_NAME"].0.replace("-", "_");
+        let override_prefix = format!("{}{}_", BUILT_OVERRIDE_PREFIX, cargo_pkg_name);
         Self {
             map,
             override_prefix,

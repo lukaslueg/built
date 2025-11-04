@@ -773,6 +773,186 @@ fn main() {
 }
 
 #[test]
+#[cfg(all(feature = "git2", feature = "chrono", feature = "semver"))]
+fn overridden_testbox_pkg_name_with_hyphen() {
+    let mut p = Project::new();
+
+    let built_root = get_built_root();
+
+    p.add_file(
+        "Cargo.toml",
+        format!(
+            r#"
+[package]
+name = "great-testbox"
+version = "1.2.3-rc1"
+authors = ["Joe", "Bob", "Harry:Potter"]
+build = "build.rs"
+description = "xobtset"
+homepage = "localhost"
+repository = "https://dev.example.com/sources/great-testbox/"
+license = "MIT"
+
+[dependencies]
+built = {{ path = "{built_root}", features=["git2", "chrono", "semver"] }}
+
+[build-dependencies]
+built = {{ path = "{built_root}", features=["git2", "chrono", "semver"] }}
+
+[features]
+default = ["SuperAwesome", "MegaAwesome"]
+SuperAwesome = []
+MegaAwesome = []"#,
+            built_root = built_root.display().to_string().escape_default()
+        ),
+    )
+    .add_file(
+        "build.rs",
+        r#"
+fn main() {
+    built::write_built_file().unwrap();
+}"#,
+    )
+    .set_env("BUILT_OVERRIDE_great_testbox_GIT_VERSION", "GIT_VERSION1")
+    .set_env("BUILT_OVERRIDE_great_testbox_GIT_DIRTY", "false")
+    .set_env("BUILT_OVERRIDE_great_testbox_GIT_COMMIT_HASH", "1234567890")
+    .set_env("BUILT_OVERRIDE_great_testbox_GIT_HEAD_REF", "GIT_REF")
+    .set_env("BUILT_OVERRIDE_great_testbox_CI_PLATFORM", "TESTBOXCI")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_VERSION", "1.2.3.4")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_VERSION_MAJOR", "abc")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_VERSION_MINOR", "def")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_VERSION_PATCH", "ghi")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_VERSION_PRE", "jkl")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_AUTHORS", "The council")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_NAME", "OVERRIDEBOX")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_DESCRIPTION", "TEST")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_HOMEPAGE", "foreignhost")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_LICENSE", "MITv2")
+    .set_env("BUILT_OVERRIDE_great_testbox_PKG_REPOSITORY", "8.8.8.8")
+    .set_env("BUILT_OVERRIDE_great_testbox_NUM_JOBS", "999")
+    .set_env(
+        "BUILT_OVERRIDE_great_testbox_OPT_LEVEL",
+        "not_too_fast_not_too_slow",
+    )
+    .set_env("BUILT_OVERRIDE_great_testbox_DEBUG", "false")
+    .set_env("BUILT_OVERRIDE_great_testbox_PROFILE", "MEDIUM")
+    .set_env(
+        "BUILT_OVERRIDE_great_testbox_FEATURES",
+        "cup_holder,Stereo Sound, dynamic range",
+    )
+    .set_env("BUILT_OVERRIDE_great_testbox_RUSTC", "overridec")
+    .set_env("BUILT_OVERRIDE_great_testbox_RUSTC_VERSION", "overridec v1")
+    .set_env("BUILT_OVERRIDE_great_testbox_RUSTDOC", "overridedoc")
+    .set_env("BUILT_OVERRIDE_great_testbox_RUSTDOC_VERSION", "overridedoc v1")
+    .set_env("BUILT_OVERRIDE_great_testbox_HOST", "overridehost")
+    .set_env("BUILT_OVERRIDE_great_testbox_TARGET", "potato")
+    .set_env("BUILT_OVERRIDE_great_testbox_CFG_TARGET_ARCH", "potatoes")
+    .set_env("BUILT_OVERRIDE_great_testbox_CFG_ENDIAN", "random")
+    .set_env("BUILT_OVERRIDE_great_testbox_CFG_FAMILY", "v0")
+    .set_env("BUILT_OVERRIDE_great_testbox_CFG_OS", "none")
+    .set_env("BUILT_OVERRIDE_great_testbox_CFG_POINTER_WIDTH", "63.9998")
+    .set_env("BUILT_OVERRIDE_great_testbox_CFG_ENV", "calm")
+    .set_env(
+        "BUILT_OVERRIDE_great_testbox_BUILT_TIME_UTC",
+        "Sat, 25 May 2024 12:15:59 +0000",
+    )
+    .add_file(
+        "src/main.rs",
+        r#"
+//! The testbox.
+
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built_info::GIT_VERSION, Some("GIT_VERSION1"));
+    assert_eq!(built_info::GIT_DIRTY, Some(false));
+    assert_eq!(built_info::GIT_COMMIT_HASH, Some("1234567890"));
+    assert_eq!(built_info::GIT_COMMIT_HASH_SHORT, Some("12345678"));
+    assert_eq!(built_info::GIT_HEAD_REF, Some("GIT_REF"));
+    assert_eq!(built_info::CI_PLATFORM, Some("TESTBOXCI"));
+    assert_eq!(built_info::PKG_VERSION, "1.2.3.4");
+    assert_eq!(built_info::PKG_VERSION_MAJOR, "abc");
+    assert_eq!(built_info::PKG_VERSION_MINOR, "def");
+    assert_eq!(built_info::PKG_VERSION_PATCH, "ghi");
+    assert_eq!(built_info::PKG_VERSION_PRE, "jkl");
+    assert_eq!(built_info::PKG_AUTHORS, "The council");
+    assert_eq!(built_info::PKG_NAME, "OVERRIDEBOX");
+    assert_eq!(built_info::PKG_DESCRIPTION, "TEST");
+    assert_eq!(built_info::PKG_HOMEPAGE, "foreignhost");
+    assert_eq!(built_info::PKG_LICENSE, "MITv2");
+    assert_eq!(built_info::PKG_REPOSITORY, "8.8.8.8");
+    assert_eq!(built_info::NUM_JOBS, 999);
+    assert_eq!(built_info::OPT_LEVEL, "not_too_fast_not_too_slow");
+    assert!(!built_info::DEBUG);
+    assert_eq!(built_info::PROFILE, "MEDIUM");
+    assert_eq!(built_info::FEATURES,
+               ["Stereo Sound", "cup_holder", "dynamic range"]);
+    assert_eq!(built_info::FEATURES_STR,
+               "Stereo Sound, cup_holder, dynamic range");
+    assert_eq!(built_info::FEATURES_LOWERCASE,
+               ["cup_holder", "dynamic range", "stereo sound"]);
+    assert_eq!(built_info::FEATURES_LOWERCASE_STR,
+               "cup_holder, dynamic range, stereo sound");
+    assert_eq!(built_info::RUSTC, "overridec");
+    assert_eq!(built_info::RUSTC_VERSION, "overridec v1");
+    assert_eq!(built_info::RUSTDOC, "overridedoc");
+    assert_eq!(built_info::RUSTDOC_VERSION, "overridedoc v1");
+    assert_eq!(built_info::HOST, "overridehost");
+    assert_eq!(built_info::TARGET, "potato");
+    assert_eq!(built_info::CFG_TARGET_ARCH, "potatoes");
+    assert_eq!(built_info::CFG_ENDIAN, "random");
+    assert_eq!(built_info::CFG_FAMILY, "v0");
+    assert_eq!(built_info::CFG_OS, "none");
+    assert_eq!(built_info::CFG_POINTER_WIDTH, "63.9998");
+    assert_eq!(built_info::CFG_ENV, "calm");
+
+    assert_eq!(built::util::strptime(built_info::BUILT_TIME_UTC).to_rfc2822(),
+              "Sat, 25 May 2024 12:15:59 +0000");
+    assert_eq!(built_info::OVERRIDE_VARIABLES_USED, [
+        "BUILT_TIME_UTC",
+        "CFG_ENDIAN",
+        "CFG_ENV",
+        "CFG_FAMILY",
+        "CFG_OS",
+        "CFG_POINTER_WIDTH",
+        "CFG_TARGET_ARCH",
+        "CI_PLATFORM",
+        "DEBUG",
+        "FEATURES",
+        "GIT_COMMIT_HASH",
+        "GIT_DIRTY",
+        "GIT_HEAD_REF",
+        "GIT_VERSION",
+        "HOST",
+        "NUM_JOBS",
+        "OPT_LEVEL",
+        "PKG_AUTHORS",
+        "PKG_DESCRIPTION",
+        "PKG_HOMEPAGE",
+        "PKG_LICENSE",
+        "PKG_NAME",
+        "PKG_REPOSITORY",
+        "PKG_VERSION",
+        "PKG_VERSION_MAJOR",
+        "PKG_VERSION_MINOR",
+        "PKG_VERSION_PATCH",
+        "PKG_VERSION_PRE",
+        "PROFILE",
+        "RUSTC",
+        "RUSTC_VERSION",
+        "RUSTDOC",
+        "RUSTDOC_VERSION",
+        "TARGET",
+    ]);
+    println!("builttestsuccess");
+}"#,
+    );
+    p.create_and_run(&[]);
+}
+
+#[test]
 #[cfg(feature = "chrono")]
 fn source_date_epoch() {
     let mut p = Project::new();
