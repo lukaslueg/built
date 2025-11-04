@@ -843,7 +843,10 @@ fn main() {
     .set_env("BUILT_OVERRIDE_great_testbox_RUSTC", "overridec")
     .set_env("BUILT_OVERRIDE_great_testbox_RUSTC_VERSION", "overridec v1")
     .set_env("BUILT_OVERRIDE_great_testbox_RUSTDOC", "overridedoc")
-    .set_env("BUILT_OVERRIDE_great_testbox_RUSTDOC_VERSION", "overridedoc v1")
+    .set_env(
+        "BUILT_OVERRIDE_great_testbox_RUSTDOC_VERSION",
+        "overridedoc v1",
+    )
     .set_env("BUILT_OVERRIDE_great_testbox_HOST", "overridehost")
     .set_env("BUILT_OVERRIDE_great_testbox_TARGET", "potato")
     .set_env("BUILT_OVERRIDE_great_testbox_CFG_TARGET_ARCH", "potatoes")
