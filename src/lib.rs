@@ -363,36 +363,6 @@
 //!
 //! **Note**: When both `git2` and `gix` features are enabled, `git2` takes precedence.
 //!
-//! This feature produces the same output format as `git2`:
-//! ```
-//! /// If the crate was compiled from within a git-repository,
-//! /// `GIT_VERSION` contains HEAD's tag. The short commit id is used
-//! /// if HEAD is not tagged.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_VERSION`.
-//! pub static GIT_VERSION: Option<&str> = Some("0.4.1-10-gca2af4f");
-//!
-//! /// If the repository had dirty/staged files.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_DIRTY`.
-//! pub static GIT_DIRTY: Option<bool> = Some(true);
-//!
-//! /// If the crate was compiled from within a git-repository,
-//! /// `GIT_HEAD_REF` contains full name to the reference pointed to by
-//! /// HEAD (e.g.: `refs/heads/master`). If HEAD is detached or the branch
-//! /// name is not valid UTF-8 `None` will be stored.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_HEAD_REF`.
-//! pub static GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
-//!
-//! /// If the crate was compiled from within a git-repository,
-//! /// `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH`.
-//! pub static GIT_COMMIT_HASH: Option<&str> = Some("ca2af4f11bb8f4f6421c4cccf428bf4862573daf");
-//!
-//! /// If the crate was compiled from within a git-repository,
-//! /// `GIT_COMMIT_HASH_SHORT` contains HEAD's short commit SHA-1 hash.
-//! /// Can be overridden using `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH_SHORT`.
-//! pub static GIT_COMMIT_HASH_SHORT: Option<&str> = Some("ca2af4f");
-//! ```
-//!
 //! ### `chrono`
 //!
 //! The build-time is recorded as `BUILT_TIME_UTC`. If `built` is included as a runtime-dependency,
