@@ -34,7 +34,7 @@ jobs:
       - run: cargo check --no-default-features --features cargo-lock
       - run: cargo check --no-default-features --features dependency-tree
       - run: cargo check --no-default-features --features git2
-      - run: cargo check --no-default-features --features gix
+      - run: cargo check --no-default-features --features gix,git2
       - run: cargo check --no-default-features --features semver
       - run: cargo check --no-default-features --features chrono
       - run: cargo check --all-features
@@ -86,8 +86,8 @@ jobs:
       - if: matrix.toolchain == 'nightly'
         run: echo "RUSTFLAGS=-Zfmt-debug=none" >> $GITHUB_ENV
       - run: cargo test --no-default-features
-      - run: cargo test --no-default-features --features gix
       - run: cargo test --no-default-features --features git2
+      - run: cargo test --no-default-features --features gix,git2
       - run: cargo test --all-features
       - run: cargo test -- --ignored nostd_testbox
       - run: cargo run --manifest-path=example_project/Cargo.toml
