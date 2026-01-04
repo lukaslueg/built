@@ -303,14 +303,7 @@ fn main() {
 }"#,
     );
 
-    #[rustversion::before(1.85)]
-    const FEATURES: &str = r#"["DEFAULT", "MEGAAWESOME", "SUPERAWESOME"]"#;
-    #[rustversion::before(1.85)]
-    const FEATURES_STR: &str = r#""DEFAULT, MEGAAWESOME, SUPERAWESOME""#;
-
-    #[rustversion::since(1.85)]
     const FEATURES: &str = r#"["MegaAwesome", "SuperAwesome", "default"]"#;
-    #[rustversion::since(1.85)]
     const FEATURES_STR: &str = r#""MegaAwesome, SuperAwesome, default""#;
 
     p.add_file(
@@ -368,7 +361,6 @@ fn main() {{
     p.create_and_run(&[]);
 }
 
-#[rustversion::since(1.85)]
 #[test]
 fn cargo_cfg_feature() {
     let mut p = Project::new();
@@ -480,14 +472,7 @@ fn full_testbox() {
 
         let built_root = get_built_root();
 
-        #[rustversion::before(1.85)]
-        const FEATURES: &str = r#"["DEFAULT", "MEGAAWESOME", "SUPERAWESOME"]"#;
-        #[rustversion::before(1.85)]
-        const FEATURES_STR: &str = r#""DEFAULT, MEGAAWESOME, SUPERAWESOME""#;
-
-        #[rustversion::since(1.85)]
         const FEATURES: &str = r#"["MegaAwesome", "SuperAwesome", "default"]"#;
-        #[rustversion::since(1.85)]
         const FEATURES_STR: &str = r#""MegaAwesome, SuperAwesome, default""#;
 
         p.add_file(

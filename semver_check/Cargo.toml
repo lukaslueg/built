@@ -3,7 +3,7 @@ name = "semver_check"
 version = "0.1.0"
 authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 build = "build.rs"
-edition = "2021"
+edition = "2024"
 publish = false
 rust-version = "1.85"
 

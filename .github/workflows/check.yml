@@ -22,23 +22,26 @@ jobs:
         toolchain: [ stable, "1.85" ]
     steps:
       - uses: actions/checkout@v4
-      - if: matrix.toolchain == '1.85'
-        env:
-          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
-        # Note that this uses the runner's pre-installed stable cargo
-        run: cargo update && cargo update --manifest-path=example_project/Cargo.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}
       - run: cargo check --no-default-features
-      - run: cargo check --no-default-features --features cargo-lock
-      - run: cargo check --no-default-features --features dependency-tree
-      - run: cargo check --no-default-features --features git2
-      - run: cargo check --no-default-features --features gix,git2
-      - run: cargo check --no-default-features --features semver
-      - run: cargo check --no-default-features --features chrono
       - run: cargo check --all-features
       - run: cargo check --manifest-path=example_project/Cargo.toml
+
+  check_features:
+    name: cargo check individual features
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [ stable, "1.85" ]
+        features: [ "cargo-lock", "dependency-tree", "git2", "gix,git2", "semver", "chrono" ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - run: cargo check --no-default-features --features ${{ matrix.features }}
 
   semver_crate:
     name: cargo check of internal crate
@@ -48,11 +51,6 @@ jobs:
         toolchain: [ stable, "1.85" ]
     steps:
       - uses: actions/checkout@v4
-      - if: matrix.toolchain == '1.85'
-        env:
-          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
-        # Note that this uses the runner's pre-installed stable cargo
-        run: cargo update --manifest-path=semver_check/Cargo.toml
       - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.toolchain }}

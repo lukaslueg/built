@@ -239,7 +239,6 @@
 //! pub static DEBUG: bool = true;
 //!
 //! /// The features that were enabled during compilation.
-//! /// The feature-names will be normalized when using cargo < 1.85.
 //! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_FEATURES`.
 //! pub static FEATURES: [&str; 0] = [];
 //! /// The features as a comma-separated string.
@@ -542,7 +541,9 @@ pub fn write_built_file_with_opts(
 
     let unused_override_vars = envmap.unused_override_vars().collect::<Vec<_>>().join(", ");
     if !unused_override_vars.is_empty() {
-        println!("cargo::warning=At least one environment variable looks like an override-variable but was ignored by built: `{unused_override_vars}`. Typo?");
+        println!(
+            "cargo::warning=At least one environment variable looks like an override-variable but was ignored by built: `{unused_override_vars}`. Typo?"
+        );
     }
 
     Ok(())

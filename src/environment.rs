@@ -83,7 +83,7 @@ impl EnvironmentMap {
     {
         self.map.iter().filter_map(move |v| match f(v.0.as_str()) {
             Some(w) => {
-                v.1 .1.borrow_mut().upgrade_to_queried();
+                v.1.1.borrow_mut().upgrade_to_queried();
                 Some(w)
             }
             None => None,
