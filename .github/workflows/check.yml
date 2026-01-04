@@ -1,6 +1,6 @@
 name: Clippy, Format & Test
 
-on: [pull_request, push, workflow_dispatch]
+on: [ pull_request, push, workflow_dispatch ]
 
 jobs:
   fmt:
@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain: [stable, "1.81"]
+        toolchain: [ stable, "1.85" ]
     steps:
       - uses: actions/checkout@v4
-      - if: matrix.toolchain == '1.81'
+      - if: matrix.toolchain == '1.85'
         env:
           CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
         # Note that this uses the runner's pre-installed stable cargo
@@ -34,6 +34,7 @@ jobs:
       - run: cargo check --no-default-features --features cargo-lock
       - run: cargo check --no-default-features --features dependency-tree
       - run: cargo check --no-default-features --features git2
+      - run: cargo check --no-default-features --features gix
       - run: cargo check --no-default-features --features semver
       - run: cargo check --no-default-features --features chrono
       - run: cargo check --all-features
@@ -44,10 +45,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain: [stable, "1.83"]
+        toolchain: [ stable, "1.85" ]
     steps:
       - uses: actions/checkout@v4
-      - if: matrix.toolchain == '1.83'
+      - if: matrix.toolchain == '1.85'
         env:
           CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
         # Note that this uses the runner's pre-installed stable cargo
@@ -73,8 +74,8 @@ jobs:
     name: cargo test
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        toolchain: [stable, nightly]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        toolchain: [ stable, nightly ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -85,6 +86,8 @@ jobs:
       - if: matrix.toolchain == 'nightly'
         run: echo "RUSTFLAGS=-Zfmt-debug=none" >> $GITHUB_ENV
       - run: cargo test --no-default-features
+      - run: cargo test --no-default-features --features gix
+      - run: cargo test --no-default-features --features git2
       - run: cargo test --all-features
       - run: cargo test -- --ignored nostd_testbox
       - run: cargo run --manifest-path=example_project/Cargo.toml

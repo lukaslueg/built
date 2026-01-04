@@ -5,7 +5,7 @@ authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 build = "build.rs"
 edition = "2021"
 publish = false
-rust-version = "1.83"
+rust-version = "1.85"
 
 [build-dependencies]
-built = { version = "0.8", path="../", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }
+built = { version = "0.8", path = "../", features = ["cargo-lock", "dependency-tree", "git2", "chrono", "semver"] }

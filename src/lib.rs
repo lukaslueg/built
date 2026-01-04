@@ -348,12 +348,49 @@
 //!
 //! /// If the crate was compiled from within a git-repository,
 //! /// `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_GIT_COMMIT_HASH`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH`.
 //! pub static GIT_COMMIT_HASH: Option<&str> = Some("ca2af4f11bb8f4f6421c4cccf428bf4862573daf");
 //!
 //! /// If the crate was compiled from within a git-repository,
 //! /// `GIT_COMMIT_HASH_SHORT` contains HEAD's short commit SHA-1 hash.
-//! /// Can be overriden using `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH_SHORT`.
+//! /// Can be overridden using `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH_SHORT`.
+//! pub static GIT_COMMIT_HASH_SHORT: Option<&str> = Some("ca2af4f");
+//! ```
+//!
+//! ### `gix`
+//! An alternative to `git2` that uses the `gix` (gitoxide) crate for git operations.
+//! This feature provides the same git information as `git2` but uses a pure Rust
+//! implementation with potentially faster build times.
+//!
+//! **Note**: When both `git2` and `gix` features are enabled, `git2` takes precedence.
+//!
+//! This feature produces the same output format as `git2`:
+//! ```
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_VERSION` contains HEAD's tag. The short commit id is used
+//! /// if HEAD is not tagged.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_VERSION`.
+//! pub static GIT_VERSION: Option<&str> = Some("0.4.1-10-gca2af4f");
+//!
+//! /// If the repository had dirty/staged files.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_DIRTY`.
+//! pub static GIT_DIRTY: Option<bool> = Some(true);
+//!
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_HEAD_REF` contains full name to the reference pointed to by
+//! /// HEAD (e.g.: `refs/heads/master`). If HEAD is detached or the branch
+//! /// name is not valid UTF-8 `None` will be stored.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_HEAD_REF`.
+//! pub static GIT_HEAD_REF: Option<&str> = Some("refs/heads/master");
+//!
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_COMMIT_HASH` contains HEAD's full commit SHA-1 hash.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH`.
+//! pub static GIT_COMMIT_HASH: Option<&str> = Some("ca2af4f11bb8f4f6421c4cccf428bf4862573daf");
+//!
+//! /// If the crate was compiled from within a git-repository,
+//! /// `GIT_COMMIT_HASH_SHORT` contains HEAD's short commit SHA-1 hash.
+//! /// Can be overridden using `BUILT_OVERRIDE_{pkg_name}_GIT_COMMIT_HASH_SHORT`.
 //! pub static GIT_COMMIT_HASH_SHORT: Option<&str> = Some("ca2af4f");
 //! ```
 //!
@@ -379,6 +416,10 @@ mod dependencies;
 mod environment;
 #[cfg(feature = "git2")]
 mod git;
+#[cfg(any(feature = "git2", feature = "gix"))]
+mod git_shared;
+#[cfg(feature = "gix")]
+mod gix;
 #[cfg(feature = "chrono")]
 mod krono;
 pub mod util;
@@ -442,7 +483,8 @@ pub(crate) fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
 /// be written to. This should not be a concern if the filename points to
 /// `OUR_DIR`.
 pub fn write_built_file_with_opts(
-    #[cfg(any(feature = "cargo-lock", feature = "git2"))] manifest_location: Option<&path::Path>,
+    #[cfg(any(feature = "cargo-lock", feature = "git2", feature = "gix"))]
+    manifest_location: Option<&path::Path>,
     dst: &path::Path,
 ) -> io::Result<()> {
     let mut built_file = fs::File::create(dst)?;
@@ -461,10 +503,10 @@ pub fn write_built_file_with_opts(
     envmap.write_compiler_version(&built_file)?;
     envmap.write_cfg(&built_file)?;
 
-    #[cfg(feature = "git2")]
+    #[cfg(any(feature = "git2", feature = "gix"))]
     {
         if let Some(manifest_location) = manifest_location {
-            git::write_git_version(manifest_location, &envmap, &built_file)?;
+            git_shared::write_git_version(manifest_location, &envmap, &built_file)?;
         }
     }
 
@@ -517,7 +559,7 @@ pub fn write_built_file_with_opts(
 pub fn write_built_file() -> io::Result<()> {
     let dst = path::Path::new(&env::var("OUT_DIR").expect("OUT_DIR not set")).join("built.rs");
     write_built_file_with_opts(
-        #[cfg(any(feature = "cargo-lock", feature = "git2"))]
+        #[cfg(any(feature = "cargo-lock", feature = "git2", feature = "gix"))]
         Some(
             env::var("CARGO_MANIFEST_DIR")
                 .expect("CARGO_MANIFEST_DIR")
