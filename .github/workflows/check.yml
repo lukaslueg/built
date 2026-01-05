@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         toolchain: [ stable, "1.85" ]
-        features: [ "cargo-lock", "dependency-tree", "git2", "gix,git2", "semver", "chrono" ]
+        features: [ "cargo-lock", "dependency-tree", "git2", "gix", "gix,git2", "semver", "chrono" ]
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
@@ -84,11 +84,23 @@ jobs:
       - if: matrix.toolchain == 'nightly'
         run: echo "RUSTFLAGS=-Zfmt-debug=none" >> $GITHUB_ENV
       - run: cargo test --no-default-features
-      - run: cargo test --no-default-features --features git2
-      - run: cargo test --no-default-features --features gix,git2
       - run: cargo test --all-features
       - run: cargo test -- --ignored nostd_testbox
-      - run: cargo run --manifest-path=example_project/Cargo.toml
+      - run: cargo run --manifest-path=example_project/Cargo.toml --no-default-features --features gix
+      - run: cargo run --manifest-path=example_project/Cargo.toml --no-default-features --features git2
+
+  test_features:
+    name: cargo test individual features
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        features: [ "cargo-lock", "dependency-tree", "git2", "gix", "gix,git2", "semver", "chrono" ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --no-default-features
+      - run: cargo test --no-default-features --features ${{ matrix.features }}
 
   semver:
     name: Semver check
