@@ -280,7 +280,7 @@
 //! ```
 //!
 //! ### `cargo-lock`
-//! Parses `Cargo.lock`and generates representations of  dependencies and their versions.
+//! Parses `Cargo.lock` and generates representations of  dependencies and their versions.
 //!
 //! For this to work, `Cargo.lock` needs to actually be there; this is (usually)
 //! only true for executables and not for libraries. Cargo will only create a
