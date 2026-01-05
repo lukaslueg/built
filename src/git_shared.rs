@@ -32,10 +32,10 @@ pub(crate) fn write_git_version(
     w: &fs::File,
 ) -> io::Result<()> {
     #[cfg(feature = "git2")]
-    use crate::git::{get_repo_description, get_repo_head};
+    use crate::git_impl::{get_repo_description, get_repo_head};
     // `git2` takes precedence
     #[cfg(all(feature = "gix", not(feature = "git2")))]
-    use crate::gix::{get_repo_description, get_repo_head};
+    use crate::gix_impl::{get_repo_description, get_repo_head};
 
     let RepoInfo {
         mut branch,
@@ -150,12 +150,12 @@ pub(crate) fn write_variables(
 #[cfg(feature = "git2")]
 #[cfg(test)]
 mod tests {
-    #[cfg(all(feature = "git2", not(feature = "gix")))]
-    use crate::git::{get_repo_description, get_repo_head};
+    #[cfg(not(feature = "gix"))]
+    use crate::git_impl::{get_repo_description, get_repo_head};
     // When testing, `gix` must take precedence, or it's not tested.
     // Using `gix-testtools` would allow to setup fixtures without such dependencies.
     #[cfg(feature = "gix")]
-    use crate::gix::{get_repo_description, get_repo_head};
+    use crate::gix_impl::{get_repo_description, get_repo_head};
 
     #[test]
     fn parse_git_repo() {
@@ -163,7 +163,7 @@ mod tests {
         use std::path;
 
         let repo_root = tempfile::tempdir().unwrap();
-        assert_eq!(get_repo_description(repo_root.as_ref()), Ok(None));
+        assert_eq!(get_repo_description(repo_root.as_ref()).unwrap(), None);
 
         let repo = git2::Repository::init_opts(
             &repo_root,
@@ -244,12 +244,8 @@ mod tests {
         repo.set_head(branch_name).unwrap();
 
         assert_eq!(
-            get_repo_head(&project_root),
-            Ok(Some((
-                Some(branch_name.to_owned()),
-                commit_hash,
-                commit_hash_short
-            )))
+            get_repo_head(&project_root).unwrap(),
+            Some((Some(branch_name.to_owned()), commit_hash, commit_hash_short))
         );
     }
 
@@ -295,8 +291,8 @@ mod tests {
 
         repo.set_head_detached(commit_oid).unwrap();
         assert_eq!(
-            get_repo_head(repo_root.as_ref()),
-            Ok(Some((None, commit_hash, commit_hash_short)))
+            get_repo_head(repo_root.as_ref()).unwrap(),
+            Some((None, commit_hash, commit_hash_short))
         );
     }
 }

@@ -384,11 +384,11 @@
 mod dependencies;
 mod environment;
 #[cfg(feature = "git2")]
-mod git;
+mod git_impl;
 #[cfg(any(feature = "git2", feature = "gix"))]
 mod git_shared;
-#[cfg(feature = "gix")]
-mod gix;
+#[cfg(all(feature = "gix", any(test, not(feature = "git2"))))]
+mod gix_impl;
 #[cfg(feature = "chrono")]
 mod krono;
 pub mod util;
@@ -400,6 +400,9 @@ pub use semver;
 
 #[cfg(feature = "chrono")]
 pub use chrono;
+
+#[cfg(feature = "gix")]
+pub use gix;
 
 pub use environment::CIPlatform;
 
