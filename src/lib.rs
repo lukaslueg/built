@@ -158,6 +158,14 @@
 //! The information that `built` collects and makes available in `built.rs` depends
 //! on the features that were enabled on the build-time dependency.
 //!
+//! Crates using `built` should avoid enabling unnecessary features on `built`: These features
+//! pull in other dependencies, which slows down the compilation-process; in the worst case,
+//! one of `built`'s dependencies may fail to build on the target-platform, causing a build-
+//! failure for the entire dependency-tree; there is nothing dependent crates can do to fix
+//! the build in these situations.  
+//! If your crate separates into multiple sub-crates, `built` should generally be used most close
+//! to the top-most crate (e.g. in the CLI crate).
+//!
 //! ### _Always available_
 //! The following information is available regardless of feature-flags.
 //!
