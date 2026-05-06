@@ -16,7 +16,7 @@ cargo-lock = { version = "11.0", optional = true, default-features = false }
 semver = { version = "1.0", optional = true }
 chrono = { version = "0.4", optional = true, default-features = false, features = ["clock"] }
 git2 = { version = "0.20", optional = true, default-features = false, features = [] }
-gix = { version = "0.77", optional = true, default-features = false, features = ["revision", "status", "max-performance-safe"] }
+gix = { version = "0.83", optional = true, default-features = false, features = ["sha1", "revision", "status", "max-performance-safe"] }
 
 [dev-dependencies]
 tempfile = "3"
