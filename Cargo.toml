@@ -9,7 +9,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["cargo", "build"]
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 
 [dependencies]
 cargo-lock = { version = "11.0", optional = true, default-features = false }

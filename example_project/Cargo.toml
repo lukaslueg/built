@@ -5,7 +5,7 @@ authors = ["Lukas Lueg <lukas.lueg@gmail.com>"]
 build = "build.rs"
 edition = "2024"
 publish = false
-rust-version = "1.85"
+rust-version = "1.87"
 
 [dependencies]
 built = { version = "0.8", path = "../", features = ["chrono", "semver"] }

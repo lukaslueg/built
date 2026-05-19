@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain: [ stable, "1.85" ]
+        toolchain: [ stable, "1.87" ]
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain: [ stable, "1.85" ]
+        toolchain: [ stable, "1.87" ]
         features: [ "cargo-lock", "dependency-tree", "git2", "gix", "gix,git2", "semver", "chrono" ]
     steps:
       - uses: actions/checkout@v6
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain: [ stable, "1.85" ]
+        toolchain: [ stable, "1.87" ]
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
