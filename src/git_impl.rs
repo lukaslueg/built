@@ -59,7 +59,7 @@ pub fn get_repo_head(
                 if repo.head_detached()? {
                     None
                 } else {
-                    head_ref.name()
+                    head_ref.name().ok()
                 }
             };
             let head = head_ref.peel_to_commit()?;
