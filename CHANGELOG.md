@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Mangle hyphens in override-variables
 - Bump MSRV to 1.85, switch to Edition 2024
 - Bump `cargo-lock` to `11.0`
+- Bump `git2` to 0.21
 - Add `gix` as an alternative to `libgit2`
 
 ## [0.8.0]
