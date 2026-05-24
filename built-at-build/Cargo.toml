@@ -1,0 +1,18 @@
+[package]
+name = "built-at-build"
+# Version should always match version of built.
+version = "0.8.0"
+edition = "2021"
+description = "Access variables available from built from your build scripts."
+
+[build-dependencies]
+# Dependency should always be >= current version.
+built = ">=0.8.0"
+
+[features]
+# Features should always match built features.
+cargo-lock = ["built/cargo-lock"]
+chrono = ["built/chrono"]
+dependency-tree = ["built/dependency-tree"]
+git2 = ["built/git2"]
+semver = ["built/semver"]
