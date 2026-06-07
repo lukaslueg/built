@@ -178,16 +178,16 @@
 //! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_VERSION`.
 //! pub static PKG_VERSION: &str = "0.1.0";
 //! /// The major version.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_MAJOR`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_VERSION_MAJOR`.
 //! pub static PKG_VERSION_MAJOR: &str = "0";
 //! /// The minor version.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_MINOR`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_VERSION_MINOR`.
 //! pub static PKG_VERSION_MINOR: &str = "1";
 //! /// "The patch version.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_PATCH`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_VERSION_PATCH`.
 //! pub static PKG_VERSION_PATCH: &str = "0";
 //! /// "The pre-release version.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_PRE`.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_PKG_VERSION_PRE`.
 //! pub static PKG_VERSION_PRE: &str = "";
 //!
 //! /// "A colon-separated list of authors.
