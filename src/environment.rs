@@ -372,19 +372,18 @@ impl EnvironmentMap {
         use std::io::Write;
 
         let rustc;
-        let rustc_version;
-        match self.get_override_var("RUSTC") {
+
+        let rustc_version = match self.get_override_var("RUSTC") {
             Some(v) => {
                 rustc = v;
-                rustc_version = self
-                    .get_override_var("RUSTC_VERSION")
+                self.get_override_var("RUSTC_VERSION")
                     .expect("RUSTC_VERSION must be overridden if RUSTC is")
             }
             None => {
                 rustc = self.get("RUSTC").unwrap();
-                rustc_version = get_version_from_cmd(rustc.as_ref())?;
+                get_version_from_cmd(rustc.as_ref())?
             }
-        }
+        };
 
         let rustdoc;
         let rustdoc_version;
