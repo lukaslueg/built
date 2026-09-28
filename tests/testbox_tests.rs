@@ -236,6 +236,28 @@ pub unsafe extern "C" fn main() -> ! {
 }
 
 #[test]
+fn optional_string_override_with_special_characters() {
+    let mut p = Project::new();
+    p.bootstrap(None)
+        .set_env("BUILT_OVERRIDE_testbox_CI_PLATFORM", "a\"b\\c\nnext")
+        .add_file(
+            "src/main.rs",
+            r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built_info::CI_PLATFORM, Some("a\"b\\c\nnext"));
+    println!("builttestsuccess");
+}
+"#,
+        );
+
+    p.create_and_run(&[]);
+}
+
+#[test]
 fn unused_override() {
     for git_feature in git_features_for_bootstrap() {
         let mut p = Project::new();

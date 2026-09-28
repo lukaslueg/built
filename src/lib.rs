@@ -401,7 +401,7 @@ mod gix_impl;
 mod krono;
 pub mod util;
 
-use std::{env, fmt, fs, io, io::Write, path};
+use std::{env, fs, io, io::Write, path};
 
 #[cfg(feature = "semver")]
 pub use semver;
@@ -449,9 +449,9 @@ macro_rules! write_str_variable {
 }
 pub(crate) use write_str_variable;
 
-pub(crate) fn fmt_option_str<S: fmt::Display>(o: Option<S>) -> String {
+pub(crate) fn fmt_option_str<S: AsRef<str>>(o: Option<S>) -> String {
     match o {
-        Some(s) => format!("Some(\"{s}\")"),
+        Some(s) => format!("Some(\"{}\")", s.as_ref().escape_default()),
         None => "None".to_owned(),
     }
 }
