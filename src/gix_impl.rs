@@ -1,58 +1,13 @@
-use gix::bstr::ByteSlice;
+use gix::{bstr::ByteSlice, discover::upwards};
 use std::path;
 
-#[derive(Debug)]
-#[cfg_attr(all(feature = "gix", feature = "git2"), allow(dead_code))]
-pub enum GixError {
-    Discover(Box<gix::discover::Error>),
-    Describe(Box<gix::commit::describe::Error>),
-    HeadCommit(gix::reference::head_commit::Error),
-    FindExisting(gix::reference::find::existing::Error),
-    IsDirty(Box<gix::status::is_dirty::Error>),
-    Peel(gix::head::peel::Error),
-}
-
-impl From<gix::discover::Error> for GixError {
-    fn from(e: gix::discover::Error) -> Self {
-        Self::Discover(Box::new(e))
-    }
-}
-
-impl From<gix::status::is_dirty::Error> for GixError {
-    fn from(e: gix::status::is_dirty::Error) -> Self {
-        Self::IsDirty(Box::new(e))
-    }
-}
-
-impl From<gix::commit::describe::Error> for GixError {
-    fn from(e: gix::commit::describe::Error) -> Self {
-        Self::Describe(Box::new(e))
-    }
-}
-
-impl From<gix::reference::find::existing::Error> for GixError {
-    fn from(e: gix::reference::find::existing::Error) -> Self {
-        Self::FindExisting(e)
-    }
-}
-
-impl From<gix::head::peel::Error> for GixError {
-    fn from(e: gix::head::peel::Error) -> Self {
-        Self::Peel(e)
-    }
-}
-
-impl From<gix::reference::head_commit::Error> for GixError {
-    fn from(e: gix::reference::head_commit::Error) -> Self {
-        Self::HeadCommit(e)
-    }
-}
+pub use gix::Error as GixError;
 
 /// Retrieves the git-tag or hash describing the exact version and a boolean
 /// that indicates if the repository currently has dirty/staged files.
 ///
 /// If a valid git-repo can't be discovered at or above the given path,
-/// or if any operation on the repository fails, `None` is returned.
+/// `None` is returned. Other repository errors are returned as `Err`.
 pub fn get_repo_description(
     manifest_location: &path::Path,
 ) -> Result<Option<(String, bool)>, GixError> {
@@ -63,8 +18,8 @@ pub fn get_repo_description(
             let dirty = repo.is_dirty()?;
             Ok(Some((tag, dirty)))
         }
-        Err(gix::discover::Error::Discover(_)) => Ok(None),
-        Err(e) => Err(e.into()),
+        Err(e) if e.downcast_any_ref::<upwards::Error>().is_some() => Ok(None),
+        Err(e) => Err(e),
     }
 }
 
@@ -74,7 +29,7 @@ pub fn get_repo_description(
 /// branch name will be `None` if the head is detached, or it's not valid UTF-8.
 ///
 /// If a valid git-repo can't be discovered at or above the given path,
-/// or if any operation on the repository fails, `None` is returned.
+/// `None` is returned. Other repository errors are returned as `Err`.
 pub fn get_repo_head(
     manifest_location: &path::Path,
 ) -> Result<Option<(Option<String>, String, String)>, GixError> {
@@ -92,7 +47,24 @@ pub fn get_repo_head(
                 Ok(None)
             }
         }
-        Err(gix::discover::Error::Discover(_)) => Ok(None),
-        Err(e) => Err(e.into()),
+        Err(e) if e.downcast_any_ref::<upwards::Error>().is_some() => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{get_repo_description, get_repo_head};
+
+    #[test]
+    fn discovery_errors() {
+        let root = tempfile::tempdir().unwrap();
+        assert_eq!(get_repo_description(root.path()).unwrap(), None);
+        assert_eq!(get_repo_head(root.path()).unwrap(), None);
+
+        gix::init(root.path()).unwrap();
+        std::fs::write(root.path().join(".git/config"), "[invalid").unwrap();
+        assert!(get_repo_description(root.path()).is_err());
+        assert!(get_repo_head(root.path()).is_err());
     }
 }

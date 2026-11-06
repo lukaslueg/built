@@ -9,14 +9,14 @@ license = "MIT"
 readme = "README.md"
 keywords = ["cargo", "build"]
 edition = "2024"
-rust-version = "1.87"
+rust-version = "1.88"
 
 [dependencies]
 cargo-lock = { version = "11.0", optional = true, default-features = false }
 semver = { version = "1.0", optional = true }
 chrono = { version = "0.4", optional = true, default-features = false, features = ["clock"] }
 git2 = { version = "0.21", optional = true, default-features = false, features = [] }
-gix = { version = "0.87", optional = true, default-features = false, features = ["sha1", "revision", "status", "max-performance-safe"] }
+gix = { version = "0.90", optional = true, default-features = false, features = ["sha1", "revision", "status", "max-performance"] }
 
 [dev-dependencies]
 tempfile = "3"

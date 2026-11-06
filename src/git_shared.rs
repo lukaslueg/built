@@ -45,23 +45,22 @@ pub(crate) fn write_git_version(
         mut commit_id_short,
     } = RepoInfo::from_overrides(envmap);
 
-    if branch.is_none() || commit_id.is_none() || commit_id_short.is_none() {
-        if let Ok(Some((git_branch, git_commit_id, git_commit_short_id))) =
+    if (branch.is_none() || commit_id.is_none() || commit_id_short.is_none())
+        && let Ok(Some((git_branch, git_commit_id, git_commit_short_id))) =
             get_repo_head(manifest_location)
-        {
-            branch = branch.or(git_branch);
-            commit_id = commit_id.or(Some(git_commit_id));
-            commit_id_short = commit_id_short.or(Some(git_commit_short_id))
-        }
+    {
+        branch = branch.or(git_branch);
+        commit_id = commit_id.or(Some(git_commit_id));
+        commit_id_short = commit_id_short.or(Some(git_commit_short_id))
     }
 
     // This is an expensive call, avoid it if it's all overridden.
     // TODO(performance): could be split into dirty + describe, and re-use the opened Repository.
-    if tag.is_none() || dirty.is_none() {
-        if let Ok(Some((git_tag, git_dirty))) = get_repo_description(manifest_location) {
-            tag = tag.or(Some(git_tag));
-            dirty = dirty.or(Some(git_dirty));
-        }
+    if (tag.is_none() || dirty.is_none())
+        && let Ok(Some((git_tag, git_dirty))) = get_repo_description(manifest_location)
+    {
+        tag = tag.or(Some(git_tag));
+        dirty = dirty.or(Some(git_dirty));
     }
 
     write_variables(
