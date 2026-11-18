@@ -236,6 +236,29 @@ pub unsafe extern "C" fn main() -> ! {
 }
 
 #[test]
+fn featureless_testbox() {
+    let mut p = Project::new();
+    p.bootstrap(None).add_file(
+        "src/main.rs",
+        r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert!(built_info::FEATURES.is_empty());
+    assert!(built_info::FEATURES_LOWERCASE.is_empty());
+    assert_eq!(built_info::FEATURES_STR, "");
+    assert_eq!(built_info::FEATURES_LOWERCASE_STR, "");
+    println!("builttestsuccess");
+}
+"#,
+    );
+
+    p.create_and_run(&[]);
+}
+
+#[test]
 fn optional_string_override_with_special_characters() {
     let mut p = Project::new();
     p.bootstrap(None)
