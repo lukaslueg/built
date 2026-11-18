@@ -35,7 +35,7 @@ jobs:
     strategy:
       matrix:
         toolchain: [ stable, "1.88" ]
-        features: [ "cargo-lock", "dependency-tree", "git2", "gix", "gix,git2", "semver", "chrono" ]
+        features: [ "cargo-lock", "dependency-tree", "git2", "gix", "gix,git2", "jiff", "semver" ]
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
@@ -94,7 +94,7 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
-        features: [ "cargo-lock", "dependency-tree", "git2", "gix", "gix,git2", "semver", "chrono" ]
+        features: [ "cargo-lock", "dependency-tree", "git2", "gix", "gix,git2", "jiff", "semver" ]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7

@@ -51,7 +51,7 @@
 //! build = "build.rs"
 //!
 //! [build-dependencies]
-//! built = "0.8"
+//! built = "0.9"
 //! ```
 //!
 //! Add or modify a build-script. In `build.rs`:
@@ -100,10 +100,9 @@
 //! }
 //!
 //! /// The time this crate was built
-//! #[cfg(feature = "chrono")]
-//! fn built_time() -> built::chrono::DateTime<built::chrono::Local> {
+//! #[cfg(feature = "jiff")]
+//! fn built_time() -> built::jiff::Timestamp {
 //!     built::util::strptime(built_info::BUILT_TIME_UTC)
-//!         .with_timezone(&built::chrono::offset::Local)
 //! }
 //!
 //! /// If another crate pulls in a dependency we don't like, print a warning
@@ -371,23 +370,24 @@
 //!
 //! **Note**: When both `git2` and `gix` features are enabled, `git2` takes precedence.
 //!
-//! ### `chrono`
+//! ### `jiff`
 //!
-//! The build-time is recorded as `BUILT_TIME_UTC`. If `built` is included as a runtime-dependency,
-//! it can parse the string-representation into a `time:Tm` with the help of
-//! `built::util::strptime()`.
+//! The build time is recorded as `BUILT_TIME_UTC`. If `built` is also a runtime dependency
+//! with the `jiff` feature, `built::util::strptime` parses this string into a `jiff::Timestamp`.
 //!
-//! `built` honors the environment variable `SOURCE_DATE_EPOCH`. If the variable is defined and
-//! parses to a valid UTC timestamp, that build-time is used instead of the current local time.
-//! The variable is silently ignored if defined but but does not parse to a valid UTC timestamp.
+//! `built` uses `SOURCE_DATE_EPOCH` as the build time when it contains Unix seconds in Jiff's
+//! timestamp range. If it is unset, malformed, or outside that range, `built` uses the system
+//! clock. RFC 2822 formatting requires a nonnegative year.
 //!
 //! ```
 //! /// The built-time in RFC2822, UTC
-//! /// Can be overridden with`BUILT_OVERRIDE_BUILT_TIME_UTC`; the override takes precedence
-//! /// over `SOURCE_DATE_EPOCH`; it *must* parse via `chrono::DateTime::parse_from_rfc2822()`.
+//! /// An RFC 2822 `BUILT_OVERRIDE_BUILT_TIME_UTC` value takes precedence over
+//! /// `SOURCE_DATE_EPOCH`. The written timestamp is normalized to UTC.
 //! pub static BUILT_TIME_UTC: &str = "Wed, 27 May 2020 18:12:39 +0000";
 //! ```
 
+#[cfg(feature = "jiff")]
+mod build_time;
 #[cfg(feature = "cargo-lock")]
 mod dependencies;
 mod environment;
@@ -397,8 +397,6 @@ mod git_impl;
 mod git_shared;
 #[cfg(all(feature = "gix", any(test, not(feature = "git2"))))]
 mod gix_impl;
-#[cfg(feature = "chrono")]
-mod krono;
 pub mod util;
 
 use std::{env, fs, io, io::Write, path};
@@ -406,8 +404,8 @@ use std::{env, fs, io, io::Write, path};
 #[cfg(feature = "semver")]
 pub use semver;
 
-#[cfg(feature = "chrono")]
-pub use chrono;
+#[cfg(feature = "jiff")]
+pub use jiff;
 
 #[cfg(feature = "gix")]
 pub use gix;
@@ -418,8 +416,7 @@ pub use environment::CIPlatform;
 #[allow(dead_code)]
 type _READMETEST = ();
 
-/// If `SOURCE_DATE_EPOCH` is defined, its value is used instead of
-/// `chrono::..::now()` as `BUILT_TIME_UTC`.
+/// A valid `SOURCE_DATE_EPOCH` provides the build time when there is no explicit time override.
 /// The presence of `SOURCE_DATE_EPOCH` also soft-indicates that a
 /// reproducible build is desired, which we may or may not be able
 /// to honor.
@@ -495,8 +492,8 @@ pub fn write_built_file_with_opts(
         dependencies::write_dependencies(manifest_location, &built_file)?;
     }
 
-    #[cfg(feature = "chrono")]
-    krono::write_time(&built_file, &envmap)?;
+    #[cfg(feature = "jiff")]
+    build_time::write_time(&built_file, &envmap)?;
 
     let mut used_override_vars = envmap.used_override_vars().collect::<Vec<_>>();
     used_override_vars.sort_unstable();

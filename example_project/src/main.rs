@@ -1,3 +1,5 @@
+use jiff::{Timestamp, tz::TimeZone};
+
 // The file `built.rs` was placed there by cargo and `build.rs`
 mod built_info {
     include!(concat!(env!("OUT_DIR"), "/built.rs"));
@@ -57,12 +59,13 @@ fn main() {
     }
 
     let built_time = built::util::strptime(built_info::BUILT_TIME_UTC);
+    let local_time = built_time.to_zoned_datetime(TimeZone::system());
     println!(
         "I was built with profile \"{}\", features \"{}\" on {} ({} seconds ago) using `{}` (with help from `{}`).",
         built_info::PROFILE,
         built_info::FEATURES_STR,
-        built_time.with_timezone(&built::chrono::offset::Local),
-        (built::chrono::offset::Utc::now() - built_time).num_seconds(),
+        local_time.strftime("%Y-%m-%d %H:%M:%S %:z"),
+        Timestamp::now().duration_since(built_time).as_secs(),
         built_info::DIRECT_DEPENDENCIES_STR,
         built_info::INDIRECT_DEPENDENCIES_STR
     );

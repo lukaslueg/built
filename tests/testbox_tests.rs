@@ -485,7 +485,7 @@ fn main() {
     feature = "cargo-lock",
     feature = "dependency-tree",
     any(feature = "git2", feature = "gix"),
-    feature = "chrono",
+    feature = "jiff",
     feature = "semver"
 ))]
 fn full_testbox() {
@@ -512,10 +512,10 @@ repository = "https://dev.example.com/sources/testbox/"
 license = "MIT"
 
 [dependencies]
-built = {{ path = "{built_root}", features=["cargo-lock", "dependency-tree", "{git_feature}", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["cargo-lock", "dependency-tree", "{git_feature}", "jiff", "semver"] }}
 
 [build-dependencies]
-built = {{ path = "{built_root}", features=["cargo-lock", "dependency-tree", "{git_feature}", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["cargo-lock", "dependency-tree", "{git_feature}", "jiff", "semver"] }}
 
 [features]
 default = ["SuperAwesome", "MegaAwesome"]
@@ -592,7 +592,8 @@ fn main() {{
     assert_eq!(built_info::DIRECT_DEPENDENCIES.len(), 1);
     assert_eq!(built_info::DIRECT_DEPENDENCIES[0].0, "built");
 
-    assert!((built::chrono::offset::Utc::now() - built::util::strptime(built_info::BUILT_TIME_UTC)).num_days() <= 1);
+    let build_time = built::util::strptime(built_info::BUILT_TIME_UTC);
+    assert!(built::jiff::Timestamp::now().duration_since(build_time).abs().as_secs() <= 86_400);
 
     assert!(built_info::OVERRIDE_VARIABLES_USED.is_empty());
 
@@ -606,7 +607,7 @@ fn main() {{
 #[test]
 #[cfg(all(
     any(feature = "git2", feature = "gix"),
-    feature = "chrono",
+    feature = "jiff",
     feature = "semver"
 ))]
 fn overridden_testbox() {
@@ -630,10 +631,10 @@ repository = "https://dev.example.com/sources/testbox/"
 license = "MIT"
 
 [dependencies]
-built = {{ path = "{built_root}", features=["{git_feature}", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["{git_feature}", "jiff", "semver"] }}
 
 [build-dependencies]
-built = {{ path = "{built_root}", features=["{git_feature}", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["{git_feature}", "jiff", "semver"] }}
 
 [features]
 default = ["SuperAwesome", "MegaAwesome"]
@@ -688,9 +689,10 @@ fn main() {
         .set_env("BUILT_OVERRIDE_testbox_CFG_OS", "none")
         .set_env("BUILT_OVERRIDE_testbox_CFG_POINTER_WIDTH", "63.9998")
         .set_env("BUILT_OVERRIDE_testbox_CFG_ENV", "calm")
+        .set_env("SOURCE_DATE_EPOCH", "0")
         .set_env(
             "BUILT_OVERRIDE_testbox_BUILT_TIME_UTC",
-            "Sat, 25 May 2024 12:15:59 +0000",
+            "Sat, 25 May 2024 13:15:59 +0100",
         )
         .add_file(
             "src/main.rs",
@@ -744,8 +746,7 @@ fn main() {
     assert_eq!(built_info::CFG_POINTER_WIDTH, "63.9998");
     assert_eq!(built_info::CFG_ENV, "calm");
 
-    assert_eq!(built::util::strptime(built_info::BUILT_TIME_UTC).to_rfc2822(),
-              "Sat, 25 May 2024 12:15:59 +0000");
+    assert_eq!(built_info::BUILT_TIME_UTC, "Sat, 25 May 2024 12:15:59 +0000");
     assert_eq!(built_info::OVERRIDE_VARIABLES_USED, [
         "BUILT_TIME_UTC",
         "CFG_ENDIAN",
@@ -792,7 +793,7 @@ fn main() {
 #[test]
 #[cfg(all(
     any(feature = "git2", feature = "gix"),
-    feature = "chrono",
+    feature = "jiff",
     feature = "semver"
 ))]
 fn overridden_testbox_pkg_name_with_hyphen() {
@@ -816,10 +817,10 @@ repository = "https://dev.example.com/sources/great-testbox/"
 license = "MIT"
 
 [dependencies]
-built = {{ path = "{built_root}", features=["{git_feature}", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["{git_feature}", "jiff", "semver"] }}
 
 [build-dependencies]
-built = {{ path = "{built_root}", features=["{git_feature}", "chrono", "semver"] }}
+built = {{ path = "{built_root}", features=["{git_feature}", "jiff", "semver"] }}
 
 [features]
 default = ["SuperAwesome", "MegaAwesome"]
@@ -933,8 +934,7 @@ fn main() {
     assert_eq!(built_info::CFG_POINTER_WIDTH, "63.9998");
     assert_eq!(built_info::CFG_ENV, "calm");
 
-    assert_eq!(built::util::strptime(built_info::BUILT_TIME_UTC).to_rfc2822(),
-              "Sat, 25 May 2024 12:15:59 +0000");
+    assert_eq!(built_info::BUILT_TIME_UTC, "Sat, 25 May 2024 12:15:59 +0000");
     assert_eq!(built_info::OVERRIDE_VARIABLES_USED, [
         "BUILT_TIME_UTC",
         "CFG_ENDIAN",
@@ -979,7 +979,7 @@ fn main() {
 }
 
 #[test]
-#[cfg(feature = "chrono")]
+#[cfg(feature = "jiff")]
 fn source_date_epoch() {
     let mut p = Project::new();
     let built_root = get_built_root();
@@ -996,10 +996,10 @@ build = "build.rs"
 description = "xobtset"
 
 [dependencies]
-built = {{ path = "{built_root}", features=["chrono"] }}
+built = {{ path = "{built_root}", features=["jiff"] }}
 
 [build-dependencies]
-built = {{ path = "{built_root}", features=["chrono"] }}"#,
+built = {{ path = "{built_root}", features=["jiff"] }}"#,
             built_root = built_root.display().to_string().escape_default()
         ),
     )
@@ -1018,8 +1018,8 @@ mod built_info {
 }
 
 fn main() {
-    assert_eq!(built::util::strptime(built_info::BUILT_TIME_UTC).to_rfc2822(),
-              "Sat, 25 May 2024 12:15:59 +0000");
+    assert_eq!(built_info::BUILT_TIME_UTC, "Sat, 25 May 2024 12:15:59 +0000");
+    assert_eq!(built::util::strptime(built_info::BUILT_TIME_UTC).as_second(), 1716639359);
     assert_eq!(built_info::NUM_JOBS, 1);
     println!("builttestsuccess");
 }"#,

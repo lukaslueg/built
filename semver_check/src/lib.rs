@@ -62,7 +62,7 @@ pub const GIT_HEAD_REF: Option<&str> = built_info::GIT_HEAD_REF;
 pub const GIT_COMMIT_HASH: Option<&str> = built_info::GIT_COMMIT_HASH;
 pub const GIT_COMMIT_HASH_SHORT: Option<&str> = built_info::GIT_COMMIT_HASH_SHORT;
 
-// chrono
+// jiff
 pub const BUILT_TIME_UTC: &str = built_info::BUILT_TIME_UTC;
 
 pub static OVERRIDE_VARIABLES_USED: [&str; 0] = [];

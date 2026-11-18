@@ -8,10 +8,11 @@ publish = false
 rust-version = "1.88"
 
 [dependencies]
-built = { version = "0.8", path = "../", features = ["chrono", "semver"] }
+built = { version = "0.9", path = "../", features = ["jiff", "semver"] }
+jiff = "1"
 
 [build-dependencies]
-built = { version = "0.8", path = "../", features = ["cargo-lock", "dependency-tree", "chrono", "semver"] }
+built = { version = "0.9", path = "../", features = ["cargo-lock", "dependency-tree", "jiff", "semver"] }
 
 [features]
 default = [ "git2" ]
