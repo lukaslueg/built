@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Replace the optional `chrono` feature and re-export with `jiff` 1.0. `built::util::strptime` now returns `jiff::Timestamp`. `BUILT_TIME_UTC` continues to use RFC 2822 in UTC. Timestamp inputs follow Jiff's supported range, and leap seconds are normalized to `:59`.
 - Escape generated `#[doc]` attributes to prevent special characters in override values from breaking compilation.
 - Generate empty `FEATURES` and `FEATURES_LOWERCASE` arrays when no Cargo features are enabled.
+- Include lightweight Git tags when generating `GIT_VERSION` with `gix`.
 
 
 ## [0.8.1]

@@ -214,17 +214,25 @@ mod tests {
         assert!(!tag.is_empty());
         assert!(!dirty);
 
-        // Tag the commit, it should be retrieved
-        repo.tag(
-            "foobar",
-            &repo
-                .find_object(commit_oid, Some(git2::ObjectType::Commit))
-                .unwrap(),
-            &sig,
-            "Tagged foobar",
-            false,
-        )
-        .unwrap();
+        let commit_object = repo
+            .find_object(commit_oid, Some(git2::ObjectType::Commit))
+            .unwrap();
+        repo.tag_lightweight("lightweight", &commit_object, false)
+            .unwrap();
+        let expected = Some(("lightweight".to_owned(), false));
+        assert_eq!(
+            crate::git_impl::get_repo_description(&project_root).unwrap(),
+            expected
+        );
+        #[cfg(feature = "gix")]
+        assert_eq!(
+            crate::gix_impl::get_repo_description(&project_root).unwrap(),
+            expected
+        );
+
+        // The annotated tag takes precedence over the lightweight tag on the same commit.
+        repo.tag("foobar", &commit_object, &sig, "Tagged foobar", false)
+            .unwrap();
 
         let (tag, dirty) = get_repo_description(&project_root).unwrap().unwrap();
         assert_eq!(tag, "foobar");

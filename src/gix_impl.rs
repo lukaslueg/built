@@ -1,4 +1,4 @@
-use gix::{bstr::ByteSlice, discover::upwards};
+use gix::{bstr::ByteSlice, commit::describe::SelectRef, discover::upwards};
 use std::path;
 
 pub use gix::Error as GixError;
@@ -14,7 +14,11 @@ pub fn get_repo_description(
     match gix::discover(manifest_location) {
         Ok(repo) => {
             let commit = repo.head_commit()?;
-            let tag = commit.describe().format()?.to_string();
+            let tag = commit
+                .describe()
+                .names(SelectRef::AllTags)
+                .format()?
+                .to_string();
             let dirty = repo.is_dirty()?;
             Ok(Some((tag, dirty)))
         }
