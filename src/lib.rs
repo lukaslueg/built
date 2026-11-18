@@ -426,8 +426,11 @@ macro_rules! write_variable {
     ($writer:expr, $name:expr, $datatype:expr, $value:expr, $doc:expr) => {
         writeln!(
             $writer,
-            "#[allow(clippy::needless_raw_string_hashes)]\n#[doc=r#\"{}\"#]\n#[allow(dead_code)]\npub static {}: {} = {};",
-            $doc, $name, $datatype, $value
+            "#[doc = \"{}\"]\n#[allow(dead_code)]\npub static {}: {} = {};",
+            $doc.to_string().escape_default(),
+            $name,
+            $datatype,
+            $value
         )?;
     };
 }
