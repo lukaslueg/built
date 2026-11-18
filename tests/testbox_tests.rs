@@ -1,5 +1,5 @@
 use std::{
-    collections, env, ffi, fs,
+    collections, ffi, fs,
     io::{self, Write},
     path, process,
 };
@@ -148,20 +148,8 @@ fn main() {
     }
 }
 
-/// Tries to find built's Cargo.toml, panics if it ends up in /
 fn get_built_root() -> path::PathBuf {
-    env::current_exe()
-        .map(|path| {
-            let mut path = path;
-            loop {
-                if path.join("Cargo.toml").exists() {
-                    break;
-                }
-                path = path::PathBuf::from(path.parent().unwrap());
-            }
-            path
-        })
-        .unwrap()
+    path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
 #[test]
