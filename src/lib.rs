@@ -306,11 +306,10 @@
 //! ```
 //!
 //! ### `dependency-tree` (implies `cargo-lock`)
-//! Solve the dependency-graph in `Cargo.lock` to discern direct and indirect
-//! dependencies.
-//!
-//! "Direct" dependencies are those which the root-package(s) depends on.
-//! "Indirect" dependencies are those which are not direct dependencies.
+//! Searches for `Cargo.lock` starting at the supplied manifest directory and
+//! walking up its ancestors. The dependency lists start from the package
+//! running the build script. Direct dependencies are one edge away.
+//! Indirect dependencies are reachable only through other dependencies.
 //!
 //! ```
 //! /// An array of direct dependencies as documented by `Cargo.lock`.
@@ -456,7 +455,10 @@ pub(crate) fn fmt_option_str<S: AsRef<str>>(o: Option<S>) -> String {
     }
 }
 
-/// Writes rust-code describing the crate at `manifest_location` to a new file named `dst`.
+/// Writes Rust code describing the package running the build script to `dst`.
+///
+/// With Git or lockfile metadata enabled, `manifest_location` is the directory
+/// where the search for the Git repository or lockfile starts.
 ///
 /// # Errors
 /// The function returns an error if the file at `dst` already exists or can't
@@ -492,7 +494,12 @@ pub fn write_built_file_with_opts(
 
     #[cfg(feature = "cargo-lock")]
     if let Some(manifest_location) = manifest_location {
-        dependencies::write_dependencies(manifest_location, &built_file)?;
+        dependencies::write_dependencies(
+            manifest_location,
+            #[cfg(feature = "dependency-tree")]
+            &envmap,
+            &built_file,
+        )?;
     }
 
     #[cfg(feature = "jiff")]

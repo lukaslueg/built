@@ -169,6 +169,123 @@ fn get_built_root() -> path::PathBuf {
 }
 
 #[test]
+#[cfg(feature = "dependency-tree")]
+fn workspace_dependency_tree_testbox() {
+    let mut p = Project::new();
+    p.add_file(
+        "Cargo.toml",
+        r#"
+[workspace]
+members = ["subject", "dependent", "sibling"]
+resolver = "3"
+
+[workspace.package]
+version = "1.2.3-RC.1+Build.007"
+"#,
+    )
+    .add_file(
+        "subject/Cargo.toml",
+        format!(
+            r#"
+[package]
+name = "Mixed-Name"
+version.workspace = true
+edition = "2024"
+
+[dependencies]
+direct = {{ path = "../direct" }}
+
+[build-dependencies]
+built = {{ path = "{}", features = ["dependency-tree"] }}
+"#,
+            get_built_root().display().to_string().escape_default(),
+        ),
+    )
+    .add_file(
+        "dependent/Cargo.lock",
+        r#"
+version = 4
+
+[[package]]
+name = "Mixed-Name"
+version = "1.2.3-RC.1+Build.007"
+dependencies = ["direct"]
+
+[[package]]
+name = "direct"
+version = "0.1.0"
+"#,
+    )
+    .add_file("subject/src/lib.rs", "pub use direct as dependency;\n")
+    .add_file(
+        "subject/build.rs",
+        r#"
+use std::{env, path::Path};
+
+fn main() {
+    built::write_built_file().unwrap();
+    let dst = Path::new(&env::var_os("OUT_DIR").unwrap()).join("explicit.rs");
+    built::write_built_file_with_opts(Some(Path::new("../dependent")), &dst).unwrap();
+}
+"#,
+    )
+    .add_file(
+        "subject/src/main.rs",
+        r#"
+mod subject {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+mod explicit {
+    include!(concat!(env!("OUT_DIR"), "/explicit.rs"));
+}
+
+fn main() {
+    assert_eq!(subject::PKG_NAME, "overridden-name");
+    assert_eq!(subject::PKG_VERSION, "9.0.0");
+    assert_eq!(subject::DIRECT_DEPENDENCIES.map(|(name, _)| name), ["built", "direct"]);
+    assert!(subject::INDIRECT_DEPENDENCIES.contains(&("indirect", "0.1.0")));
+    for (name, _) in subject::DEPENDENCIES {
+        assert!(!["Mixed-Name", "dependent", "sibling", "sibling-only"].contains(&name));
+    }
+    assert_eq!(explicit::DIRECT_DEPENDENCIES, [("direct", "0.1.0")]);
+    assert!(explicit::INDIRECT_DEPENDENCIES.is_empty());
+    println!("builttestsuccess");
+}
+"#,
+    )
+    .set_env("BUILT_OVERRIDE_Mixed_Name_PKG_NAME", "overridden-name")
+    .set_env("BUILT_OVERRIDE_Mixed_Name_PKG_VERSION", "9.0.0");
+    for (name, dependencies) in [
+        (
+            "dependent",
+            r#"subject = { package = "Mixed-Name", path = "../subject" }"#,
+        ),
+        ("sibling", r#"sibling-only = { path = "../sibling-only" }"#),
+        ("sibling-only", ""),
+        ("direct", r#"indirect = { path = "../indirect" }"#),
+        ("indirect", ""),
+    ] {
+        p.add_file(
+            format!("{name}/Cargo.toml"),
+            format!(
+                r#"
+[package]
+name = "{name}"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+{dependencies}
+"#
+            ),
+        )
+        .add_file(format!("{name}/src/lib.rs"), "");
+    }
+    p.create_and_run(&["-p", "Mixed-Name"]);
+}
+
+#[test]
 #[ignore = "requires target x86_64-unknown-none"]
 fn nostd_testbox() {
     let mut p = Project::new();

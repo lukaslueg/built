@@ -34,54 +34,78 @@ struct Dependencies {
 
 #[cfg(feature = "dependency-tree")]
 impl Dependencies {
-    fn new(lockfile: &cargo_lock::Lockfile) -> Self {
+    fn new(
+        mut lockfile: cargo_lock::Lockfile,
+        package: &cargo_lock::Dependency,
+    ) -> io::Result<Self> {
         use cargo_lock::dependency::graph::EdgeDirection;
 
+        // cargo-lock builds the graph from `packages`. Version 1 lockfiles can
+        // store the top-level package separately in a `[root]` table.
+        if let Some(root) = lockfile.root.take() {
+            lockfile.packages.push(root);
+        }
         let tree = lockfile
             .dependency_tree()
-            .expect("properly formed lockfile");
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
         let graph = tree.graph();
+        let root = *tree.nodes().get(package).ok_or_else(|| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("Local package {package} is missing from Cargo.lock"),
+            )
+        })?;
 
-        let root_pkg_idx = graph
-            .externals(EdgeDirection::Incoming)
+        let direct = graph
+            .neighbors_directed(root, EdgeDirection::Outgoing)
+            .filter(|&idx| idx != root)
             .collect::<collections::HashSet<_>>();
-        let deps = package_names(graph.node_indices().filter_map(|idx| {
-            if root_pkg_idx.contains(&idx) {
-                None
-            } else {
-                Some(&graph[idx])
-            }
-        }));
-        let direct_deps_idx = root_pkg_idx
-            .iter()
-            .flat_map(|idx| graph.neighbors_directed(*idx, EdgeDirection::Outgoing))
-            .collect::<collections::HashSet<_>>();
-        let direct_deps = package_names(direct_deps_idx.iter().map(|dep_idx| &graph[*dep_idx]));
-        let indirect_deps = package_names(graph.node_indices().filter_map(|idx| {
-            if root_pkg_idx.contains(&idx) | direct_deps_idx.contains(&idx) {
-                None
-            } else {
-                Some(&graph[idx])
-            }
-        }));
-
-        Self {
-            deps,
-            direct_deps,
-            indirect_deps,
+        let mut reachable = direct.clone();
+        reachable.insert(root);
+        let mut pending = direct.iter().copied().collect::<Vec<_>>();
+        while let Some(idx) = pending.pop() {
+            pending.extend(
+                graph
+                    .neighbors_directed(idx, EdgeDirection::Outgoing)
+                    .filter(|&neighbor| reachable.insert(neighbor)),
+            );
         }
+        reachable.remove(&root);
+
+        Ok(Self {
+            deps: package_names(reachable.iter().map(|&idx| &graph[idx])),
+            direct_deps: package_names(direct.iter().map(|&idx| &graph[idx])),
+            indirect_deps: package_names(reachable.difference(&direct).map(|&idx| &graph[idx])),
+        })
     }
 }
 
 #[cfg(feature = "dependency-tree")]
-pub fn write_dependencies(manifest_location: &path::Path, mut w: &fs::File) -> io::Result<()> {
-    use io::{Read, Write};
+pub fn write_dependencies(
+    manifest_location: &path::Path,
+    envmap: &crate::environment::EnvironmentMap,
+    mut w: &fs::File,
+) -> io::Result<()> {
+    use io::Write;
 
-    let mut lock_buf = String::new();
-    fs::File::open(find_lockfile(manifest_location)?)?.read_to_string(&mut lock_buf)?;
-    let lockfile = lock_buf.parse().expect("Failed to parse lockfile");
-
-    let dependencies = Dependencies::new(&lockfile);
+    let package = cargo_lock::Dependency {
+        name: envmap
+            .get("CARGO_PKG_NAME")
+            .ok_or_else(|| io::Error::other("CARGO_PKG_NAME is missing"))?
+            .parse()
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?,
+        version: envmap
+            .get("CARGO_PKG_VERSION")
+            .ok_or_else(|| io::Error::other("CARGO_PKG_VERSION is missing"))?
+            .parse()
+            .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?,
+        // Cargo omits the source from lockfile entries for local paths.
+        source: None,
+    };
+    let lockfile = fs::read_to_string(find_lockfile(manifest_location)?)?
+        .parse()
+        .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
+    let dependencies = Dependencies::new(lockfile, &package)?;
 
     write_variable!(
         w,
@@ -246,7 +270,12 @@ dependencies = [
     #[cfg(feature = "dependency-tree")]
     fn direct_deps() {
         let lockfile = LOCK_TOML_BUFFER.parse().expect("Failed to parse lockfile");
-        let dependencies = super::Dependencies::new(&lockfile);
+        let package = cargo_lock::Dependency {
+            name: "dummy".parse().unwrap(),
+            version: "0.1.0".parse().unwrap(),
+            source: None,
+        };
+        let dependencies = super::Dependencies::new(lockfile, &package).unwrap();
         assert_eq!(
             dependencies.deps,
             [
@@ -272,5 +301,68 @@ dependencies = [
                 ("minimal-lexical".to_owned(), "0.2.1".to_owned()),
             ]
         );
+    }
+
+    #[test]
+    #[cfg(feature = "dependency-tree")]
+    fn source_disambiguates_package_identity() {
+        let lockfile = r#"
+version = 4
+
+[[package]]
+name = "Mixed-Name"
+version = "1.2.3-RC.1+Build.007"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "Mixed-Name"
+version = "1.2.3-RC.1+Build.007"
+dependencies = [
+ "Mixed-Name 1.2.3-RC.1+Build.007 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+"#
+        .parse()
+        .unwrap();
+        let package = cargo_lock::Dependency {
+            name: "Mixed-Name".parse().unwrap(),
+            version: "1.2.3-RC.1+Build.007".parse().unwrap(),
+            source: None,
+        };
+        let dependencies = super::Dependencies::new(lockfile, &package).unwrap();
+        assert_eq!(
+            dependencies.direct_deps,
+            [("Mixed-Name".to_owned(), "1.2.3-RC.1+Build.007".to_owned())]
+        );
+        assert_eq!(dependencies.deps, dependencies.direct_deps);
+        assert!(dependencies.indirect_deps.is_empty());
+    }
+
+    #[test]
+    #[cfg(feature = "dependency-tree")]
+    fn legacy_root() {
+        let lockfile = r#"
+[root]
+name = "legacy-root"
+version = "1.2.3"
+dependencies = ["legacy-dep 1.2.3"]
+
+[[package]]
+name = "legacy-dep"
+version = "1.2.3"
+"#
+        .parse()
+        .unwrap();
+        let package = cargo_lock::Dependency {
+            name: "legacy-root".parse().unwrap(),
+            version: "1.2.3".parse().unwrap(),
+            source: None,
+        };
+        let dependencies = super::Dependencies::new(lockfile, &package).unwrap();
+        assert_eq!(
+            dependencies.direct_deps,
+            [("legacy-dep".to_owned(), "1.2.3".to_owned())]
+        );
+        assert_eq!(dependencies.deps, dependencies.direct_deps);
+        assert!(dependencies.indirect_deps.is_empty());
     }
 }
