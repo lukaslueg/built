@@ -146,6 +146,22 @@ fn main() {
         )
         .expect("git-init failed")
     }
+
+    #[cfg(feature = "git2")]
+    fn init_git_with_empty_commit(&self) {
+        let repo = self.init_git();
+        let sig = git2::Signature::now("foo", "bar").unwrap();
+        let tree = repo.treebuilder(None).unwrap().write().unwrap();
+        repo.commit(
+            Some("HEAD"),
+            &sig,
+            &sig,
+            "Initial commit",
+            &repo.find_tree(tree).unwrap(),
+            &[],
+        )
+        .unwrap();
+    }
 }
 
 fn get_built_root() -> path::PathBuf {
@@ -1190,18 +1206,37 @@ fn main() {
 }
 "#,
             );
-        let repo = p.init_git();
-        let sig = git2::Signature::now("foo", "bar").unwrap();
-        let tree = repo.treebuilder(None).unwrap().write().unwrap();
-        repo.commit(
-            Some("HEAD"),
-            &sig,
-            &sig,
-            "Initial commit",
-            &repo.find_tree(tree).unwrap(),
-            &[],
-        )
-        .unwrap();
+        p.init_git_with_empty_commit();
+        p.create_and_run(&[]);
+    }
+}
+
+#[test]
+#[cfg(feature = "git2")]
+fn git_full_hash_override_supplies_short_hash() {
+    for git_feature in git_features() {
+        let mut p = Project::new();
+        p.bootstrap(Some(git_feature))
+            .set_env(
+                "BUILT_OVERRIDE_testbox_GIT_COMMIT_HASH",
+                "1234567890abcdef1234567890abcdef12345678",
+            )
+            .add_file(
+                "src/main.rs",
+                r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert!(built_info::GIT_HEAD_REF.is_some());
+    assert_eq!(built_info::GIT_COMMIT_HASH, Some("1234567890abcdef1234567890abcdef12345678"));
+    assert_eq!(built_info::GIT_COMMIT_HASH_SHORT, Some("12345678"));
+    println!("builttestsuccess");
+}
+"#,
+            );
+        p.init_git_with_empty_commit();
         p.create_and_run(&[]);
     }
 }

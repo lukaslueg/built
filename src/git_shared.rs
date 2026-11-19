@@ -1,7 +1,7 @@
 use crate::{environment, fmt_option_str, write_variable};
 use std::{fs, io, path};
 
-/// Length of the short commit hash (8 characters by default)
+/// Length of the short hash derived from a full hash override.
 const SHORT_HASH_LENGTH: usize = 8;
 
 /// Fully resolved repository information, that may incorporate overrides.
@@ -32,6 +32,14 @@ pub(crate) fn write_git_version(
     let mut commit_id = envmap.get_override_var::<Option<String>>("GIT_COMMIT_HASH");
     let mut commit_id_short = envmap.get_override_var::<Option<String>>("GIT_COMMIT_HASH_SHORT");
 
+    if let Some(full_hash) = &commit_id {
+        commit_id_short.get_or_insert_with(|| {
+            full_hash
+                .as_ref()
+                .map(|hash| hash.chars().take(SHORT_HASH_LENGTH).collect())
+        });
+    }
+
     if (branch.is_none() || commit_id.is_none() || commit_id_short.is_none())
         && let Ok(Some((git_branch, git_commit_id, git_commit_short_id))) =
             get_repo_head(manifest_location)
@@ -50,21 +58,14 @@ pub(crate) fn write_git_version(
         dirty.get_or_insert(Some(git_dirty));
     }
 
-    let commit_id = commit_id.flatten();
-    let commit_id_short = commit_id_short.unwrap_or_else(|| {
-        commit_id
-            .as_ref()
-            .map(|hash| hash.chars().take(SHORT_HASH_LENGTH).collect())
-    });
-
     write_variables(
         w,
         RepoInfo {
             branch: branch.flatten(),
             tag: tag.flatten(),
             dirty: dirty.flatten(),
-            commit_id,
-            commit_id_short,
+            commit_id: commit_id.flatten(),
+            commit_id_short: commit_id_short.flatten(),
         },
     )
 }
