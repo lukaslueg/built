@@ -14,18 +14,6 @@ pub(crate) struct RepoInfo {
     pub commit_id_short: Option<String>,
 }
 
-impl RepoInfo {
-    pub(crate) fn from_overrides(envmap: &environment::EnvironmentMap) -> Self {
-        RepoInfo {
-            branch: envmap.get_override_var("GIT_HEAD_REF"),
-            tag: envmap.get_override_var("GIT_VERSION"),
-            dirty: envmap.get_override_var("GIT_DIRTY"),
-            commit_id: envmap.get_override_var("GIT_COMMIT_HASH"),
-            commit_id_short: envmap.get_override_var("GIT_COMMIT_HASH_SHORT"),
-        }
-    }
-}
-
 pub(crate) fn write_git_version(
     manifest_location: &path::Path,
     envmap: &environment::EnvironmentMap,
@@ -37,21 +25,20 @@ pub(crate) fn write_git_version(
     #[cfg(all(feature = "gix", not(feature = "git2")))]
     use crate::gix_impl::{get_repo_description, get_repo_head};
 
-    let RepoInfo {
-        mut branch,
-        mut tag,
-        mut dirty,
-        mut commit_id,
-        mut commit_id_short,
-    } = RepoInfo::from_overrides(envmap);
+    // Some(None) is an explicit override and must take precedence over Git metadata.
+    let mut branch = envmap.get_override_var::<Option<String>>("GIT_HEAD_REF");
+    let mut tag = envmap.get_override_var::<Option<String>>("GIT_VERSION");
+    let mut dirty = envmap.get_override_var::<Option<bool>>("GIT_DIRTY");
+    let mut commit_id = envmap.get_override_var::<Option<String>>("GIT_COMMIT_HASH");
+    let mut commit_id_short = envmap.get_override_var::<Option<String>>("GIT_COMMIT_HASH_SHORT");
 
     if (branch.is_none() || commit_id.is_none() || commit_id_short.is_none())
         && let Ok(Some((git_branch, git_commit_id, git_commit_short_id))) =
             get_repo_head(manifest_location)
     {
-        branch = branch.or(git_branch);
-        commit_id = commit_id.or(Some(git_commit_id));
-        commit_id_short = commit_id_short.or(Some(git_commit_short_id))
+        branch.get_or_insert(git_branch);
+        commit_id.get_or_insert(Some(git_commit_id));
+        commit_id_short.get_or_insert(Some(git_commit_short_id));
     }
 
     // This is an expensive call, avoid it if it's all overridden.
@@ -59,16 +46,23 @@ pub(crate) fn write_git_version(
     if (tag.is_none() || dirty.is_none())
         && let Ok(Some((git_tag, git_dirty))) = get_repo_description(manifest_location)
     {
-        tag = tag.or(Some(git_tag));
-        dirty = dirty.or(Some(git_dirty));
+        tag.get_or_insert(Some(git_tag));
+        dirty.get_or_insert(Some(git_dirty));
     }
+
+    let commit_id = commit_id.flatten();
+    let commit_id_short = commit_id_short.unwrap_or_else(|| {
+        commit_id
+            .as_ref()
+            .map(|hash| hash.chars().take(SHORT_HASH_LENGTH).collect())
+    });
 
     write_variables(
         w,
         RepoInfo {
-            branch,
-            tag,
-            dirty,
+            branch: branch.flatten(),
+            tag: tag.flatten(),
+            dirty: dirty.flatten(),
             commit_id,
             commit_id_short,
         },
@@ -82,15 +76,10 @@ pub(crate) fn write_variables(
         tag,
         dirty,
         commit_id,
-        mut commit_id_short,
+        commit_id_short,
     }: RepoInfo,
 ) -> io::Result<()> {
     use io::Write;
-
-    // If we have a commit hash but no short hash, generate the short hash from the full hash
-    if let (Some(h), None) = (&commit_id, &commit_id_short) {
-        commit_id_short = Some(h.chars().take(SHORT_HASH_LENGTH).collect())
-    }
 
     write_variable!(
         w,

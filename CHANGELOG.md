@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Escape generated `#[doc]` attributes to prevent special characters in override values from breaking compilation.
 - Generate empty `FEATURES` and `FEATURES_LOWERCASE` arrays when no Cargo features are enabled.
 - Include lightweight Git tags when generating `GIT_VERSION` with `gix`.
+- Honor `BUILT_OVERRIDE_NONE` for all optional Git metadata fields.
 
 
 ## [0.8.1]

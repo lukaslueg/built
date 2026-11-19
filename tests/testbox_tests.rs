@@ -1163,6 +1163,51 @@ fn main() {
 
 #[test]
 #[cfg(feature = "git2")]
+fn git_none_overrides() {
+    for git_feature in git_features() {
+        let mut p = Project::new();
+        p.bootstrap(Some(git_feature))
+            .set_env("BUILT_OVERRIDE_testbox_GIT_HEAD_REF", "BUILT_OVERRIDE_NONE")
+            .set_env("BUILT_OVERRIDE_testbox_GIT_DIRTY", "BUILT_OVERRIDE_NONE")
+            .set_env(
+                "BUILT_OVERRIDE_testbox_GIT_COMMIT_HASH_SHORT",
+                "BUILT_OVERRIDE_NONE",
+            )
+            .add_file(
+                "src/main.rs",
+                r#"
+mod built_info {
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}
+
+fn main() {
+    assert_eq!(built_info::GIT_HEAD_REF, None);
+    assert_eq!(built_info::GIT_DIRTY, None);
+    assert_eq!(built_info::GIT_COMMIT_HASH_SHORT, None);
+    assert!(built_info::GIT_VERSION.is_some());
+    assert!(built_info::GIT_COMMIT_HASH.is_some());
+    println!("builttestsuccess");
+}
+"#,
+            );
+        let repo = p.init_git();
+        let sig = git2::Signature::now("foo", "bar").unwrap();
+        let tree = repo.treebuilder(None).unwrap().write().unwrap();
+        repo.commit(
+            Some("HEAD"),
+            &sig,
+            &sig,
+            "Initial commit",
+            &repo.find_tree(tree).unwrap(),
+            &[],
+        )
+        .unwrap();
+        p.create_and_run(&[]);
+    }
+}
+
+#[test]
+#[cfg(feature = "git2")]
 fn empty_git() {
     for git_feature in git_features_for_bootstrap() {
         // Issue #7, git can be there and still fail
