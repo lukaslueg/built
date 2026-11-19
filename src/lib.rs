@@ -224,14 +224,14 @@
 //! /// if `RUSTC` is overridden, `RUSTC_VERSION` *must* also be overridden.
 //! pub static RUSTC: &str = "rustc";
 //! /// The documentation-generator that cargo resolved to use.
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTDOC`; notice that if `RUSTDOC`
-//! /// is overridden, `RUSTDOC_VERSION` *must* also be overridden.
+//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTDOC`. When `RUSTDOC` is
+//! /// overridden, `RUSTDOC_VERSION` defaults to an empty string.
 //! pub static RUSTDOC: &str = "rustdoc";
 //! /// The output of `rustc -V`
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTC_VERSION`.
+//! /// Can be overridden independently of `RUSTC` with `BUILT_OVERRIDE_{pkg_name}_RUSTC_VERSION`.
 //! pub static RUSTC_VERSION: &str = "rustc 1.43.1 (8d69840ab 2020-05-04)";
 //! /// The output of `rustdoc -V`
-//! /// Can be overridden with `BUILT_OVERRIDE_{pkg_name}_RUSTDOC_VERSION`.
+//! /// Can be overridden independently of `RUSTDOC` with `BUILT_OVERRIDE_{pkg_name}_RUSTDOC_VERSION`.
 //! pub static RUSTDOC_VERSION: &str = "rustdoc 1.43.1 (8d69840ab 2020-05-04)";
 //!
 //! /// Value of `OPT_LEVEL` for the profile used during compilation.

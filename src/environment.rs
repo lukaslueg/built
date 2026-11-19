@@ -372,32 +372,23 @@ impl EnvironmentMap {
     pub fn write_compiler_version(&self, mut w: &fs::File) -> io::Result<()> {
         use std::io::Write;
 
-        let rustc;
-
-        let rustc_version = match self.get_override_var("RUSTC") {
-            Some(v) => {
-                rustc = v;
-                self.get_override_var("RUSTC_VERSION")
-                    .expect("RUSTC_VERSION must be overridden if RUSTC is")
+        let rustc_override = self.get_override_var("RUSTC");
+        let rustc = rustc_override.unwrap_or_else(|| self.get("RUSTC").unwrap());
+        let rustc_version = match self.get_override_var("RUSTC_VERSION") {
+            Some(version) => version,
+            None if rustc_override.is_some() => {
+                panic!("RUSTC_VERSION must be overridden if RUSTC is")
             }
-            None => {
-                rustc = self.get("RUSTC").unwrap();
-                get_version_from_cmd(rustc.as_ref())?
-            }
+            None => get_version_from_cmd(rustc.as_ref())?,
         };
 
-        let rustdoc;
-        let rustdoc_version;
-        match self.get_override_var("RUSTDOC") {
-            Some(v) => {
-                rustdoc = v;
-                rustdoc_version = self.get_override_var("RUSTDOC_VERSION").unwrap_or_default();
-            }
-            None => {
-                rustdoc = self.get("RUSTDOC").unwrap();
-                rustdoc_version = get_version_from_cmd(rustdoc.as_ref()).unwrap_or_default();
-            }
-        }
+        let rustdoc_override = self.get_override_var("RUSTDOC");
+        let rustdoc = rustdoc_override.unwrap_or_else(|| self.get("RUSTDOC").unwrap());
+        let rustdoc_version = match self.get_override_var("RUSTDOC_VERSION") {
+            Some(version) => version,
+            None if rustdoc_override.is_some() => String::new(),
+            None => get_version_from_cmd(rustdoc.as_ref()).unwrap_or_default(),
+        };
 
         write_str_variable!(
             w,

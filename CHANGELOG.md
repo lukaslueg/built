@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Honor `BUILT_OVERRIDE_NONE` for all optional Git metadata fields.
 - Derive `GIT_COMMIT_HASH_SHORT` from the overridden `GIT_COMMIT_HASH` when the short hash has no override.
 - Scope `dependency-tree` output to the package running the build script.
+- Honor `RUSTC_VERSION` and `RUSTDOC_VERSION` overrides independently of the tool paths.
 
 
 ## [0.8.1]

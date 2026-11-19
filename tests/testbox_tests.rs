@@ -426,6 +426,33 @@ fn main() {
 }
 
 #[test]
+fn compiler_version_overrides_without_tool_path_overrides() {
+    for version in ["RUSTC_VERSION", "RUSTDOC_VERSION"] {
+        let mut p = Project::new();
+        p.bootstrap(None)
+            .set_env(format!("BUILT_OVERRIDE_testbox_{version}"), "override v1")
+            .add_file(
+                "src/main.rs",
+                format!(
+                    r#"
+mod built_info {{
+    include!(concat!(env!("OUT_DIR"), "/built.rs"));
+}}
+
+fn main() {{
+    assert_eq!(built_info::{version}, "override v1");
+    assert_eq!(built_info::OVERRIDE_VARIABLES_USED.as_slice(), ["{version}"]);
+    println!("builttestsuccess");
+}}
+"#,
+                ),
+            );
+
+        p.create_and_run(&[]);
+    }
+}
+
+#[test]
 fn unused_override() {
     for git_feature in git_features_for_bootstrap() {
         let mut p = Project::new();
