@@ -1,6 +1,6 @@
 use crate::util::{self, ArrayDisplay};
 use crate::{fmt_option_str, write_str_variable, write_variable};
-use std::{cell, collections, env, ffi, fmt, fs, io, process};
+use std::{cell, collections, env, ffi, fs, io, process};
 
 const BUILT_OVERRIDE_PREFIX: &str = "BUILT_OVERRIDE_";
 
@@ -73,10 +73,6 @@ impl EnvironmentMap {
         })
     }
 
-    pub fn contains_key(&self, key: &str) -> bool {
-        self.get(key).is_some()
-    }
-
     pub fn filter_map_keys<F>(&self, mut f: F) -> impl Iterator<Item = &str>
     where
         F: FnMut(&str) -> Option<&str>,
@@ -133,7 +129,7 @@ impl EnvironmentMap {
 
         let ci = match self.get_override_var("CI_PLATFORM") {
             Some(v) => v,
-            None => self.detect_ci().map(|ci| ci.to_string()),
+            None => crate::ci::detect_ci(|key| self.get(key)).map(|ci| ci.to_string()),
         };
         write_variable!(
             w,
@@ -406,125 +402,5 @@ impl EnvironmentMap {
             )
         );
         Ok(())
-    }
-
-    pub fn detect_ci(&self) -> Option<CIPlatform> {
-        macro_rules! detect {
-            ($(($k:expr, $v:expr, $i:ident)),*) => {$(
-                    if self.get($k).map_or(false, |v| v == $v) {
-                        return Some(CIPlatform::$i);
-                    }
-                    )*};
-            ($(($k:expr, $i:ident)),*) => {$(
-                    if self.contains_key($k) {
-                        return Some(CIPlatform::$i);
-                    }
-                    )*};
-            ($($k:expr),*) => {$(
-                if self.contains_key($k) {
-                    return Some(CIPlatform::Generic);
-                }
-            )*};
-        }
-        // Variable names collected by watson/ci-info
-        detect!(
-            ("TRAVIS", Travis),
-            ("CIRCLECI", Circle),
-            ("GITLAB_CI", GitLab),
-            ("APPVEYOR", AppVeyor),
-            ("DRONE", Drone),
-            ("MAGNUM", Magnum),
-            ("SEMAPHORE", Semaphore),
-            ("JENKINS_URL", Jenkins),
-            ("bamboo_planKey", Bamboo),
-            ("TF_BUILD", TFS),
-            ("TEAMCITY_VERSION", TeamCity),
-            ("BUILDKITE", Buildkite),
-            ("HUDSON_URL", Hudson),
-            ("GO_PIPELINE_LABEL", GoCD),
-            ("BITBUCKET_COMMIT", BitBucket),
-            ("GITHUB_ACTIONS", GitHubActions)
-        );
-
-        if self.contains_key("TASK_ID") && self.contains_key("RUN_ID") {
-            return Some(CIPlatform::TaskCluster);
-        }
-
-        detect!(("CI_NAME", "codeship", Codeship));
-
-        detect!(
-            "CI",                     // Could be Travis, Circle, GitLab, AppVeyor or CodeShip
-            "CONTINUOUS_INTEGRATION", // Probably Travis
-            "BUILD_NUMBER"            // Jenkins, TeamCity
-        );
-        None
-    }
-}
-
-/// Various Continuous Integration platforms whose presence can be detected.
-pub enum CIPlatform {
-    /// <https://travis-ci.org>
-    Travis,
-    /// <https://circleci.com>
-    Circle,
-    /// <https://about.gitlab.com/gitlab-ci>
-    GitLab,
-    /// <https://www.appveyor.com>
-    AppVeyor,
-    /// <https://codeship.com>
-    Codeship,
-    /// <https://github.com/drone/drone>
-    Drone,
-    /// <https://magnum-ci.com>
-    Magnum,
-    /// <https://semaphoreci.com>
-    Semaphore,
-    /// <https://jenkins.io>
-    Jenkins,
-    /// <https://www.atlassian.com/software/bamboo>
-    Bamboo,
-    /// <https://www.visualstudio.com/de/tfs>
-    TFS,
-    /// <https://www.jetbrains.com/teamcity>
-    TeamCity,
-    /// <https://buildkite.com>
-    Buildkite,
-    /// <http://hudson-ci.org>
-    Hudson,
-    /// <https://github.com/taskcluster>
-    TaskCluster,
-    /// <https://www.gocd.io>
-    GoCD,
-    /// <https://bitbucket.org>
-    BitBucket,
-    /// <https://github.com/features/actions>
-    GitHubActions,
-    /// Unspecific
-    Generic,
-}
-
-impl fmt::Display for CIPlatform {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str(match *self {
-            CIPlatform::Travis => "Travis CI",
-            CIPlatform::Circle => "CircleCI",
-            CIPlatform::GitLab => "GitLab",
-            CIPlatform::AppVeyor => "AppVeyor",
-            CIPlatform::Codeship => "CodeShip",
-            CIPlatform::Drone => "Drone",
-            CIPlatform::Magnum => "Magnum",
-            CIPlatform::Semaphore => "Semaphore",
-            CIPlatform::Jenkins => "Jenkins",
-            CIPlatform::Bamboo => "Bamboo",
-            CIPlatform::TFS => "Team Foundation Server",
-            CIPlatform::TeamCity => "TeamCity",
-            CIPlatform::Buildkite => "Buildkite",
-            CIPlatform::Hudson => "Hudson",
-            CIPlatform::TaskCluster => "TaskCluster",
-            CIPlatform::GoCD => "GoCD",
-            CIPlatform::BitBucket => "BitBucket",
-            CIPlatform::GitHubActions => "GitHub Actions",
-            CIPlatform::Generic => "Generic CI",
-        })
     }
 }

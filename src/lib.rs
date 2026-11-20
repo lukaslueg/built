@@ -387,6 +387,7 @@
 
 #[cfg(feature = "jiff")]
 mod build_time;
+mod ci;
 #[cfg(feature = "cargo-lock")]
 mod dependencies;
 mod environment;
@@ -409,7 +410,7 @@ pub use jiff;
 #[cfg(feature = "gix")]
 pub use gix;
 
-pub use environment::CIPlatform;
+pub use ci::CIPlatform;
 
 #[doc = include_str!("../README.md")]
 #[allow(dead_code)]

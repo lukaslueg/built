@@ -58,7 +58,7 @@ where
 /// (e.g. `TASK_ID`), this function may have false positives.
 #[must_use]
 pub fn detect_ci() -> Option<super::CIPlatform> {
-    crate::environment::EnvironmentMap::new().detect_ci()
+    crate::ci::detect_ci(|key| std::env::var(key).ok())
 }
 
 pub(crate) trait ParseFromEnv<'a>
